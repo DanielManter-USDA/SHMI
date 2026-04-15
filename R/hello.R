@@ -1,18 +1,24 @@
-# Hello, world!
-#
-# This is an example function named 'hello' 
-# which prints 'Hello, world!'.
-#
-# You can learn more about package authoring with RStudio at:
-#
-#   https://r-pkgs.org
-#
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Install Package:           'Ctrl + Shift + B'
-#   Check Package:             'Ctrl + Shift + E'
-#   Test Package:              'Ctrl + Shift + T'
+# Initial Setup of SHMI package
 
-hello <- function() {
-  print("Hello, world!")
-}
+usethis::use_git()
+usethis::use_github()
+
+usethis::use_package_doc()
+usethis::use_readme_rmd()
+usethis::use_testthat()
+usethis::use_vignette("SHMI-overview")
+
+# now make files...
+# R/build_shmi.R
+# R/predict_sh.R
+# R/utils.R
+
+
+devtools::document()
+
+
+#usethis::use_data(final_model, overwrite = TRUE)
+
+devtools::check()
+devtools::install()
+

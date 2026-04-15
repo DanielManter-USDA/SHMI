@@ -18,7 +18,7 @@ Description: Implements the Soil Health Management Index (SHMI), a
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-URL: https://github.com/DanielManter-USDA/SHMI
+URL: https://danielmanter-usda.github.io/SHMI/, https://github.com/DanielManter-USDA/SHMI
 BugReports: https://github.com/DanielManter-USDA/SHMI/issues
 Suggests: 
     knitr,

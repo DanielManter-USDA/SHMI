@@ -1,16 +1,18 @@
+url: https://danielmanter-usda.github.io/SHMI/
+
 template:
   bootstrap: 5
   bootswatch: flatly
 
 navbar:
   structure:
-    left:
-      - text: "Get Started"
-        href: articles/SHMI-overview.html
-      - text: "Reference"
-        href: reference/index.html
-      - text: "News"
-        href: news/index.html
+    left: [articles, reference]
+
+
+articles:
+  - title: "Get Started"
+    contents:
+      - SHMI-overview
 
 reference:
   - title: "Core Workflow"
@@ -24,16 +26,12 @@ reference:
       - compute_rot_diversity
       - compute_avg_annual_disturbance
       - compute_orginput
-
-  - title: "Supporting Functions"
+  - title: "Helper Functions"
     contents:
-      - harmonize_crop_windows
-      - safe_read
-
-articles:
-  - title: "SHMI Overview"
-    contents:
-      - SHMI-overview
+      - get_shmi_example
+      - get_shmi_template
+      - copy_shmi_example
+      - SHMI
 
 home:
   title: "SHMI"

@@ -1,5 +1,9 @@
 # SHMI: Soil Health Management Index
 
+![R-CMD-check](https://github.com/DanielManter-USDA/SHMI/actions/workflows/R-CMD-check.yaml/badge.svg)
+![pkgdown](https://github.com/DanielManter-USDA/SHMI/actions/workflows/pkgdown.yaml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+
 The **SHMI** R package provides a complete, reproducible workflow for computing
 the Soil Health Management Index (SHMI) from standardized Excel workbooks.
 SHMI integrates four management pillars:

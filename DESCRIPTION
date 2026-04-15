@@ -1,17 +1,21 @@
 Package: SHMI
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
+Title: Soil Health Management Index (SHMI)
+Version: 1.0.0
 Authors@R: c(
     person(
-      "Jane", "Doe",
-      email = "jane@example.com",
+      "Daniel", "Manter",
+      email = "daniel.manter@usda.gov",
       role = c("aut", "cre")
     )
   )
-Description: More about what it does (maybe more than one line).
-    Continuation lines should be indented.
-License: What license is it under?
+Description: Implements the Soil Health Management Index (SHMI), a 
+    rotation-scale indicator of management intensity and ecological function. 
+    The package harmonizes crop windows, expands daily cover and disturbance 
+    events, summarizes organic inputs, and computes standardized pillar scores 
+    for cover, diversity, disturbance, and biological amendments. Functions 
+    support reproducible workflows for research, monitoring, and reporting.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/DanielManter-USDA/SHMI
@@ -23,3 +27,13 @@ Suggests:
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 RoxygenNote: 7.3.3
+Imports:
+    readxl,
+    dplyr,
+    tidyr,
+    lubridate,
+    janitor,
+    tibble,
+    purrr,
+    stringr,
+    scales

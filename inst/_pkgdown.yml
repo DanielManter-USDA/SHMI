@@ -1,0 +1,40 @@
+template:
+  bootstrap: 5
+  bootswatch: flatly
+
+navbar:
+  structure:
+    left:
+      - text: "Get Started"
+        href: articles/SHMI-overview.html
+      - text: "Reference"
+        href: reference/index.html
+      - text: "News"
+        href: news/index.html
+
+reference:
+  - title: "Core Workflow"
+    contents:
+      - prepare_shmi_inputs
+      - build_shmi
+
+  - title: "Pillar Functions"
+    contents:
+      - compute_w.cover
+      - compute_rot_diversity
+      - compute_avg_annual_disturbance
+      - compute_orginput
+
+  - title: "Supporting Functions"
+    contents:
+      - harmonize_crop_windows
+      - safe_read
+
+articles:
+  - title: "SHMI Overview"
+    contents:
+      - SHMI-overview
+
+home:
+  title: "SHMI"
+  description: "Soil Health Management Index"

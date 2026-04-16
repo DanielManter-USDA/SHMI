@@ -57,40 +57,40 @@
 #' }
 #'
 #' @export
-validate_shmi_input <- function(dat) {
+validate_shmi_input <- function(shmi_inputs) {
 
   errors <- c()
   warnings <- c()
 
   # ---- Check required tables ----
   required_tables <- c("crop_harmonized", "daily", "rot_bounds")
-  missing_tables <- setdiff(required_tables, names(dat))
+  missing_tables <- setdiff(required_tables, names(shmi_inputs))
   if (length(missing_tables) > 0) {
     errors <- c(errors, paste("Missing required tables:", paste(missing_tables, collapse=", ")))
   }
 
   # ---- Check MGT_combo ----
   for (tbl in required_tables) {
-    if (!"MGT_combo" %in% names(dat[[tbl]])) {
+    if (!"MGT_combo" %in% names(shmi_inputs[[tbl]])) {
       errors <- c(errors, paste0("Table ", tbl, " is missing MGT_combo column"))
     }
-    if (any(is.na(dat[[tbl]]$MGT_combo))) {
+    if (any(is.na(shmi_inputs[[tbl]]$MGT_combo))) {
       errors <- c(errors, paste0("Table ", tbl, " contains NA MGT_combo values"))
     }
   }
 
   # ---- Check date columns ----
-  date_tables <- c("crop_harmonized", "daily")
+  date_tables <- c("daily")
   for (tbl in date_tables) {
-    if (!"date" %in% names(dat[[tbl]])) {
+    if (!"date" %in% names(shmi_inputs[[tbl]])) {
       errors <- c(errors, paste0("Table ", tbl, " is missing date column"))
-    } else if (!inherits(dat[[tbl]]$date, "Date")) {
+    } else if (!inherits(shmi_inputs[[tbl]]$date, "Date")) {
       errors <- c(errors, paste0("Table ", tbl, " has non-Date date column"))
     }
   }
 
   # ---- Check rotation boundaries ----
-  rb <- dat$rot_bounds
+  rb <- shmi_inputs$rot_bounds
   if (!all(c("rot_start", "rot_end") %in% names(rb))) {
     errors <- c(errors, "rot_bounds must contain rot_start and rot_end")
   }
@@ -99,7 +99,7 @@ validate_shmi_input <- function(dat) {
   }
 
   # ---- Check duplicates ----
-  dups <- dat$daily %>%
+  dups <- shmi_inputs$daily %>%
     dplyr::count(MGT_combo, date) %>%
     dplyr::filter(n > 1)
   if (nrow(dups) > 0) {
@@ -107,17 +107,17 @@ validate_shmi_input <- function(dat) {
   }
 
   # ---- Check crop_present ----
-  if (any(!dat$daily$crop_present %in% c(0,1,NA))) {
+  if (any(!shmi_inputs$daily$crop_present %in% c(0,1,NA))) {
     errors <- c(errors, "daily$crop_present contains values other than 0, 1, or NA")
   }
 
   # ---- Summaries (non-fatal) ----
   summary <- tibble::tibble(
-    fields = length(unique(dat$daily$MGT_combo)),
-    years = length(unique(lubridate::year(dat$daily$date))),
-    species = length(unique(dat$crop_harmonized$CD_name)),
-    mixtures = sum(grepl("\\+", dat$crop_harmonized$CD_name)),
-    fallow_days = sum(dat$daily$CD_name == "fallow", na.rm = TRUE)
+    fields = length(unique(shmi_inputs$daily$MGT_combo)),
+    years = length(unique(lubridate::year(shmi_inputs$daily$date))),
+    species = length(unique(shmi_inputs$crop_harmonized$CD_name)),
+    mixtures = sum(grepl("\\+", shmi_inputs$crop_harmonized$CD_name)),
+    fallow_days = sum(shmi_inputs$daily$CD_name == "fallow", na.rm = TRUE)
   )
 
   # ---- Final output ----

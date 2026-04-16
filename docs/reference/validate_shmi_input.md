@@ -16,7 +16,7 @@ fallow days is included for diagnostic transparency.
 ## Usage
 
 ``` r
-validate_shmi_input(dat)
+validate_shmi_input(shmi_inputs)
 ```
 
 ## Arguments

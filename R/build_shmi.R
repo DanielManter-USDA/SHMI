@@ -91,7 +91,7 @@ build_shmi <- function(shmi_inputs,
                        settings = NULL,
                        expert_mode = FALSE) {
 
-  val <- validate_shmi_input(dat)
+  val <- validate_shmi_input(shmi_inputs)
   # If validation fails: stop immediately
   if (!val$ok) {
     message("❌ SHMI input validation failed.\n")
@@ -101,8 +101,6 @@ build_shmi <- function(shmi_inputs,
 
   # If validation succeeds: print summary and continue
   message("✅ SHMI input validation passed.\n")
-  message("Input summary:")
-  print(val$summary)
 
   # --------------------------------------------------------------------------
   # 1. Official national SHMI settings (locked mode)

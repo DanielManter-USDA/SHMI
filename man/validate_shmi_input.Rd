@@ -4,7 +4,7 @@
 \alias{validate_shmi_input}
 \title{Validate SHMI Input Tables}
 \usage{
-validate_shmi_input(dat)
+validate_shmi_input(shmi_inputs)
 }
 \arguments{
 \item{dat}{A named list of SHMI input tables, typically produced by

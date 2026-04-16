@@ -7,6 +7,9 @@
 <url><loc>https://danielmanter-usda.github.io/SHMI/LICENSE-text.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/build_shmi.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/compute_avg_annual_disturbance.html</loc></url>
+<url><loc>https://danielmanter-usda.github.io/SHMI/reference/compute_cover.html</loc></url>
+<url><loc>https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.html</loc></url>
+<url><loc>https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/compute_rot_diversity.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/compute_w.cover.html</loc></url>

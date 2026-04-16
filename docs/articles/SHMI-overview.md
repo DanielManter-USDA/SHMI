@@ -115,7 +115,7 @@ This section demonstrates how each pillar is computed individually.
 ### 4.1 Cover
 
 ``` r
-# compute_w.cover(inputs$daily, inputs$rot_bounds)
+# compute_cover(inputs$daily, inputs$rot_bounds)
 ```
 
 Cover is based on seasonal plant-days, normalized by rotation length and
@@ -126,7 +126,7 @@ weighted by seasonal importance.
 ### 4.2 Diversity
 
 ``` r
-# compute_rot_diversity(inputs$crop_harmonized, inputs$daily)
+# compute_diversity(inputs$crop_harmonized, inputs$daily)
 ```
 
 Diversity uses Hill-number entropy metrics at the rotation scale, with
@@ -137,7 +137,7 @@ mixture expansion and species-level plant-day aggregation.
 ### 4.3 Inverse Disturbance
 
 ``` r
-# compute_avg_annual_disturbance(inputs$daily_dist, inputs$rot_bounds)
+# compute_disturbance(inputs$daily_dist, inputs$rot_bounds)
 ```
 
 Disturbance is computed using a mechanistic mixing-efficiency × depth
@@ -186,7 +186,7 @@ For more details, see:
 
 - [`?prepare_shmi_inputs`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)  
 - [`?build_shmi`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)  
-- [`?compute_w.cover`](https://danielmanter-usda.github.io/SHMI/reference/compute_w.cover.md)  
-- [`?compute_rot_diversity`](https://danielmanter-usda.github.io/SHMI/reference/compute_rot_diversity.md)  
-- [`?compute_avg_annual_disturbance`](https://danielmanter-usda.github.io/SHMI/reference/compute_avg_annual_disturbance.md)  
+- [`?compute_cover`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.md)  
+- [`?compute_diversity`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md)  
+- [`?compute_disturbance`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md)  
 - [`?compute_orginput`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)

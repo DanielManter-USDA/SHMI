@@ -21,15 +21,3 @@ get_shmi_template <- function(path = "SHMI_template.xlsx") {
 get_shmi_example <- function() {
   system.file("extdata", "SHMI_example_1.xlsx", package = "SHMI")
 }
-
-
-#' Copy the example SHMI Excel file to a local path
-#'
-#' @param path File path to save the example.
-#' @return The path to the saved file.
-#' @export
-copy_shmi_example <- function(path = "SHMI_example_1.xlsx") {
-  example <- system.file("extdata", "SHMI_example_1.xlsx", package = "SHMI")
-  file.copy(example, path, overwrite = TRUE)
-  path
-}

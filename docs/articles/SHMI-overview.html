@@ -6,6 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>SHMI Overview • SHMI</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -20,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,8 +54,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-
-      <h1>SHMI Overview</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>SHMI Overview</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/DanielManter-USDA/SHMI/blob/HEAD/vignettes/SHMI-overview.Rmd" class="external-link"><code>vignettes/SHMI-overview.Rmd</code></a></small>
@@ -215,7 +219,7 @@ individually.</p>
 <h3 id="cover">4.1 Cover<a class="anchor" aria-label="anchor" href="#cover"></a>
 </h3>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># compute_w.cover(inputs$daily, inputs$rot_bounds)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># compute_cover(inputs$daily, inputs$rot_bounds)</span></span></code></pre></div>
 <p>Cover is based on seasonal plant-days, normalized by rotation length
 and weighted by seasonal importance.</p>
 <hr>
@@ -224,7 +228,7 @@ and weighted by seasonal importance.</p>
 <h3 id="diversity">4.2 Diversity<a class="anchor" aria-label="anchor" href="#diversity"></a>
 </h3>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># compute_rot_diversity(inputs$crop_harmonized, inputs$daily)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># compute_diversity(inputs$crop_harmonized, inputs$daily)</span></span></code></pre></div>
 <p>Diversity uses Hill-number entropy metrics at the rotation scale,
 with mixture expansion and species-level plant-day aggregation.</p>
 <hr>
@@ -233,7 +237,7 @@ with mixture expansion and species-level plant-day aggregation.</p>
 <h3 id="inverse-disturbance">4.3 Inverse Disturbance<a class="anchor" aria-label="anchor" href="#inverse-disturbance"></a>
 </h3>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># compute_avg_annual_disturbance(inputs$daily_dist, inputs$rot_bounds)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># compute_disturbance(inputs$daily_dist, inputs$rot_bounds)</span></span></code></pre></div>
 <p>Disturbance is computed using a mechanistic mixing-efficiency × depth
 model:</p>
 <ul>
@@ -291,13 +295,13 @@ systems.</p>
 <code><a href="../reference/build_shmi.html">?build_shmi</a></code><br>
 </li>
 <li>
-<code><a href="../reference/compute_w.cover.html">?compute_w.cover</a></code><br>
+<code><a href="../reference/compute_cover.html">?compute_cover</a></code><br>
 </li>
 <li>
-<code><a href="../reference/compute_rot_diversity.html">?compute_rot_diversity</a></code><br>
+<code><a href="../reference/compute_diversity.html">?compute_diversity</a></code><br>
 </li>
 <li>
-<code><a href="../reference/compute_avg_annual_disturbance.html">?compute_avg_annual_disturbance</a></code><br>
+<code><a href="../reference/compute_disturbance.html">?compute_disturbance</a></code><br>
 </li>
 <li><code><a href="../reference/compute_orginput.html">?compute_orginput</a></code></li>
 </ul>
@@ -309,7 +313,7 @@ systems.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Daniel Manter.</p>
+  <p>Developed by Daniel Manter, Jennifer Moore.</p>
 </div>
 
 <div class="pkgdown-footer-right">

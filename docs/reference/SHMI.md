@@ -73,13 +73,13 @@ All SHMI outputs include:
 - [`build_shmi`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
   — compute SHMI scores
 
-- [`compute_w.cover`](https://danielmanter-usda.github.io/SHMI/reference/compute_w.cover.md)
+- [`compute_cover`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.md)
   — cover pillar
 
-- [`compute_rot_diversity`](https://danielmanter-usda.github.io/SHMI/reference/compute_rot_diversity.md)
+- [`compute_diversity`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md)
   — diversity pillar
 
-- [`compute_avg_annual_disturbance`](https://danielmanter-usda.github.io/SHMI/reference/compute_avg_annual_disturbance.md)
+- [`compute_disturbance`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md)
   — inverse disturbance pillar
 
 - [`compute_orginput`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)

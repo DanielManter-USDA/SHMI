@@ -79,13 +79,13 @@ The SHMI computation proceeds in five stages:
 3.  **Pillar computation**:
 
     - Cover — via
-      [`compute_w.cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_w.cover.md)
+      [`compute_cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.md)
 
     - Diversity — via
-      [`compute_rot_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_rot_diversity.md)
+      [`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md)
 
     - Inverse disturbance — via
-      [`compute_avg_annual_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_avg_annual_disturbance.md)
+      [`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md)
       (mechanistic T\\\_t\\)
 
     - Organic inputs — via

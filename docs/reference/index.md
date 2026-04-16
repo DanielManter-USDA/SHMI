@@ -9,11 +9,11 @@
 
 ## Pillar Functions
 
-- [`compute_w.cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_w.cover.md)
+- [`compute_cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.md)
   : Compute the SHMI Cover Pillar (Season‑Weighted Plant Presence)
-- [`compute_rot_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_rot_diversity.md)
+- [`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md)
   : Compute Rotation-Scale Crop Diversity (Entropy-Based Hill Numbers)
-- [`compute_avg_annual_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_avg_annual_disturbance.md)
+- [`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md)
   : Compute Mechanistic Inverse Disturbance (Mixing-Efficiency × Depth
   Metric)
 - [`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)
@@ -25,8 +25,6 @@
   : Load the example SHMI Excel file
 - [`get_shmi_template()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_template.md)
   : Get the SHMI Excel template
-- [`copy_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/copy_shmi_example.md)
-  : Copy the example SHMI Excel file to a local path
 - [`SHMI`](https://danielmanter-usda.github.io/SHMI/reference/SHMI.md)
   [`SHMI-package`](https://danielmanter-usda.github.io/SHMI/reference/SHMI.md)
   : SHMI: Soil Health Management Index

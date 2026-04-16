@@ -37,6 +37,10 @@ reference:
     contents:
       - validate_excel_input
       - validate_shmi_input
+  - title: "Plotting Functions"
+    contents:
+      - plot_shmi_gauge
+      - plot_shmi_lollipop
 
 home:
   title: "SHMI"

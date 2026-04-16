@@ -204,6 +204,14 @@ package.
 - [`validate_shmi_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_shmi_input.md)
   : Validate SHMI Input Tables
 
+## Plotting Functions
+
+- [`plot_shmi_gauge()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_gauge.md)
+  : Plot SHMI gauge panels (Cover, Diversity, Inverse Disturbance,
+  Animals, Overall SHMI)
+- [`plot_shmi_lollipop()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_lollipop.md)
+  : Plot SHMI values for multiple management units (lollipop chart)
+
 # Articles
 
 ### Get Started

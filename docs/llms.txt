@@ -104,11 +104,11 @@ incorrectly formatted.
 
 ## 📂 Workflow Overview
 
-SHMI provides a structured, end‑to‑end workflow: 1. **Template
-generation** -
-[`get_shmi_template()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_template.md) -
-[`get_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_example.md)
+SHMI provides a structured, end‑to‑end workflow:
 
+1.  **Template generation**
+    - [`get_shmi_template()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_template.md)
+    - [`get_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_example.md)
 2.  **Input preparation**
     - Validates required columns
     - Expands crop windows to daily resolution
@@ -134,15 +134,18 @@ generation** -
 Full documentation and examples are available at: 👉
 <https://danielmanter-usda.github.io/SHMI/>
 
-This includes: • Function reference • Workflow overview • Example data •
-Template documentation • Articles and vignettes
+This includes:
+
+• Function reference • Workflow overview • Example data • Template
+documentation • Articles and vignettes
 
 ------------------------------------------------------------------------
 
 ## 🤝 Contributing
 
-Issues, suggestions, and pull requests are welcome: 👉
-<https://github.com/DanielManter-USDA/SHMI/issues>
+Issues, suggestions, and pull requests are welcome:
+
+👉 <https://github.com/DanielManter-USDA/SHMI/issues>
 
 ------------------------------------------------------------------------
 

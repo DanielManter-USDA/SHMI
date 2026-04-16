@@ -107,10 +107,10 @@ if anything is missing or incorrectly formatted.
 ## 📂 Workflow Overview
 
 SHMI provides a structured, end‑to‑end workflow:
+
 1. **Template generation**
    - `get_shmi_template()`
    - `get_shmi_example()`
-
 
 2. **Input preparation**
    - Validates required columns
@@ -137,6 +137,7 @@ Full documentation and examples are available at:
 👉 https://danielmanter-usda.github.io/SHMI/
 
 This includes:
+
 • 	Function reference
 • 	Workflow overview
 • 	Example data
@@ -148,6 +149,7 @@ This includes:
 ## 🤝 Contributing
 
 Issues, suggestions, and pull requests are welcome:
+
 👉 https://github.com/DanielManter-USDA/SHMI/issues
 
 ---

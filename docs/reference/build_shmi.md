@@ -86,7 +86,6 @@ The SHMI computation proceeds in five stages:
 
     - Inverse disturbance — via
       [`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md)
-      (mechanistic T\\\_t\\)
 
     - Organic inputs — via
       [`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)
@@ -99,3 +98,16 @@ The SHMI computation proceeds in five stages:
 5.  **Output assembly**: Returns a tidy data frame of SHMI scores along
     with metadata describing the settings used and computation
     timestamp.
+
+Additionally, before computing SHMI pillars, this function automatically
+validates the internal SHMI data list using
+[`validate_shmi_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_shmi_input.md).
+The validator checks for structural completeness (e.g., required tables,
+required columns, valid date types, no duplicated daily rows, no missing
+`MGT_combo` values) and ensures that the harmonized data produced by
+[`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
+is consistent and ready for SHMI computation.
+
+If validation fails, execution stops immediately with explicit error
+messages. Users must correct the input data or Excel file before
+re-running `build_shmi()`.

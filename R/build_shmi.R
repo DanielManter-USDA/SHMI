@@ -45,8 +45,7 @@
 #'     \itemize{
 #'       \item Cover — via \code{compute_cover()}
 #'       \item Diversity — via \code{compute_diversity()}
-#'       \item Inverse disturbance — via
-#'         \code{compute_disturbance()} (mechanistic T\eqn{_t})
+#'       \item Inverse disturbance — via \code{compute_disturbance()}
 #'       \item Organic inputs — via \code{compute_orginput()}
 #'     }
 #'
@@ -65,6 +64,17 @@
 #'     the settings used and computation timestamp.
 #' }
 #'
+#' Additionally, before computing SHMI pillars, this function automatically
+#' validates the internal SHMI data list using \code{validate_shmi_input()}.
+#' The validator checks for structural completeness (e.g., required tables,
+#' required columns, valid date types, no duplicated daily rows, no missing
+#' \code{MGT_combo} values) and ensures that the harmonized data produced by
+#' \code{prepare_shmi_inputs()} is consistent and ready for SHMI computation.
+#'
+#' If validation fails, execution stops immediately with explicit error messages.
+#' Users must correct the input data or Excel file before re-running
+#' \code{build_shmi()}.
+#'
 #' @return A list with:
 #'   \itemize{
 #'     \item \code{indicator_df} — data frame with columns:
@@ -80,6 +90,19 @@
 build_shmi <- function(shmi_inputs,
                        settings = NULL,
                        expert_mode = FALSE) {
+
+  val <- validate_shmi_input(dat)
+  # If validation fails: stop immediately
+  if (!val$ok) {
+    message("❌ SHMI input validation failed.\n")
+    message("Errors:\n", paste0(" - ", val$errors, collapse = "\n"))
+    stop("Fix the errors above and re-run build_shmi().")
+  }
+
+  # If validation succeeds: print summary and continue
+  message("✅ SHMI input validation passed.\n")
+  message("Input summary:")
+  print(val$summary)
 
   # --------------------------------------------------------------------------
   # 1. Official national SHMI settings (locked mode)

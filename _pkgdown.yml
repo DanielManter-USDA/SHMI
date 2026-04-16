@@ -13,13 +13,15 @@ articles:
   - title: "Get Started"
     contents:
       - SHMI-overview
+  - title: "Articles"
+    contents:
+      - validation
 
 reference:
   - title: "Core Workflow"
     contents:
       - prepare_shmi_inputs
       - build_shmi
-
   - title: "Pillar Functions"
     contents:
       - compute_cover
@@ -31,6 +33,10 @@ reference:
       - get_shmi_example
       - get_shmi_template
       - SHMI
+  - title: "Validation Functions"
+    contents:
+      - validate_excel_input
+      - validate_shmi_input
 
 home:
   title: "SHMI"

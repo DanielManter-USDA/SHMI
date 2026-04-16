@@ -123,6 +123,17 @@ disturbance, amendment, animal). Empty sheets contribute no bounds.
 Daily grids are generated using a fully vectorized expansion, ensuring
 extremely fast performance even for large datasets.
 
+Additionally, this function automatically performs front‑end validation
+of the Excel input file using
+[`validate_excel_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_excel_input.md).
+The validator checks for required sheets, required columns, valid date
+formats, consistent `MGT_combo` values, and malformed entries before any
+ingestion or harmonization occurs.
+
+If validation fails, execution stops immediately with clear, actionable
+error messages. Users must correct the Excel file before re‑running
+`prepare_shmi_inputs()`.
+
 ## Error Handling
 
 The function stops with informative errors if:

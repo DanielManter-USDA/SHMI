@@ -65,8 +65,7 @@ The SHMI computation proceeds in five stages:
     \itemize{
       \item Cover — via \code{compute_cover()}
       \item Diversity — via \code{compute_diversity()}
-      \item Inverse disturbance — via
-        \code{compute_disturbance()} (mechanistic T\eqn{_t})
+      \item Inverse disturbance — via \code{compute_disturbance()}
       \item Organic inputs — via \code{compute_orginput()}
     }
 
@@ -84,4 +83,15 @@ The SHMI computation proceeds in five stages:
     Returns a tidy data frame of SHMI scores along with metadata describing
     the settings used and computation timestamp.
 }
+
+Additionally, before computing SHMI pillars, this function automatically
+validates the internal SHMI data list using \code{validate_shmi_input()}.
+The validator checks for structural completeness (e.g., required tables,
+required columns, valid date types, no duplicated daily rows, no missing
+\code{MGT_combo} values) and ensures that the harmonized data produced by
+\code{prepare_shmi_inputs()} is consistent and ready for SHMI computation.
+
+If validation fails, execution stops immediately with explicit error messages.
+Users must correct the input data or Excel file before re-running
+\code{build_shmi()}.
 }

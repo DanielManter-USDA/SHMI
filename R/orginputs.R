@@ -140,11 +140,17 @@ compute_orginput <- function(rot_bounds,
     )
 
   # --- 7. Scale to 0–100 ------------------------------------------------------
-  animals_scaled <- animals_rate %>%
-    dplyr::mutate(
-      Animals = scales::rescale(events_per_year, to = c(0, 100))
-    ) %>%
-    dplyr::select(MGT_combo, events_per_year, Animals)
+  if (all(animals_rate$events_per_year == 0, na.rm = TRUE)) {
+    animals_scaled <- animals_rate %>%
+      dplyr::mutate(Animals = 0) %>%
+      dplyr::select(MGT_combo, events_per_year, Animals)
+  } else {
+    animals_scaled <- animals_rate %>%
+      dplyr::mutate(
+        Animals = scales::rescale(events_per_year, to = c(0, 100))
+      ) %>%
+      dplyr::select(MGT_combo, events_per_year, Animals)
+  }
 
   animals_scaled
 }

@@ -28,3 +28,10 @@
 - [`SHMI`](https://danielmanter-usda.github.io/SHMI/reference/SHMI.md)
   [`SHMI-package`](https://danielmanter-usda.github.io/SHMI/reference/SHMI.md)
   : SHMI: Soil Health Management Index
+
+## Validation Functions
+
+- [`validate_excel_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_excel_input.md)
+  : Validate SHMI Excel Input File
+- [`validate_shmi_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_shmi_input.md)
+  : Validate SHMI Input Tables

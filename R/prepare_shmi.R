@@ -50,6 +50,16 @@
 #' Daily grids are generated using a fully vectorized expansion, ensuring
 #' extremely fast performance even for large datasets.
 #'
+#' Additionally, this function automatically performs front‑end validation of
+#' the Excel input file using \code{validate_excel_input()}. The validator checks
+#' for required sheets, required columns, valid date formats, consistent
+#' \code{MGT_combo} values, and malformed entries before any ingestion or
+#' harmonization occurs.
+#'
+#' If validation fails, execution stops immediately with clear, actionable error
+#' messages. Users must correct the Excel file before re‑running
+#' \code{prepare_shmi_inputs()}.
+#'
 #' @return A named list containing:
 #' \describe{
 #'   \item{\code{rot_bounds}}{Rotation start/end dates for each \code{MGT_combo}.}
@@ -84,6 +94,24 @@ prepare_shmi_inputs <- function(path,
                                 start_date_override = NULL,
                                 end_date_override = NULL) {
 
+  # Validate Excel file before ingestion
+  val <- validate_excel_input(path)
+
+  if (!val$ok) {
+    message("❌ Excel input validation failed.\n")
+    message("Errors:\n", paste0(" - ", val$errors, collapse = "\n"))
+    stop("Fix the errors above and re-run prepare_shmi_inputs().")
+  }
+
+  message("✅ Excel input validation passed.\n")
+  message("Input summary:")
+  print(val$summary)
+
+  if (length(val$warnings) > 0) {
+    message("\nWarnings:")
+    message(paste0(" - ", val$warnings, collapse = "\n"))
+  }
+
   # ---- Normalize override dates ----
   if (!is.null(start_date_override)) {
     start_date_override <- as.Date(start_date_override)
@@ -116,18 +144,28 @@ prepare_shmi_inputs <- function(path,
   }
 
   safe_read <- function(sheet, required_cols, ...) {
+
+    # If sheet doesn't exist
     if (!sheet %in% readxl::excel_sheets(path)) {
       if (verbose) message("Sheet '", sheet, "' not found; returning empty tibble.")
-      return(tibble::tibble(!!!setNames(rep(list(NA), length(required_cols)), required_cols)))
+      return(tibble::tibble(!!!setNames(
+        replicate(length(required_cols), logical(), simplify = FALSE),
+        required_cols
+      )))
     }
 
+    # Try reading
     df <- readxl::read_xlsx(path, sheet = sheet, ...)
     df <- janitor::remove_empty(df, "rows")
     df <- janitor::remove_empty(df, "cols")
 
+    # If empty, return zero-row tibble with correct columns
     if (nrow(df) == 0) {
-      if (verbose) message("Sheet '", sheet, "' is empty; skipping.")
-      return(NULL)
+      if (verbose) message("Sheet '", sheet, "' is empty; returning empty tibble.")
+      return(tibble::tibble(!!!setNames(
+        replicate(length(required_cols), logical(), simplify = FALSE),
+        required_cols
+      )))
     }
 
     # Ensure required columns exist
@@ -138,6 +176,15 @@ prepare_shmi_inputs <- function(path,
         paste(missing, collapse = ", "),
         call. = FALSE
       )
+    }
+
+    # Remove malformed rows with NA MGT_combo
+    if ("MGT_combo" %in% names(df)) {
+      bad <- sum(is.na(df$MGT_combo))
+      if (bad > 0 && verbose) {
+        message("Removed ", bad, " rows with NA MGT_combo from sheet '", sheet, "'.")
+      }
+      df <- df %>% dplyr::filter(!is.na(MGT_combo))
     }
 
     df
@@ -361,7 +408,7 @@ prepare_shmi_inputs <- function(path,
   }
 
   if (!is.null(end_date_override)) {
-    dist <- dist %>% filter(SD_date <= start_date_override)
+    dist <- dist %>% filter(SD_date <= end_date_override)
   }
 
   # ---- Load Soil_Amendments ----

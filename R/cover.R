@@ -1,3 +1,5 @@
+# updated 2026-04-15
+
 #' Compute the SHMI Cover Pillar (Season‑Weighted Plant Presence)
 #'
 #' Calculates the SHMI cover indicator for each management unit (`MGT_combo`)
@@ -53,8 +55,17 @@ compute_cover <- function(daily,
                           w_summer = 0.25,
                           w_fall   = 0.25) {
 
-  # 1. Assign season
+  # 1. Collapse to one row per day per field
   crop_season <- daily %>%
+    dplyr::mutate(
+      crop_present = dplyr::coalesce(crop_present, 0L)  # convert NA → 0
+    ) %>%
+    dplyr::group_by(MGT_combo, date) %>%
+    dplyr::summarize(
+      crop_present = as.integer(any(crop_present == 1L)),  # TRUE if ANY crop present
+      CD_name = dplyr::first(CD_name),
+      .groups = "drop"
+    ) %>%
     dplyr::mutate(
       month = lubridate::month(date),
       season = dplyr::case_when(
@@ -69,38 +80,50 @@ compute_cover <- function(daily,
       )
     )
 
-  # 2. Plant-days per event
+
+  # 2. Compute plant-days and possible days per season
   crop_days <- crop_season %>%
-    group_by(MGT_combo, season) %>%
+    dplyr::group_by(MGT_combo, season) %>%
     dplyr::summarize(
       plant_days = sum(crop_present),
-      .groups = "drop")
+      days_possible = dplyr::n(),
+      .groups = "drop"
+    )
 
-  # 3. Seasonal totals per rotation
+  # 3. Pivot to wide format
   season_totals <- crop_days %>%
     tidyr::pivot_wider(
       names_from = season,
-      values_from = plant_days,
+      values_from = c(plant_days, days_possible),
       values_fill = 0,
       names_sort = TRUE
     )
 
-  # 4. Rotation length
-  rot_bounds <- rot_bounds %>%
-    mutate(total_days = as.integer(rot_end - rot_start + 1))
-
+  # 4. Compute seasonal proportions (bounded 0–1)
   season_totals <- season_totals %>%
-    left_join(rot_bounds, by = "MGT_combo") %>%
-    mutate(
-      prop_winter = winter / (total_days / 4),
-      prop_spring = spring / (total_days / 4),
-      prop_summer = summer / (total_days / 4),
-      prop_fall   = fall   / (total_days / 4),
-      w_sum = w_winter + w_spring + w_summer + w_fall,
-      w_winter_n = w_winter / w_sum,
-      w_spring_n = w_spring / w_sum,
-      w_summer_n = w_summer / w_sum,
-      w_fall_n   = w_fall   / w_sum,
+    dplyr::mutate(
+      prop_winter = plant_days_winter / days_possible_winter,
+      prop_spring = plant_days_spring / days_possible_spring,
+      prop_summer = plant_days_summer / days_possible_summer,
+      prop_fall   = plant_days_fall   / days_possible_fall
+    ) %>%
+    dplyr::mutate(
+      prop_winter = dplyr::if_else(is.nan(prop_winter), 0, prop_winter),
+      prop_spring = dplyr::if_else(is.nan(prop_spring), 0, prop_spring),
+      prop_summer = dplyr::if_else(is.nan(prop_summer), 0, prop_summer),
+      prop_fall   = dplyr::if_else(is.nan(prop_fall),   0, prop_fall)
+    )
+
+  # 5. Normalize weights
+  w_sum <- w_winter + w_spring + w_summer + w_fall
+  w_winter_n <- w_winter / w_sum
+  w_spring_n <- w_spring / w_sum
+  w_summer_n <- w_summer / w_sum
+  w_fall_n   <- w_fall   / w_sum
+
+  # 6. Weighted cover score (guaranteed 0–100)
+  season_totals <- season_totals %>%
+    dplyr::mutate(
       Cover = 100 * (
         w_winter_n * prop_winter +
           w_spring_n * prop_spring +
@@ -108,6 +131,7 @@ compute_cover <- function(daily,
           w_fall_n   * prop_fall
       )
     ) %>%
-    select(MGT_combo, Cover)
+    dplyr::select(MGT_combo, Cover)
 
+  season_totals
 }

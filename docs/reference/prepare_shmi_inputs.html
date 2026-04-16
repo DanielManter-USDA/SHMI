@@ -139,6 +139,14 @@ bounds are clipped accordingly.</p></dd>
 disturbance, amendment, animal). Empty sheets contribute no bounds.</p>
 <p>Daily grids are generated using a fully vectorized expansion, ensuring
 extremely fast performance even for large datasets.</p>
+<p>Additionally, this function automatically performs front‑end validation of
+the Excel input file using <code><a href="validate_excel_input.html">validate_excel_input()</a></code>. The validator checks
+for required sheets, required columns, valid date formats, consistent
+<code>MGT_combo</code> values, and malformed entries before any ingestion or
+harmonization occurs.</p>
+<p>If validation fails, execution stops immediately with clear, actionable error
+messages. Users must correct the Excel file before re‑running
+<code>prepare_shmi_inputs()</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="error-handling">Error Handling<a class="anchor" aria-label="anchor" href="#error-handling"></a></h2>

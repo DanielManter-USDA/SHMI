@@ -109,8 +109,7 @@ not comparable to the national SHMI scale.</p></dd>
     present.</p></li>
 <li><p><strong>Pillar computation</strong>:</p><ul><li><p>Cover — via <code><a href="compute_cover.html">compute_cover()</a></code></p></li>
 <li><p>Diversity — via <code><a href="compute_diversity.html">compute_diversity()</a></code></p></li>
-<li><p>Inverse disturbance — via
-        <code><a href="compute_disturbance.html">compute_disturbance()</a></code> (mechanistic T\(_t\))</p></li>
+<li><p>Inverse disturbance — via <code><a href="compute_disturbance.html">compute_disturbance()</a></code></p></li>
 <li><p>Organic inputs — via <code><a href="compute_orginput.html">compute_orginput()</a></code></p></li>
 </ul></li>
 <li><p><strong>Weighted combination</strong>:
@@ -125,7 +124,16 @@ not comparable to the national SHMI scale.</p></dd>
 <li><p><strong>Output assembly</strong>:
     Returns a tidy data frame of SHMI scores along with metadata describing
     the settings used and computation timestamp.</p></li>
-</ol></div>
+</ol><p>Additionally, before computing SHMI pillars, this function automatically
+validates the internal SHMI data list using <code><a href="validate_shmi_input.html">validate_shmi_input()</a></code>.
+The validator checks for structural completeness (e.g., required tables,
+required columns, valid date types, no duplicated daily rows, no missing
+<code>MGT_combo</code> values) and ensures that the harmonized data produced by
+<code><a href="prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code> is consistent and ready for SHMI computation.</p>
+<p>If validation fails, execution stops immediately with explicit error messages.
+Users must correct the input data or Excel file before re-running
+<code>build_shmi()</code>.</p>
+    </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

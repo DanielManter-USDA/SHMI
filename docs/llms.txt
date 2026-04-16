@@ -197,9 +197,24 @@ package.
   [`SHMI-package`](https://danielmanter-usda.github.io/SHMI/reference/SHMI.md)
   : SHMI: Soil Health Management Index
 
+## Validation Functions
+
+- [`validate_excel_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_excel_input.md)
+  : Validate SHMI Excel Input File
+- [`validate_shmi_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_shmi_input.md)
+  : Validate SHMI Input Tables
+
 # Articles
 
 ### Get Started
 
 - [SHMI
   Overview](https://danielmanter-usda.github.io/SHMI/articles/SHMI-overview.md):
+
+### Articles
+
+- [SHMI Input
+  Validation](https://danielmanter-usda.github.io/SHMI/articles/validation.md):
+
+  How SHMI validates Excel workbooks and internal data structures before
+  computing SHMI pillars.

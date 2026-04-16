@@ -43,10 +43,10 @@
 #'
 #'   \item \strong{Pillar computation}:
 #'     \itemize{
-#'       \item Cover — via \code{compute_w.cover()}
-#'       \item Diversity — via \code{compute_rot_diversity()}
+#'       \item Cover — via \code{compute_cover()}
+#'       \item Diversity — via \code{compute_diversity()}
 #'       \item Inverse disturbance — via
-#'         \code{compute_avg_annual_disturbance()} (mechanistic T\eqn{_t})
+#'         \code{compute_disturbance()} (mechanistic T\eqn{_t})
 #'       \item Organic inputs — via \code{compute_orginput()}
 #'     }
 #'
@@ -152,7 +152,7 @@ build_shmi <- function(shmi_inputs,
   # --------------------------------------------------------------------------
 
   # Cover
-  cover <- compute_w.cover(
+  cover <- compute_cover(
     daily       = daily,
     rot_bounds  = rot_bounds,
     w_winter    = settings$w_winter,
@@ -162,7 +162,7 @@ build_shmi <- function(shmi_inputs,
   )
 
   # Diversity
-  diversity <- compute_rot_diversity(
+  diversity <- compute_diversity(
     crop_harmonized = crop_harmonized,
     daily           = daily,
     hill            = settings$hill,
@@ -170,7 +170,7 @@ build_shmi <- function(shmi_inputs,
   )
 
   # Disturbance (inverse disturbance pillar)
-  invdist <- compute_avg_annual_disturbance(
+  invdist <- compute_disturbance(
     daily_dist    = daily_dist,
     rot_bounds    = rot_bounds
   )
@@ -225,7 +225,7 @@ build_shmi <- function(shmi_inputs,
     indicator_df = indicator_df,
     settings_used = settings,
     expert_mode   = expert_mode,
-    shmi_version  = "1.0.0",
+    shmi_version  = "1.0.2",
     timestamp     = Sys.time()
   )
 }

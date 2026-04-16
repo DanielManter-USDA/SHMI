@@ -1,5 +1,5 @@
 utils::globalVariables(c(
-  # compute_avg_annual_disturbance
+  # compute_disturbance
   "MGT_combo", "SD_depth_cm", "SD_mixeff", "ME_times_depth", "cum_ME",
   "T_t", "T_t_norm", "T_t_annual", "T_t_inv", "InvDist",
 
@@ -8,11 +8,11 @@ utils::globalVariables(c(
   "amend_present", "ani_present", "rot_years", "weighted_input",
   "total_weighted", "events_per_year", "Animals",
 
-  # compute_rot_diversity
+  # compute_diversity
   "CD_seq_num", "CD_name", "crop_present", "mix_n", "species", "D",
   "Diversity_raw",
 
-  # compute_w.cover
+  # compute_cover
   "season", "plant_days", "rot_end", "rot_start", "winter", "total_days",
   "spring", "summer", "fall", "w_sum", "w_winter_n", "prop_winter",
   "w_spring_n", "prop_spring", "w_summer_n", "prop_summer",

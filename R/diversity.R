@@ -66,10 +66,10 @@
 #'   }
 #'
 #' @export
-compute_rot_diversity <- function(crop_harmonized,
-                                  daily,
-                                  hill = 2,
-                                  max_div = 8) {
+compute_diversity <- function(crop_harmonized,
+                              daily,
+                              hill = 2,
+                              max_div = 8) {
 
   # 1. Daily plant-days summary
   daily_sum <- daily %>%

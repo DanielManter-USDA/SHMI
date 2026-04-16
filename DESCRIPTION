@@ -1,7 +1,7 @@
 Package: SHMI
 Type: Package
 Title: Soil Health Management Index (SHMI)
-Version: 1.0.1
+Version: 1.0.2
 Authors@R: c(
     person(
       "Daniel", "Manter",

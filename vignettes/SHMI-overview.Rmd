@@ -121,7 +121,7 @@ This section demonstrates how each pillar is computed individually.
 ## 4.1 Cover
 
 ```{r}
-# compute_w.cover(inputs$daily, inputs$rot_bounds)
+# compute_cover(inputs$daily, inputs$rot_bounds)
 ```
 
 Cover is based on seasonal plant-days, normalized by rotation length and weighted by seasonal importance.
@@ -131,7 +131,7 @@ Cover is based on seasonal plant-days, normalized by rotation length and weighte
 ## 4.2 Diversity
 
 ```{r}
-# compute_rot_diversity(inputs$crop_harmonized, inputs$daily)
+# compute_diversity(inputs$crop_harmonized, inputs$daily)
 ```
 
 Diversity uses Hill-number entropy metrics at the rotation scale, with mixture expansion and species-level plant-day aggregation.
@@ -141,7 +141,7 @@ Diversity uses Hill-number entropy metrics at the rotation scale, with mixture e
 ## 4.3 Inverse Disturbance
 
 ```{r}
-# compute_avg_annual_disturbance(inputs$daily_dist, inputs$rot_bounds)
+# compute_disturbance(inputs$daily_dist, inputs$rot_bounds)
 ```
 
 Disturbance is computed using a mechanistic mixing-efficiency × depth model:
@@ -185,7 +185,7 @@ For more details, see:
 
 - `?prepare_shmi_inputs`  
 - `?build_shmi`  
-- `?compute_w.cover`  
-- `?compute_rot_diversity`  
-- `?compute_avg_annual_disturbance`  
+- `?compute_cover`  
+- `?compute_diversity`  
+- `?compute_disturbance`  
 - `?compute_orginput`

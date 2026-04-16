@@ -22,15 +22,14 @@ reference:
 
   - title: "Pillar Functions"
     contents:
-      - compute_w.cover
-      - compute_rot_diversity
-      - compute_avg_annual_disturbance
+      - compute_cover
+      - compute_diversity
+      - compute_disturbance
       - compute_orginput
   - title: "Helper Functions"
     contents:
       - get_shmi_example
       - get_shmi_template
-      - copy_shmi_example
       - SHMI
 
 home:

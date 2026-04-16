@@ -63,8 +63,8 @@
 #'   }
 #'
 #' @export
-compute_avg_annual_disturbance <- function(daily_dist,
-                                           rot_bounds) {
+compute_disturbance <- function(daily_dist,
+                                rot_bounds) {
 
   # get full list of mgt units
   all_mgts <- rot_bounds %>% select(MGT_combo)

@@ -63,10 +63,10 @@ The SHMI computation proceeds in five stages:
 
   \item \strong{Pillar computation}:
     \itemize{
-      \item Cover — via \code{compute_w.cover()}
-      \item Diversity — via \code{compute_rot_diversity()}
+      \item Cover — via \code{compute_cover()}
+      \item Diversity — via \code{compute_diversity()}
       \item Inverse disturbance — via
-        \code{compute_avg_annual_disturbance()} (mechanistic T\eqn{_t})
+        \code{compute_disturbance()} (mechanistic T\eqn{_t})
       \item Organic inputs — via \code{compute_orginput()}
     }
 

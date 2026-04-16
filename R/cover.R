@@ -46,12 +46,12 @@
 #'   }
 #'
 #' @export
-compute_w.cover <- function(daily,
-                            rot_bounds,
-                            w_winter = 0.25,
-                            w_spring = 0.25,
-                            w_summer = 0.25,
-                            w_fall   = 0.25) {
+compute_cover <- function(daily,
+                          rot_bounds,
+                          w_winter = 0.25,
+                          w_spring = 0.25,
+                          w_summer = 0.25,
+                          w_fall   = 0.25) {
 
   # 1. Assign season
   crop_season <- daily %>%

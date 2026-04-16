@@ -77,9 +77,9 @@ All SHMI outputs include:
 \itemize{
   \item \code{\link{prepare_shmi_inputs}} — read, validate, harmonize inputs
   \item \code{\link{build_shmi}} — compute SHMI scores
-  \item \code{\link{compute_w.cover}} — cover pillar
-  \item \code{\link{compute_rot_diversity}} — diversity pillar
-  \item \code{\link{compute_avg_annual_disturbance}} — inverse disturbance pillar
+  \item \code{\link{compute_cover}} — cover pillar
+  \item \code{\link{compute_diversity}} — diversity pillar
+  \item \code{\link{compute_disturbance}} — inverse disturbance pillar
   \item \code{\link{compute_orginput}} — organic inputs pillar
 }
 }

@@ -1,11 +1,12 @@
 # SHMI: Soil Health Management Index <img src="man/figures/logo.png" align="right" width="120" />
 
 <!-- badges: start -->
-![R-CMD-check](https://github.com/DanielManter-USDA/SHMI/actions/workflows/R-CMD-check.yaml/badge.svg)
-![pkgdown](https://github.com/DanielManter-USDA/SHMI/actions/workflows/pkgdown.yaml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?logo=open-source-initiative&logoColor=white)
 <!-- badges: end -->
 
+SHMI converts multi‑year crop, disturbance, and amendment records into standardized soil‑health management scores.
+
+---
 
 The **SHMI** R package provides a complete, reproducible workflow for computing
 the Soil Health Management Index (SHMI) from standardized Excel workbooks.
@@ -61,16 +62,23 @@ A complete SHMI workflow in just a few lines
 ```r
 library(SHMI)
 
-# 1. Retrieve the Excel template
-template <- get_shmi_template()
+# 1. Retrieve the sample Excel file
+example <- get_shmi_example()
 
 # 2. Prepare inputs (validates structure and expands events)
-df <- prepare_shmi_inputs(template)
+df <- prepare_shmi_inputs(example)
 
 # 3. Compute pillar scores and SHMI
 result <- build_shmi(df)
 
 head(result)
+
+# 4. Plot the results
+# Plot the first management unit
+plot_shmi_gauge(result$indicator_df, row = 1)
+
+# Plot all available management units
+plot_shmi_lollipop(result$indicator_df)
 
 ```
 
@@ -98,8 +106,10 @@ shmi <- build_shmi(inputs)
 
 shmi$indicator_df
 ```
+**Important:** The template is blank. You must enter your management data before running `prepare_shmi_inputs()`.
+
 The SHMI template enforces required column names, date formats, and sheet structure. 
-prepare_shmi_inputs() performs full validation and will return clear, actionable error messages 
+`prepare_shmi_inputs()` performs full validation and will return clear, actionable error messages 
 if anything is missing or incorrectly formatted.
 
 ---
@@ -109,40 +119,41 @@ if anything is missing or incorrectly formatted.
 SHMI provides a structured, end‑to‑end workflow:
 
 1. **Template generation**
-   - `get_shmi_template()`
-   - `get_shmi_example()`
+   - Blank Template [`get_shmi_template()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_template.html)
+   - Example Data [`get_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_example.html)
 
 2. **Input preparation**
    - Validates required columns
    - Expands crop windows to daily resolution
    - Summarizes disturbance and organic inputs
    - Harmonizes dates and management events
-   - `prepare_shmi_inputs()`
+   - [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.html)
 
 3. **Computation of individual pillar scores**
-   - Cover `compute_cover()`
-   - Diversity `compute_diversity()`
-   - Disturbance `compute_disturbance()`
-   - Organic inputs `compute_orginput()`
+   - Cover [`compute_cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.html)
+   - Diversity [`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.html)
+   - Disturbance [`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.html)
+   - Organic inputs [`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.html)
 
 4. **Final SHMI calculation**
-   - `build_shmi()`
+   - [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.html)
 
 
 ---
 
 ## 📚 Documentation
 
-Full documentation and examples are available at:
+Full documentation and examples are available at: 
+
 👉 https://danielmanter-usda.github.io/SHMI/
 
 This includes:
 
-• 	Function reference
-• 	Workflow overview
-• 	Example data
-• 	Template documentation
-• 	Articles and vignettes
+- Function reference
+- Workflow overview
+- Example data
+- Template documentation
+- Articles and vignettes
 
 ---
 
@@ -166,6 +177,6 @@ Distributed under the MIT license.
 📌 Citation
 If you use SHMI in a publication, please cite:
 
-Manter DK, Moore JM. (202X). SHMI: Soil Health Management Index R package.
+Manter DK, Moore JM. (2026). SHMI: Soil Health Management Index R package.
 
 ---

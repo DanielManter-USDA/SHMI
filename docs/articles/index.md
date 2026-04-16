@@ -1,11 +1,9 @@
 # Articles
 
-### Get Started
+### All vignettes
 
 - [SHMI
   Overview](https://danielmanter-usda.github.io/SHMI/articles/SHMI-overview.md):
-
-### Articles
 
 - [SHMI Input
   Validation](https://danielmanter-usda.github.io/SHMI/articles/validation.md):

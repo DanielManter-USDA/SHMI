@@ -32,7 +32,7 @@ A data frame with:
   }
 }
 \description{
-Calculates the SHMI disturbance pillar for each management unit
+Calculates the SHMI disturbance sub-index for each management unit
 (`MGT_combo`) using a mechanistic soil-mixing model based on mixing
 efficiency and tillage depth. Disturbance is computed at the *annual* scale
 and then averaged across the rotation. The final inverse-disturbance score

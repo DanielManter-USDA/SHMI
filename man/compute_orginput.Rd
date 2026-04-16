@@ -2,7 +2,7 @@
 % Please edit documentation in R/orginputs.R
 \name{compute_orginput}
 \alias{compute_orginput}
-\title{Compute the Organic Inputs Pillar (Amendments + Animals)}
+\title{Compute the Organic Inputs Sub-index (Amendments + Animals)}
 \usage{
 compute_orginput(rot_bounds, amend, animal, w_amend = 1, w_animal = 1)
 }

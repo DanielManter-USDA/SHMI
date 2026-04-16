@@ -1,4 +1,4 @@
-#' Compute the Organic Inputs Pillar (Amendments + Animals)
+#' Compute the Organic Inputs Sub-index (Amendments + Animals)
 #'
 #' Calculates the SHMI organic-inputs indicator for each management unit
 #' (`MGT_combo`) by combining amendment events and animal events across the

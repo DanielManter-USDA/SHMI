@@ -1,6 +1,4 @@
-# updated 2026-04-15
-
-#' Compute the SHMI Cover Pillar (Season‑Weighted Plant Presence)
+#' Compute the SHMI Cover Sub-index (Season‑Weighted Plant Presence)
 #'
 #' Calculates the SHMI cover indicator for each management unit (`MGT_combo`)
 #' using daily crop presence data and rotation bounds. Cover is computed as a
@@ -26,10 +24,10 @@
 #'     \item \code{rot_end}
 #'   }
 #'
-#' @param w_winter Numeric weight for winter cover (default 0.25).
-#' @param w_spring Numeric weight for spring cover (default 0.25).
-#' @param w_summer Numeric weight for summer cover (default 0.25).
-#' @param w_fall   Numeric weight for fall cover (default 0.25).
+#' @param w_winter Numeric weight for winter cover (default 0.130).
+#' @param w_spring Numeric weight for spring cover (default 0.129).
+#' @param w_summer Numeric weight for summer cover (default 0.513).
+#' @param w_fall   Numeric weight for fall cover (default 0.227).
 #'
 #' @details
 #' The algorithm proceeds in four steps:
@@ -50,10 +48,10 @@
 #' @export
 compute_cover <- function(daily,
                           rot_bounds,
-                          w_winter = 0.25,
-                          w_spring = 0.25,
-                          w_summer = 0.25,
-                          w_fall   = 0.25) {
+                          w_winter = 0.130,
+                          w_spring = 0.129,
+                          w_summer = 0.513,
+                          w_fall   = 0.227) {
 
   # 1. Collapse to one row per day per field
   crop_season <- daily %>%

@@ -10,7 +10,7 @@ standardized soil‑health management scores.
 
 The **SHMI** R package provides a complete, reproducible workflow for
 computing the Soil Health Management Index (SHMI) from standardized
-Excel workbooks. SHMI integrates four management pillars:
+Excel workbooks. SHMI integrates four management sub-indices:
 
 - **Cover** — seasonal plant presence  
 - **Diversity** — rotation-scale crop diversity (Hill numbers)  
@@ -69,7 +69,7 @@ example <- get_shmi_example()
 # 2. Prepare inputs (validates structure and expands events)
 df <- prepare_shmi_inputs(example)
 
-# 3. Compute pillar scores and SHMI
+# 3. Compute sub-index scores and SHMI
 result <- build_shmi(df)
 
 head(result)
@@ -89,16 +89,17 @@ plot_shmi_lollipop(result$indicator_df)
 ``` r
 library(SHMI)
 
-# Get a blank SHMI template
-blank_file <- get_shmi_template()
+# Download a blank SHMI template to a known location
+path <- "myDir/SHMI_template.xlsx"
+download_shmi_template(path = path)
 
-# (1) Open the template in Excel
-# (2) Fill in your management data
-# (3) Save it as "my_shmi_inputs.xlsx"
+# (1) Open "myDir/SHMI_template.xlsx" in Excel
+# (2) Enter your management data into each sheet
+# (3) Save the completed file as "myDir/my_shmi_inputs.xlsx"
 
-user_file <- "path/to/my_shmi_inputs.xlsx"
+user_file <- "myDir/my_shmi_inputs.xlsx"
 
-# Prepare inputs
+# Prepare inputs (validates structure and checks for missing fields)
 inputs <- prepare_shmi_inputs(user_file)
 
 # Compute SHMI
@@ -134,7 +135,7 @@ SHMI provides a structured, end‑to‑end workflow:
     - Summarizes disturbance and organic inputs
     - Harmonizes dates and management events
     - [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.html)
-3.  **Computation of individual pillar scores**
+3.  **Computation of individual sub-index scores**
     - Cover
       [`compute_cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.html)
     - Diversity

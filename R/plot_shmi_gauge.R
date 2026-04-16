@@ -21,7 +21,6 @@
 #'
 #' @return A 1×5 panel of ggplot gauge charts.
 #' @export
-#'
 plot_shmi_gauge <- function(shmi,
                             MGT_combo = NULL,
                             row = 1) {

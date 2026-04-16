@@ -24,7 +24,7 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
+    <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="default" aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="index.html">SHMI</a>
 
@@ -37,14 +37,34 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="articles/index.html">Articles</a></li>
-<li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="articles/SHMI-overview.html">Get Started</a></li>
+<li class="nav-item"><a class="nav-link" href="articles/SHMI-overview.html#quick-start">Quick Start</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="articles/SHMI-overview.html">Overview</a></li>
+    <li><a class="dropdown-item" href="articles/validation.html">Validation</a></li>
+    <li><a class="dropdown-item" href="articles/workflow.html">Workflow</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-reference">
+<li><a class="dropdown-item" href="reference/index.html">All Functions</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="reference/index.html#core-workflow">Core Workflow</a></li>
+    <li><a class="dropdown-item" href="reference/index.html#subindex-functions">Sub-index Functions</a></li>
+    <li><a class="dropdown-item" href="reference/index.html#helper-functions">Helper Functions</a></li>
+    <li><a class="dropdown-item" href="reference/index.html#validation-functions">Validation Functions</a></li>
+    <li><a class="dropdown-item" href="reference/index.html#plotting-functions">Plotting Functions</a></li>
+  </ul>
+</li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/DanielManter-USDA/SHMI/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/DanielManter-USDA/SHMI" aria-label="SHMI GitHub repository"><span class="fa fa-github"></span></a></li>
       </ul>
 </div>
 
@@ -61,7 +81,7 @@
 <p><img src="https://img.shields.io/badge/License-MIT-blue.svg?logo=open-source-initiative&amp;logoColor=white" alt="License: MIT"><!-- badges: end --></p>
 <p>SHMI converts multi‑year crop, disturbance, and amendment records into standardized soil‑health management scores.</p>
 <hr>
-<p>The <strong>SHMI</strong> R package provides a complete, reproducible workflow for computing the Soil Health Management Index (SHMI) from standardized Excel workbooks. SHMI integrates four management pillars:</p>
+<p>The <strong>SHMI</strong> R package provides a complete, reproducible workflow for computing the Soil Health Management Index (SHMI) from standardized Excel workbooks. SHMI integrates four management sub-indices:</p>
 <ul>
 <li>
 <strong>Cover</strong> — seasonal plant presence<br>
@@ -131,7 +151,7 @@
 <span><span class="co"># 2. Prepare inputs (validates structure and expands events)</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="va">example</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 3. Compute pillar scores and SHMI</span></span>
+<span><span class="co"># 3. Compute sub-index scores and SHMI</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
@@ -150,16 +170,17 @@
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://danielmanter-usda.github.io/SHMI/">SHMI</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Get a blank SHMI template</span></span>
-<span><span class="va">blank_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_shmi_template.html">get_shmi_template</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co"># Download a blank SHMI template to a known location</span></span>
+<span><span class="va">path</span> <span class="op">&lt;-</span> <span class="st">"myDir/SHMI_template.xlsx"</span></span>
+<span><span class="fu"><a href="reference/download_shmi_template.html">download_shmi_template</a></span><span class="op">(</span>path <span class="op">=</span> <span class="va">path</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># (1) Open the template in Excel</span></span>
-<span><span class="co"># (2) Fill in your management data</span></span>
-<span><span class="co"># (3) Save it as "my_shmi_inputs.xlsx"</span></span>
+<span><span class="co"># (1) Open "myDir/SHMI_template.xlsx" in Excel</span></span>
+<span><span class="co"># (2) Enter your management data into each sheet</span></span>
+<span><span class="co"># (3) Save the completed file as "myDir/my_shmi_inputs.xlsx"</span></span>
 <span></span>
-<span><span class="va">user_file</span> <span class="op">&lt;-</span> <span class="st">"path/to/my_shmi_inputs.xlsx"</span></span>
+<span><span class="va">user_file</span> <span class="op">&lt;-</span> <span class="st">"myDir/my_shmi_inputs.xlsx"</span></span>
 <span></span>
-<span><span class="co"># Prepare inputs</span></span>
+<span><span class="co"># Prepare inputs (validates structure and checks for missing fields)</span></span>
 <span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="va">user_file</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Compute SHMI</span></span>
@@ -195,7 +216,7 @@
 </ul>
 </li>
 <li>
-<strong>Computation of individual pillar scores</strong>
+<strong>Computation of individual sub-index scores</strong>
 <ul>
 <li>Cover <a href="https://danielmanter-usda.github.io/SHMI/reference/compute_cover.html"><code>compute_cover()</code></a>
 </li>

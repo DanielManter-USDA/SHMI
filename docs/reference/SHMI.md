@@ -3,7 +3,7 @@
 The \*\*SHMI\*\* package provides a complete, reproducible workflow for
 computing the Soil Health Management Index (SHMI) from standardized
 Excel workbooks. SHMI is a composite indicator integrating four
-management pillars:
+management sub-indices:
 
 ## Details
 
@@ -42,10 +42,11 @@ A complete SHMI workflow consists of:
 
 2.  **Compute SHMI**
     [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
-    Computes all four pillars and combines them into a final SHMI score.
+    Computes all four sub-indices and combines them into a final SHMI
+    score.
 
-3.  **Interpret results** The returned object includes pillar scores,
-    final SHMI values, settings used, and a timestamp for
+3.  **Interpret results** The returned object includes sub-indices
+    scores, final SHMI values, settings used, and a timestamp for
     reproducibility.
 
 ## Settings
@@ -74,13 +75,13 @@ All SHMI outputs include:
   — compute SHMI scores
 
 - [`compute_cover`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.md)
-  — cover pillar
+  — cover sub-index
 
 - [`compute_diversity`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md)
-  — diversity pillar
+  — diversity sub-index
 
 - [`compute_disturbance`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md)
-  — inverse disturbance pillar
+  — inverse disturbance sub-index
 
 - [`compute_orginput`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)
-  — organic inputs pillar
+  — organic inputs sub-index

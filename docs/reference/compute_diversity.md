@@ -1,6 +1,6 @@
 # Compute Rotation-Scale Crop Diversity (Entropy-Based Hill Numbers)
 
-Calculates the SHMI diversity pillar for each management unit
+Calculates the SHMI diversity sub-index for each management unit
 (\`MGT_combo\`) using daily crop presence data and harmonized crop
 windows. Diversity is computed at the \*rotation scale\* by expanding
 species mixtures, summing plant-days across years, and applying

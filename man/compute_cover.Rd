@@ -2,15 +2,15 @@
 % Please edit documentation in R/cover.R
 \name{compute_cover}
 \alias{compute_cover}
-\title{Compute the SHMI Cover Pillar (Season‑Weighted Plant Presence)}
+\title{Compute the SHMI Cover Sub-index (Season‑Weighted Plant Presence)}
 \usage{
 compute_cover(
   daily,
   rot_bounds,
-  w_winter = 0.25,
-  w_spring = 0.25,
-  w_summer = 0.25,
-  w_fall = 0.25
+  w_winter = 0.13,
+  w_spring = 0.129,
+  w_summer = 0.513,
+  w_fall = 0.227
 )
 }
 \arguments{
@@ -31,13 +31,13 @@ containing at least:
   \item \code{rot_end}
 }}
 
-\item{w_winter}{Numeric weight for winter cover (default 0.25).}
+\item{w_winter}{Numeric weight for winter cover (default 0.130).}
 
-\item{w_spring}{Numeric weight for spring cover (default 0.25).}
+\item{w_spring}{Numeric weight for spring cover (default 0.129).}
 
-\item{w_summer}{Numeric weight for summer cover (default 0.25).}
+\item{w_summer}{Numeric weight for summer cover (default 0.513).}
 
-\item{w_fall}{Numeric weight for fall cover (default 0.25).}
+\item{w_fall}{Numeric weight for fall cover (default 0.227).}
 }
 \value{
 A data frame with one row per \code{MGT_combo} and a single column:

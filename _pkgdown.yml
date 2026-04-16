@@ -5,38 +5,71 @@ template:
   bootswatch: flatly
 
 navbar:
-  structure:
-    left: [articles, reference]
+  title: "SHMI"
+  type: default
 
+  left:
+    - text: "Get Started"
+      href: articles/SHMI-overview.html
 
-articles:
-  - title: "Get Started"
-    contents:
-      - SHMI-overview
-  - title: "Articles"
-    contents:
-      - validation
+    - text: "Quick Start"
+      href: articles/SHMI-overview.html#quick-start
+
+    - text: "Articles"
+      menu:
+        - text: "Overview"
+          href: articles/SHMI-overview.html
+        - text: "Validation"
+          href: articles/validation.html
+        - text: "Workflow"
+          href: articles/workflow.html
+
+    - text: "Reference"
+      menu:
+        - text: "All Functions"
+          href: reference/index.html
+        - text: "---"
+        - text: "Core Workflow"
+          href: reference/index.html#core-workflow
+        - text: "Sub-index Functions"
+          href: reference/index.html#subindex-functions
+        - text: "Helper Functions"
+          href: reference/index.html#helper-functions
+        - text: "Validation Functions"
+          href: reference/index.html#validation-functions
+        - text: "Plotting Functions"
+          href: reference/index.html#plotting-functions
+
+  right:
+    - search: TRUE
+    - icon: fa-github
+      aria-label: "SHMI GitHub repository"
+      href: https://github.com/DanielManter-USDA/SHMI
 
 reference:
   - title: "Core Workflow"
     contents:
       - prepare_shmi_inputs
       - build_shmi
-  - title: "Pillar Functions"
+
+  - title: "Sub-index Functions"
     contents:
       - compute_cover
       - compute_diversity
       - compute_disturbance
       - compute_orginput
+
   - title: "Helper Functions"
     contents:
       - get_shmi_example
-      - get_shmi_template
+      - download_shmi_template
       - SHMI
+
   - title: "Validation Functions"
     contents:
       - validate_excel_input
       - validate_shmi_input
+
   - title: "Plotting Functions"
     contents:
       - plot_shmi_gauge

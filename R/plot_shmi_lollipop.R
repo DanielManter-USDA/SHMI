@@ -10,7 +10,6 @@
 #'
 #' @return A ggplot lollipop chart.
 #' @export
-#'
 plot_shmi_lollipop <- function(shmi) {
 
   # ---- Validate ----

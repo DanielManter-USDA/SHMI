@@ -2,7 +2,7 @@
 #'
 #' Computes the Soil Health Management Index (SHMI) for each management unit
 #' (`MGT_combo`) using the harmonized inputs produced by
-#' \code{prepare_shmi_inputs()}. SHMI is a weighted composite of four pillars:
+#' \code{prepare_shmi_inputs()}. SHMI is a weighted composite of four sub-indices:
 #' cover, diversity, inverse disturbance, and organic inputs (amendments +
 #' animals). By default, the function uses the official national SHMI settings
 #' (locked mode). In expert mode, users may override settings, but resulting
@@ -50,7 +50,7 @@
 #'     }
 #'
 #'   \item \strong{Weighted combination}:
-#'     Pillars are normalized so their weights sum to 1, then combined into a
+#'     Sub-indices are normalized so their weights sum to 1, then combined into a
 #'     single SHMI score:
 #'     \deqn{
 #'       SHMI = w_{cover} \cdot Cover +
@@ -64,7 +64,7 @@
 #'     the settings used and computation timestamp.
 #' }
 #'
-#' Additionally, before computing SHMI pillars, this function automatically
+#' Additionally, before computing SHMI sub-indices, this function automatically
 #' validates the internal SHMI data list using \code{validate_shmi_input()}.
 #' The validator checks for structural completeness (e.g., required tables,
 #' required columns, valid date types, no duplicated daily rows, no missing
@@ -169,7 +169,7 @@ build_shmi <- function(shmi_inputs,
   animal          <- shmi_inputs$animal
 
   # --------------------------------------------------------------------------
-  # 4. Compute pillars
+  # 4. Compute sub-indices
   # --------------------------------------------------------------------------
 
   # Cover
@@ -206,7 +206,7 @@ build_shmi <- function(shmi_inputs,
   )
 
   # --------------------------------------------------------------------------
-  # 5. Combine pillars
+  # 5. Combine sub-indices
   # --------------------------------------------------------------------------
   indicator_df <- purrr::reduce(
     list(cover, diversity, invdist, orginput),

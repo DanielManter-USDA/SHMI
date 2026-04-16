@@ -42,7 +42,7 @@ A data frame with:
   }
 }
 \description{
-Calculates the SHMI diversity pillar for each management unit (`MGT_combo`)
+Calculates the SHMI diversity sub-index for each management unit (`MGT_combo`)
 using daily crop presence data and harmonized crop windows. Diversity is
 computed at the *rotation scale* by expanding species mixtures, summing
 plant-days across years, and applying Hill-number diversity metrics in

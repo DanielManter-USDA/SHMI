@@ -2,7 +2,7 @@
 #'
 #' The **SHMI** package provides a complete, reproducible workflow for computing
 #' the Soil Health Management Index (SHMI) from standardized Excel workbooks.
-#' SHMI is a composite indicator integrating four management pillars:
+#' SHMI is a composite indicator integrating four management sub-indices:
 #'
 #' \itemize{
 #'   \item \strong{Cover} — seasonal plant presence
@@ -35,10 +35,10 @@
 #'
 #'   \item \strong{Compute SHMI}
 #'     \code{\link{build_shmi}()}
-#'     Computes all four pillars and combines them into a final SHMI score.
+#'     Computes all four sub-indices and combines them into a final SHMI score.
 #'
 #'   \item \strong{Interpret results}
-#'     The returned object includes pillar scores, final SHMI values,
+#'     The returned object includes sub-indices scores, final SHMI values,
 #'     settings used, and a timestamp for reproducibility.
 #' }
 #'
@@ -64,10 +64,10 @@
 #' \itemize{
 #'   \item \code{\link{prepare_shmi_inputs}} — read, validate, harmonize inputs
 #'   \item \code{\link{build_shmi}} — compute SHMI scores
-#'   \item \code{\link{compute_cover}} — cover pillar
-#'   \item \code{\link{compute_diversity}} — diversity pillar
-#'   \item \code{\link{compute_disturbance}} — inverse disturbance pillar
-#'   \item \code{\link{compute_orginput}} — organic inputs pillar
+#'   \item \code{\link{compute_cover}} — cover sub-index
+#'   \item \code{\link{compute_diversity}} — diversity sub-index
+#'   \item \code{\link{compute_disturbance}} — inverse disturbance sub-index
+#'   \item \code{\link{compute_orginput}} — organic inputs sub-index
 #' }
 #'
 #' @name SHMI

@@ -1,4 +1,4 @@
-# Compute the SHMI Cover Pillar (Season‑Weighted Plant Presence)
+# Compute the SHMI Cover Sub-index (Season‑Weighted Plant Presence)
 
 Calculates the SHMI cover indicator for each management unit
 (\`MGT_combo\`) using daily crop presence data and rotation bounds.
@@ -14,10 +14,10 @@ cover score is scaled to 0–100.
 compute_cover(
   daily,
   rot_bounds,
-  w_winter = 0.25,
-  w_spring = 0.25,
-  w_summer = 0.25,
-  w_fall = 0.25
+  w_winter = 0.13,
+  w_spring = 0.129,
+  w_summer = 0.513,
+  w_fall = 0.227
 )
 ```
 
@@ -50,19 +50,19 @@ compute_cover(
 
 - w_winter:
 
-  Numeric weight for winter cover (default 0.25).
+  Numeric weight for winter cover (default 0.130).
 
 - w_spring:
 
-  Numeric weight for spring cover (default 0.25).
+  Numeric weight for spring cover (default 0.129).
 
 - w_summer:
 
-  Numeric weight for summer cover (default 0.25).
+  Numeric weight for summer cover (default 0.513).
 
 - w_fall:
 
-  Numeric weight for fall cover (default 0.25).
+  Numeric weight for fall cover (default 0.227).
 
 ## Value
 

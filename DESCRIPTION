@@ -2,13 +2,16 @@ Package: SHMI
 Type: Package
 Title: Soil Health Management Index (SHMI)
 Version: 1.0.2
-Authors@R: c(
-    person(
-      "Daniel", "Manter",
-      email = "daniel.manter@usda.gov",
-      role = c("aut", "cre")
+Authors@R: 
+    c(
+      person("Daniel", "Manter", 
+             role = c("aut", "cre"),
+             email = "daniel.manter@usda.gov"),
+      person("Jennifer", "Moore",
+             role = "aut",
+             email = "jennifer.moore2@usda.gov")
     )
-  )
+
 Description: Implements the Soil Health Management Index (SHMI), a 
     rotation-scale indicator of management intensity and ecological function. 
     The package harmonizes crop windows, expands daily cover and disturbance 

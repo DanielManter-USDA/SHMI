@@ -2,6 +2,9 @@
 
 ### All vignettes
 
+- [SHMI Conceptual
+  Design](https://danielmanter-usda.github.io/SHMI/articles/SHMI-background.md):
+
 - [SHMI
   Overview](https://danielmanter-usda.github.io/SHMI/articles/SHMI-overview.md):
 

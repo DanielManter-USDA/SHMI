@@ -134,7 +134,8 @@ compute_diversity <- function(crop_harmonized,
         TRUE      ~ D / log(max_div)      # entropies scaled by log(max_div)
       ),
       Diversity = pmin(Diversity_raw, 1) * 100
-    )
+    ) %>%
+    select(MGT_combo, Diversity)
 
   return(div_final)
 }

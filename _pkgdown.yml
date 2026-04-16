@@ -17,12 +17,12 @@ navbar:
 
     - text: "Articles"
       menu:
-        - text: "Overview"
+        - text: "SHMI Background"
+          href: articles/SHMI-background.html
+        - text: "Package Overview"
           href: articles/SHMI-overview.html
-        - text: "Validation"
+        - text: "Data Validation"
           href: articles/validation.html
-        - text: "Workflow"
-          href: articles/workflow.html
 
     - text: "Reference"
       menu:

@@ -119,7 +119,7 @@ head(result)
 #> [1] "1.0.2"
 #> 
 #> $timestamp
-#> [1] "2026-04-16 14:29:12 MDT"
+#> [1] "2026-04-16 16:48:49 MDT"
 
 # 4. Plot the results
 # Plot the first management unit

@@ -1,0 +1,150 @@
+---
+title: "SHMI Conceptual Design"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SHMI Conceptual Design}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# SHMI Conceptual Design
+
+A theory‑driven framework for a management‑based soil health index
+
+## 1. Why SHMI Exists
+
+The Soil Health Management Index (SHMI) was created to fill a gap between two worlds:
+
+- Management‑based soil health frameworks, which emphasize decisions and practices
+- Measurement‑based soil health frameworks, which emphasize biological or chemical indicators
+
+SHMI is intentionally not a latent variable model, not a covariance‑driven index, and not an outcome‑optimized score.
+Instead, it is a designed, portable, theory‑aligned index that encodes management principles directly into its structure.
+
+SHMI’s purpose is to provide:
+
+- a transparent, reproducible representation of management intensity
+- a stable index that does not change with every new data-set
+- a tool that can be validated against soil health outcomes without being derived from them
+
+This separation between design and validation is central to SHMI’s philosophy.
+
+---
+
+## 2. Conceptual Architecture
+
+SHMI is built from four sub‑indices, each representing a major dimension of soil health management:
+
+- Organic Inputs
+- Cover
+- Diversity
+- Inverse Disturbance
+
+Each sub‑index is computed from management predictors, then combined into a single SHMI score using conceptually meaningful weights.
+Why these four?
+
+They represent the most widely recognized, cross‑system levers for improving soil function:
+
+- organic matter additions
+- continuous living cover
+- plant diversity
+- reduced disturbance
+
+These are the same pillars emphasized in NRCS guidance, soil health literature, and regenerative agriculture frameworks.
+
+---
+
+## 3. Tunable Parameters and Design Space
+
+SHMI includes tunable parameters that allow researchers to explore alternative conceptual designs without altering the underlying philosophy.
+
+These include:
+
+- weights for each sub‑index
+- seasonal cover weights
+- diversity metric choice (Hill number)
+- maximum allowable disturbance (stir cap)
+
+These parameters define a design space, not a data‑driven optimization problem.
+
+Bayesian Optimization as a Design Tool
+Bayesian optimization can be used to explore this design space, but SHMI is not “fit” to outcomes.
+Instead, optimization helps identify conceptually coherent parameter sets that align with soil health theory.
+
+---
+
+## 4. Diagram: SHMI Design Structure
+
+```{r fig-conceptual, echo=FALSE, out.width="100%"}
+knitr::include_graphics("figures/shmi_tuning.png")
+```
+
+Interpretation of the diagram:
+- Grey boxes represent tunable settings
+- Green boxes represent sub‑indices
+
+The diagram illustrates:
+- how tunable parameters influence sub‑indices
+- how sub‑indices combine into SHMI
+
+This visual separation reinforces SHMI’s design‑first philosophy.
+
+---
+
+## 5. What SHMI Is Not
+
+To avoid misinterpretation, SHMI explicitly avoids:
+
+- ❌ latent variable modeling
+- ❌ PCA, factor analysis, or covariance‑based weighting
+- ❌ machine‑learned or outcome‑optimized indices
+- ❌ site‑specific calibration
+- ❌ black‑box transformations
+
+SHMI is a portable, theory‑driven index, not a statistical artifact.
+
+---
+
+## 6. Relationship to Soil Health
+
+SHMI is not a proxy for soil health.
+
+It is a predictor of soil health outcomes, grounded in management theory.
+
+This distinction matters:
+
+- SHMI is designed from management principles
+- Soil health is measured from biological, chemical, and physical indicators
+- Validation tests whether the design aligns with observed outcomes
+
+This preserves conceptual clarity and prevents circular reasoning.
+
+---
+
+## 7. Validation Philosophy
+
+Validation is performed after SHMI is constructed, using independent soil health datasets.
+
+Validation asks:
+
+- Does SHMI correlate with soil health indicators?
+- Does it predict biological or functional outcomes?
+- Does it behave consistently across regions and systems?
+
+Because SHMI is not tuned to outcomes, validation is a genuine test of theory.
+
+---
+
+## 8. Summary
+
+SHMI is:
+
+- a designed index
+- grounded in management theory
+- built from four sub‑indices
+- parameterized through tunable conceptual settings
+- validated against independent soil health data
+
+This conceptual design ensures SHMI remains transparent, portable, and scientifically defensible.
+
+---

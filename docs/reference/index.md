@@ -21,13 +21,12 @@
 
 ## Helper Functions
 
-- [`get_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_example.md)
-  : Load the example SHMI Excel file
+- [`download_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/download_shmi_example.md)
+  : Download the example SHMI Excel file
 - [`download_shmi_template()`](https://danielmanter-usda.github.io/SHMI/reference/download_shmi_template.md)
   : Download a blank SHMI Excel template
-- [`SHMI`](https://danielmanter-usda.github.io/SHMI/reference/SHMI.md)
-  [`SHMI-package`](https://danielmanter-usda.github.io/SHMI/reference/SHMI.md)
-  : SHMI: Soil Health Management Index
+- [`shmi_example`](https://danielmanter-usda.github.io/SHMI/reference/shmi_example.md)
+  : Example SHMI dataset
 
 ## Validation Functions
 

@@ -36,9 +36,11 @@ result <- build_shmi(inputs)
 
 }
 \seealso{
-[get_shmi_example()], [prepare_shmi_inputs()], [build_shmi()]
+[download_shmi_example()], [get_shmi_example()],
+  [prepare_shmi_inputs()], [build_shmi()]
 
 Other SHMI helper functions: 
-\code{\link{get_shmi_example}()}
+\code{\link{download_shmi_example}()},
+\code{\link{shmi_example}}
 }
 \concept{SHMI helper functions}

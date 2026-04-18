@@ -3,6 +3,6 @@
 ^README\.Rmd$
 ^docs$
 ^pkgdown$
-
 ^doc$
+^inst/doc$
 ^Meta$

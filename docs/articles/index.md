@@ -1,15 +1,18 @@
 # Articles
 
-### All vignettes
-
-- [SHMI Conceptual
-  Design](https://danielmanter-usda.github.io/SHMI/articles/SHMI-background.md):
+### All articles
 
 - [SHMI
   Overview](https://danielmanter-usda.github.io/SHMI/articles/SHMI-overview.md):
-
-- [SHMI Input
-  Validation](https://danielmanter-usda.github.io/SHMI/articles/validation.md):
-
-  How SHMI validates Excel workbooks and internal data structures before
-  computing SHMI pillars.
+- [SHMI
+  Background](https://danielmanter-usda.github.io/SHMI/articles/Background.md):
+- [SHMI Cover
+  Sub‑index](https://danielmanter-usda.github.io/SHMI/articles/Cover.md):
+- [SHMI Diversity
+  Sub‑index](https://danielmanter-usda.github.io/SHMI/articles/Diversity.md):
+- [SHMI Disturbance
+  Sub‑index](https://danielmanter-usda.github.io/SHMI/articles/Disturbance.md):
+- [SHMI Organic Inputs
+  Sub‑index](https://danielmanter-usda.github.io/SHMI/articles/Animals.md):
+- [Soil Health Management Index
+  (SHMI)](https://danielmanter-usda.github.io/SHMI/articles/SHMI.md):

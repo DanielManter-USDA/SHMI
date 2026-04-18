@@ -72,4 +72,5 @@
 #'
 #' @name SHMI
 #' @aliases SHMI-package
+#' @keywords internal
 NULL

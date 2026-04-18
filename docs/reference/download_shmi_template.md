@@ -31,10 +31,12 @@ management units.
 
 ## See also
 
-\[get_shmi_example()\], \[prepare_shmi_inputs()\], \[build_shmi()\]
+\[download_shmi_example()\], \[get_shmi_example()\],
+\[prepare_shmi_inputs()\], \[build_shmi()\]
 
 Other SHMI helper functions:
-[`get_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_example.md)
+[`download_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/download_shmi_example.md),
+[`shmi_example`](https://danielmanter-usda.github.io/SHMI/reference/shmi_example.md)
 
 ## Examples
 

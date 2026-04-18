@@ -12,6 +12,7 @@
 #' for crop diversity, disturbance, organic inputs, and management units.
 #'
 #' @param path File path where the template should be saved.
+#'
 #' @return The path to the saved file (invisibly).
 #'
 #' @examples
@@ -25,7 +26,8 @@
 #' }
 #'
 #' @seealso
-#'   [get_shmi_example()], [prepare_shmi_inputs()], [build_shmi()]
+#'   [download_shmi_example()], [get_shmi_example()],
+#'   [prepare_shmi_inputs()], [build_shmi()]
 #'
 #' @family SHMI helper functions
 #' @export
@@ -36,12 +38,11 @@ download_shmi_template <- function(path = "SHMI_template.xlsx") {
 }
 
 
-#' Load the example SHMI Excel file
+#' Download the example SHMI Excel file
 #'
-#' Returns the path to a fully populated example Excel workbook that
-#' demonstrates the correct SHMI input structure. This file contains
-#' realistic management data and can be used to test the complete SHMI
-#' workflow without entering data manually.
+#' Saves a fully populated example SHMI Excel workbook to a user-specified
+#' path. This file demonstrates the correct SHMI input structure and contains
+#' realistic management data for testing the complete SHMI workflow.
 #'
 #' @details
 #' The example file is stored internally in `inst/extdata/` and includes
@@ -56,24 +57,68 @@ download_shmi_template <- function(path = "SHMI_template.xlsx") {
 #' this example file contains real data and can be passed directly to
 #' [`prepare_shmi_inputs()`] without modification.
 #'
-#' @return A file path (string) pointing to the example Excel file.
+#' @param path Directory where the example file should be saved.
+#'
+#' @return The path to the saved file (invisibly).
 #'
 #' @examples
 #' \dontrun{
-#' # Retrieve the example file
-#' example_file <- get_shmi_example()
+#' # Save example file to Desktop
+#' download_shmi_example("~/Desktop")
 #'
 #' # Run the full SHMI workflow
+#' example_file <- file.path("~/Desktop", "SHMI_example_1.xlsx")
 #' inputs <- prepare_shmi_inputs(example_file)
 #' result <- build_shmi(inputs)
 #' head(result$indicator_df)
 #' }
 #'
 #' @seealso
-#'   [download_shmi_template()], [prepare_shmi_inputs()], [build_shmi()]
+#'   [download_shmi_template()], [get_shmi_example()],
+#'   [prepare_shmi_inputs()], [build_shmi()]
 #'
 #' @family SHMI helper functions
 #' @export
-get_shmi_example <- function() {
-  system.file("extdata", "SHMI_example_1.xlsx", package = "SHMI")
+download_shmi_example <- function(path = ".") {
+  src <- system.file("extdata", "SHMI_example_1.xlsx", package = "SHMI")
+  dest <- file.path(path, "SHMI_example_1.xlsx")
+  file.copy(src, dest, overwrite = TRUE)
+  invisible(dest)
 }
+
+
+#' Example SHMI dataset
+#'
+#' A small example dataset included with the SHMI package for demonstrating
+#' the minimal R-native workflow:
+#'
+#' ```
+#' data(shmi_example)
+#' inputs <- prepare_shmi_inputs(shmi_example)
+#' result <- build_shmi(inputs)
+#' ```
+#'
+#' This dataset is a simplified, single-table representation of the SHMI
+#' input structure. It is intended for quick examples, teaching, and
+#' unit tests. For the full Excel-based workflow, use
+#' [`download_shmi_example()`] or [`download_shmi_template()`].
+#'
+#' @format A data frame with X rows and Y variables:
+#' \describe{
+#'   \item{MGT_combo}{Management unit identifier}
+#'   \item{date}{Calendar date}
+#'   \item{CD_name}{Crop or mixture name}
+#'   \item{crop_present}{1 if crop present, 0 otherwise}
+#'   \item{SD_mixeff}{Mixing efficiency (if present)}
+#'   \item{SD_depth_cm}{Tillage depth in cm (if present)}
+#'   \item{...}{Additional variables depending on the example}
+#' }
+#'
+#' @usage data(shmi_example)
+#'
+#' @seealso
+#'   [prepare_shmi_inputs()], [build_shmi()],
+#'   [download_shmi_example()], [download_shmi_template()]
+#'
+#' @family SHMI helper functions
+"shmi_example"

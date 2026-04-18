@@ -224,15 +224,15 @@ build_shmi <- function(shmi_inputs,
   indicator_df <- indicator_df %>%
     dplyr::mutate(
       SHMI = (
-        w_cover * .data$Cover +
+          w_cover * .data$Cover +
           w_div   * .data$Diversity +
           w_dist  * .data$InvDist +
-          w_ani   * .data$Animals
+          w_ani   * .data$OrgInputs
       )
     ) %>%
     dplyr::select(.data$MGT_combo, .data$SHMI,
                   .data$Cover, .data$Diversity,
-                  .data$InvDist, .data$Animals) %>%
+                  .data$InvDist, .data$OrgInputs) %>%
     dplyr::arrange(.data$MGT_combo)
 
   if (!expert_mode) {

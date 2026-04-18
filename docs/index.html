@@ -38,13 +38,16 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="articles/SHMI-overview.html">Get Started</a></li>
-<li class="nav-item"><a class="nav-link" href="articles/SHMI-overview.html#quick-start">Quick Start</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/SHMI-background.html">SHMI Background</a></li>
-    <li><a class="dropdown-item" href="articles/SHMI-overview.html">Package Overview</a></li>
-    <li><a class="dropdown-item" href="articles/validation.html">Data Validation</a></li>
+<li><a class="dropdown-item" href="articles/Background.html">SHMI Background</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="articles/Cover.html">Cover Index</a></li>
+    <li><a class="dropdown-item" href="articles/Diversity.html">Diversity Index</a></li>
+    <li><a class="dropdown-item" href="articles/Disturbance.html">Disturbance Index</a></li>
+    <li><a class="dropdown-item" href="articles/Animals.html">Organic Inputs Index</a></li>
+    <li><a class="dropdown-item" href="articles/SHMI.html">Final SHMI Index</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -74,48 +77,49 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header">
-<img src="logo.png" class="logo" alt=""><h1 id="shmi-soil-health-management-index-">SHMI: Soil Health Management Index <a class="anchor" aria-label="anchor" href="#shmi-soil-health-management-index-"></a>
+<img src="logo.png" class="logo" alt=""><h1 id="shmi-soil-health-management-index-">
+<strong>SHMI: Soil Health Management Index</strong> <a class="anchor" aria-label="anchor" href="#shmi-soil-health-management-index-"></a>
 </h1>
 </div>
 <!-- badges: start -->
 <p><img src="https://img.shields.io/badge/License-MIT-blue.svg?logo=open-source-initiative&amp;logoColor=white" alt="License: MIT"><!-- badges: end --></p>
 <p>SHMI converts multi‑year crop, disturbance, and amendment records into standardized soil‑health management scores.</p>
 <hr>
-<p>The <strong>SHMI</strong> R package provides a complete, reproducible workflow for computing the Soil Health Management Index (SHMI) from standardized Excel workbooks. SHMI integrates four management sub-indices:</p>
+<p>The <strong>SHMI</strong> R package provides a complete, reproducible workflow for computing the Soil Health Management Index (SHMI) from standardized Excel workbooks or R‑native example data. SHMI integrates four management sub‑indices:</p>
 <ul>
 <li>
 <strong>Cover</strong> — seasonal plant presence<br>
 </li>
 <li>
-<strong>Diversity</strong> — rotation-scale crop diversity (Hill numbers)<br>
+<strong>Diversity</strong> — rotation‑scale crop diversity (Hill numbers)<br>
 </li>
 <li>
-<strong>Inverse Disturbance</strong> — mechanistic mixing-efficiency × depth metric<br>
+<strong>Inverse Disturbance</strong> — mechanistic mixing‑efficiency × depth metric<br>
 </li>
 <li>
-<strong>Organic Inputs</strong> — amendments and animal presence</li>
+<strong>Organic Inputs</strong> — organic amendments and animal presence</li>
 </ul>
 <p>The package includes:</p>
 <ul>
 <li>robust Excel ingestion and validation<br>
 </li>
-<li>biologically realistic crop-window harmonization<br>
+<li>biologically realistic crop‑window harmonization<br>
 </li>
-<li>fast vectorized daily-grid construction<br>
+<li>fast vectorized daily‑grid construction<br>
 </li>
 <li>mechanistic disturbance modeling<br>
 </li>
-<li>rotation-scale aggregation<br>
+<li>rotation‑scale aggregation<br>
 </li>
 <li>official national SHMI settings (locked mode)<br>
 </li>
-<li>expert-mode overrides for research and scenario analysis</li>
+<li>expert‑mode overrides for research and scenario analysis</li>
 </ul>
 <hr>
 <div class="section level2">
 <h2 id="star-why-shmi">⭐ Why SHMI?<a class="anchor" aria-label="anchor" href="#star-why-shmi"></a>
 </h2>
-<p>Agricultural management is multidimensional, and many soil health indicators respond to long‑term patterns rather than single‑year practices. SHMI provides:</p>
+<p>Agricultural management is multidimensional, and many soil health indicators respond to <strong>long‑term patterns</strong>, not single‑year practices. SHMI provides:</p>
 <ul>
 <li>A <strong>rotation‑scale</strong> measure of management intensity<br>
 </li>
@@ -138,36 +142,58 @@
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/install-deprecated.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"DanielManter-USDA/SHMI"</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
-<div class="section level2">
-<h2 id="blue_book-minimal-example">📘 Minimal Example<a class="anchor" aria-label="anchor" href="#blue_book-minimal-example"></a>
-</h2>
-<p>A complete SHMI workflow in just a few lines</p>
+</div>
+<div class="section level1">
+<h1 id="blue_book-quick-start">📘 Quick Start<a class="anchor" aria-label="anchor" href="#blue_book-quick-start"></a>
+</h1>
+<p>SHMI supports <strong>three user‑friendly workflows</strong>:</p>
+<hr>
+</div>
+<div class="section level1">
+<h1 id="id_1-minimal-rnative-workflow">
+<strong>1. Minimal R‑native workflow</strong><a class="anchor" aria-label="anchor" href="#id_1-minimal-rnative-workflow"></a>
+</h1>
+<p><em>(No Excel required)</em></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://danielmanter-usda.github.io/SHMI/">SHMI</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 1. Retrieve the sample Excel file</span></span>
-<span><span class="va">example</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_shmi_example.html">get_shmi_example</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co"># Load the built-in example dataset</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">shmi_example</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 2. Prepare inputs (validates structure and expands events)</span></span>
-<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="va">example</span><span class="op">)</span></span>
+<span><span class="co"># Compute SHMI</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">shmi_example</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 3. Compute sub-index scores and SHMI</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 4. Plot the results</span></span>
-<span><span class="co"># Plot the first management unit</span></span>
-<span><span class="fu"><a href="reference/plot_shmi_gauge.html">plot_shmi_gauge</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span>, row <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Plot all available management units</span></span>
-<span><span class="fu"><a href="reference/plot_shmi_lollipop.html">plot_shmi_lollipop</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span></span></code></pre></div>
+<p>The built‑in shmi_example dataset has already been processed through <code><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code>, so it can be passed directly to <code><a href="reference/build_shmi.html">build_shmi()</a></code>.</p>
+<p>This is ideal for teaching, demos, and unit tests.</p>
 <hr>
 </div>
-<div class="section level2">
-<h2 id="blue_book-user-supplied-data">📘 User-supplied data<a class="anchor" aria-label="anchor" href="#blue_book-user-supplied-data"></a>
-</h2>
+<div class="section level1">
+<h1 id="id_2-download-the-fully-populated-example-excel-file">
+<strong>2. Download the fully populated example Excel file</strong><a class="anchor" aria-label="anchor" href="#id_2-download-the-fully-populated-example-excel-file"></a>
+</h1>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://danielmanter-usda.github.io/SHMI/">SHMI</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Save example Excel file to working directory</span></span>
+<span><span class="fu"><a href="reference/download_shmi_example.html">download_shmi_example</a></span><span class="op">(</span><span class="st">"SHMI_example.xlsx"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Prepare inputs</span></span>
+<span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="st">"SHMI_example.xlsx"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Compute SHMI</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span></span></code></pre></div>
+<p>This file contains <strong>realistic management data</strong> and is ready to use immediately.</p>
+<hr>
+</div>
+<div class="section level1">
+<h1 id="id_3-download-the-blank-shmi-template">
+<strong>3. Download the blank SHMI template</strong><a class="anchor" aria-label="anchor" href="#id_3-download-the-blank-shmi-template"></a>
+</h1>
+<p>(This is the standard workflow for analyzing your own management data)</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://danielmanter-usda.github.io/SHMI/">SHMI</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Download a blank SHMI template to a known location</span></span>
@@ -178,76 +204,97 @@
 <span><span class="co"># (2) Enter your management data into each sheet</span></span>
 <span><span class="co"># (3) Save the completed file as "myDir/my_shmi_inputs.xlsx"</span></span>
 <span></span>
+<span><span class="co"># Prepare inputs</span></span>
 <span><span class="va">user_file</span> <span class="op">&lt;-</span> <span class="st">"myDir/my_shmi_inputs.xlsx"</span></span>
-<span></span>
-<span><span class="co"># Prepare inputs (validates structure and checks for missing fields)</span></span>
 <span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="va">user_file</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Compute SHMI</span></span>
-<span><span class="va">shmi</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">shmi</span><span class="op">$</span><span class="va">indicator_df</span></span></code></pre></div>
-<p><strong>Important:</strong> The template is blank. You must enter your management data before running <code><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code>.</p>
-<p>The SHMI template enforces required column names, date formats, and sheet structure. <code><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code> performs full validation and will return clear, actionable error messages if anything is missing or incorrectly formatted.</p>
+<span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span></span></code></pre></div>
+<p><strong>Important:</strong> The template is intentionally blank. It contains the required sheets and column structure, but no management data. You must fill in your crop, disturbance, amendment, and animal records before running <code><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code>. <code><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code> performs full validation and will return clear, actionable error messages if:</p>
+<ul>
+<li>required sheets or columns are missing</li>
+<li>dates are invalid</li>
+<li>MGT_combo identifiers are inconsistent</li>
+<li>crop windows are malformed</li>
+<li>disturbance or amendment entries are incomplete</li>
+</ul>
+<p>This workflow is the one most users will follow when computing SHMI for their own fields or research datasets</p>
 <hr>
-</div>
 <div class="section level2">
 <h2 id="open_file_folder-workflow-overview">📂 Workflow Overview<a class="anchor" aria-label="anchor" href="#open_file_folder-workflow-overview"></a>
 </h2>
 <p>SHMI provides a structured, end‑to‑end workflow:</p>
-<ol style="list-style-type: decimal">
-<li>
-<strong>Template generation</strong>
+<div class="section level3">
+<h3 id="id_1-template--example-files">
+<strong>1. Template &amp; Example Files</strong><a class="anchor" aria-label="anchor" href="#id_1-template--example-files"></a>
+</h3>
 <ul>
-<li>Blank Template <a href="https://danielmanter-usda.github.io/SHMI/reference/get_shmi_template.html"><code>get_shmi_template()</code></a>
+<li>Blank Template: <a href="https://danielmanter-usda.github.io/SHMI/reference/download_shmi_template.html"><code>download_shmi_template()</code></a><br>
 </li>
-<li>Example Data <a href="https://danielmanter-usda.github.io/SHMI/reference/get_shmi_example.html"><code>get_shmi_example()</code></a>
+<li>Example Excel: <a href="https://danielmanter-usda.github.io/SHMI/reference/download_shmi_example.html"><code>download_shmi_example()</code></a><br>
+</li>
+<li>R‑native dataset: <a href="https://danielmanter-usda.github.io/SHMI/reference/shmi_example.html"><code>data(shmi_example)</code></a>
 </li>
 </ul>
-</li>
-<li>
-<strong>Input preparation</strong>
+</div>
+<div class="section level3">
+<h3 id="id_2-input-preparation">
+<strong>2. Input Preparation</strong><a class="anchor" aria-label="anchor" href="#id_2-input-preparation"></a>
+</h3>
 <ul>
-<li>Validates required columns</li>
-<li>Expands crop windows to daily resolution</li>
-<li>Summarizes disturbance and organic inputs</li>
-<li>Harmonizes dates and management events</li>
+<li>Validates required columns<br>
+</li>
+<li>Expands crop windows to daily resolution<br>
+</li>
+<li>Summarizes disturbance and organic inputs<br>
+</li>
+<li>Harmonizes dates and management events<br>
+</li>
 <li><a href="https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.html"><code>prepare_shmi_inputs()</code></a></li>
 </ul>
-</li>
-<li>
-<strong>Computation of individual sub-index scores</strong>
+</div>
+<div class="section level3">
+<h3 id="id_3-subindex-computation">
+<strong>3. Sub‑index Computation</strong><a class="anchor" aria-label="anchor" href="#id_3-subindex-computation"></a>
+</h3>
 <ul>
-<li>Cover <a href="https://danielmanter-usda.github.io/SHMI/reference/compute_cover.html"><code>compute_cover()</code></a>
+<li>Cover — <a href="https://danielmanter-usda.github.io/SHMI/reference/compute_cover.html"><code>compute_cover()</code></a><br>
 </li>
-<li>Diversity <a href="https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.html"><code>compute_diversity()</code></a>
+<li>Diversity — <a href="https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.html"><code>compute_diversity()</code></a><br>
 </li>
-<li>Disturbance <a href="https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.html"><code>compute_disturbance()</code></a>
+<li>Disturbance — <a href="https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.html"><code>compute_disturbance()</code></a><br>
 </li>
-<li>Organic inputs <a href="https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.html"><code>compute_orginput()</code></a>
+<li>Organic Inputs — <a href="https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.html"><code>compute_orginput()</code></a>
 </li>
 </ul>
-</li>
-<li>
-<strong>Final SHMI calculation</strong>
+</div>
+<div class="section level3">
+<h3 id="id_4-final-shmi-calculation">
+<strong>4. Final SHMI Calculation</strong><a class="anchor" aria-label="anchor" href="#id_4-final-shmi-calculation"></a>
+</h3>
 <ul>
 <li><a href="https://danielmanter-usda.github.io/SHMI/reference/build_shmi.html"><code>build_shmi()</code></a></li>
 </ul>
-</li>
-</ol>
 <hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="books-documentation">📚 Documentation<a class="anchor" aria-label="anchor" href="#books-documentation"></a>
 </h2>
-<p>Full documentation and examples are available at:</p>
-<p>👉 <a href="https://danielmanter-usda.github.io/SHMI/" class="uri">https://danielmanter-usda.github.io/SHMI/</a></p>
-<p>This includes:</p>
+<p>Full documentation and examples:<br>
+👉 <a href="https://danielmanter-usda.github.io/SHMI/">https://danielmanter-usda.github.io/SHMI/</a></p>
+<p>Includes:</p>
 <ul>
-<li>Function reference</li>
-<li>Workflow overview</li>
-<li>Example data</li>
-<li>Template documentation</li>
+<li>Function reference<br>
+</li>
+<li>Workflow overview<br>
+</li>
+<li>Example data<br>
+</li>
+<li>Template documentation<br>
+</li>
 <li>Articles and vignettes</li>
 </ul>
 <hr>
@@ -255,21 +302,28 @@
 <div class="section level2">
 <h2 id="handshake-contributing">🤝 Contributing<a class="anchor" aria-label="anchor" href="#handshake-contributing"></a>
 </h2>
-<p>Issues, suggestions, and pull requests are welcome:</p>
-<p>👉 <a href="https://github.com/DanielManter-USDA/SHMI/issues" class="external-link uri">https://github.com/DanielManter-USDA/SHMI/issues</a></p>
+<p>Issues, suggestions, and pull requests are welcome:<br>
+👉 <a href="https://github.com/DanielManter-USDA/SHMI/issues" class="external-link">https://github.com/DanielManter-USDA/SHMI/issues</a></p>
 <hr>
-</div>
-<div class="section level2">
-<h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
-</h2>
-<p>This software is a work of the United States Government and is not subject to copyright protection in the United States. Foreign copyrights may apply.</p>
+<div class="section level3">
+<h3 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
+</h3>
+<p>This software is a work of the United States Government and is not subject to copyright protection in the United States.<br>
+Foreign copyrights may apply.</p>
 <p>Distributed under the MIT license.</p>
 <hr>
-<p>📌 Citation If you use SHMI in a publication, please cite:</p>
-<p>Manter DK, Moore JM. (2026). SHMI: Soil Health Management Index R package.</p>
+</div>
+<div class="section level3">
+<h3 id="pushpin-citation">📌 <strong>Citation</strong>
+<a class="anchor" aria-label="anchor" href="#pushpin-citation"></a>
+</h3>
+<p>If you use SHMI in a publication, please cite:</p>
+<p>Manter DK, Moore JM. (2026). <em>SHMI: Soil Health Management Index R package.</em></p>
 <hr>
 </div>
 </div>
+</div>
+
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">

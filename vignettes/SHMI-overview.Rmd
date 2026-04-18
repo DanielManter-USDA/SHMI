@@ -5,69 +5,26 @@ vignette: >
   %\VignetteIndexEntry{SHMI Overview}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+pkgdown:
+  show_source: false
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
+## Introduction
 
-
-
-```{r setup}
-library(SHMI)
-```
-
-# Introduction
-
-The Soil Health Management Index (SHMI) provides a quantitative, rotation‑scale assessment of soil health management practices. It integrates four biologically grounded sub-indices:
+The Soil Health Management Index (SHMI) provides a quantitative, rotation‑scale assessment of soil‑health management practices. It integrates four biologically grounded sub‑indices:
 
 - **Cover** — seasonal plant presence  
-- **Diversity** — rotation-scale crop diversity (Hill numbers)  
-- **Inverse Disturbance** — mechanistic mixing-efficiency × depth metric  
-- **Organic Inputs** — amendments and animal presence  
+- **Diversity** — rotation‑scale crop diversity (Hill numbers)  
+- **Inverse Disturbance** — mechanistic mixing‑efficiency × depth metric  
+- **Organic Inputs** — organic amendments and animal presence  
 
-This vignette provides a complete walk-through of the SHMI workflow using the functions in the SHMI R package.
-
----
-
-## Quick Start {#quick-start}
-
-## 📘 Minimal Example
-
-A complete SHMI workflow in just a few lines
-
-```{r}
-library(SHMI)
-
-# 1. Retrieve the sample Excel file
-example <- get_shmi_example()
-
-# 2. Prepare inputs (validates structure and expands events)
-df <- prepare_shmi_inputs(example)
-
-# 3. Compute sub-index scores and SHMI
-result <- build_shmi(df)
-
-head(result)
-
-# 4. Plot the results
-# Plot the first management unit
-plot_shmi_gauge(result$indicator_df, row = 1)
-
-# Plot all available management units
-plot_shmi_lollipop(result$indicator_df)
-```
+This vignette walks through the **standard SHMI workflow** using the official Excel template.
 
 ---
 
-## Detailed Instructions
+# **1. Preparing Inputs**
 
-# 1. Preparing Inputs
-
-The SHMI workflow begins with a standardized Excel workbook containing:
+SHMI begins with a standardized Excel workbook containing the following sheets:
 
 - `Mgt_Unit`  
 - `Crop_Diversity`  
@@ -75,21 +32,34 @@ The SHMI workflow begins with a standardized Excel workbook containing:
 - `Amendment_Diversity`  
 - `Animal_Diversity`  
 
-The function `prepare_shmi_inputs()`:
+Download the blank template:
 
-- reads and validates all sheets  
+```{r, eval = FALSE}
+library(SHMI)
+
+download_shmi_template(path = "SHMI_template.xlsx")
+```
+
+Then:
+
+1. Open **SHMI_template.xlsx** in Excel  
+2. Enter your management data into each sheet  
+3. Save the completed file (e.g., `"my_shmi_inputs.xlsx"`)
+
+Prepare the inputs:
+
+```{r, eval = FALSE}
+inputs <- prepare_shmi_inputs("my_shmi_inputs.xlsx")
+```
+
+`prepare_shmi_inputs()`:
+
+- validates required sheets and columns  
 - harmonizes crop windows  
 - constructs rotation bounds  
 - builds daily grids  
 - computes daily disturbance  
 - assembles amendment and animal events  
-
-```{r}
-# Example (replace with your file path)
-example_file <- SHMI::get_shmi_example()
-
-inputs <- prepare_shmi_inputs(example_file, verbose = TRUE)
-```
 
 The returned object is a named list containing:
 
@@ -99,20 +69,19 @@ The returned object is a named list containing:
 - `daily_dist`  
 - `amend`  
 - `animal`  
-- and additional metadata  
+- metadata  
 
-These objects feed directly into `build_shmi()`.
+These feed directly into `build_shmi()`.
 
 ---
 
-# 2. Computing SHMI
+# **2. Computing SHMI**
 
-Once inputs are prepared, computing SHMI is straightforward:
+Once inputs are prepared:
 
-```{r}
-shmi <- build_shmi(inputs)
-
-shmi$indicator_df
+```{r, eval = FALSE}
+result <- build_shmi(inputs)
+result$indicator_df
 ```
 
 The output includes:
@@ -121,9 +90,9 @@ The output includes:
 - **Diversity**  
 - **InvDist**  
 - **Animals**  
-- **SHMI** (weighted composite)  
+- **SHMI** (weighted composite)
 
-as well as:
+Plus metadata:
 
 - `settings_used`  
 - `expert_mode`  
@@ -132,92 +101,68 @@ as well as:
 
 ---
 
-# 3. Expert Mode
+# **3. Expert Mode**
 
-By default, SHMI uses the official national settings (locked mode). To explore scenarios or conduct research, you may override settings:
+By default, SHMI uses the official national settings (locked mode).  
+To explore scenarios or conduct research, you may override settings:
 
-```{r}
-
+```{r, eval = FALSE}
 custom <- list(
-    # cover
-    w_winter = 0.25,
-    w_spring = 0.25,
-    w_summer = 0.25,
-    w_fall   = 0.25,
+  # cover
+  w_winter = 0.25,
+  w_spring = 0.25,
+  w_summer = 0.25,
+  w_fall   = 0.25,
 
-    # diversity
-    hill      = 2,
-    max_div   = 8,
+  # diversity
+  hill    = 2,
+  max_div = 8,
 
-    # SHMI weights
-    w_cover    = 0.25,
-    w_div      = 0.25,
-    w_dist     = 0.25,
-    w_ani      = 0.25
+  # SHMI pillar weights
+  w_cover = 0.25,
+  w_div   = 0.25,
+  w_dist  = 0.25,
+  w_ani   = 0.25
 )
 
 shmi_exp <- build_shmi(inputs, settings = custom, expert_mode = TRUE)
 ```
 
-When `expert_mode = TRUE`, SHMI values are not comparable to the national SHMI scale.
+When `expert_mode = TRUE`, SHMI values are **not comparable** to the national scale.
 
 ---
 
-# 4. Sub-Index Details
+# **4. Sub‑Index Details**
 
-This section demonstrates how each sub-index is computed individually.
+You may compute sub‑indices individually:
 
-## 4.1 Cover
-
-```{r}
+### Cover
+```{r, eval = FALSE}
 compute_cover(inputs$daily, inputs$rot_bounds)
 ```
 
-Cover is based on seasonal plant-days, normalized by rotation length and weighted by seasonal importance.
-
----
-
-## 4.2 Diversity
-
-```{r}
+### Diversity
+```{r, eval = FALSE}
 compute_diversity(inputs$crop_harmonized, inputs$daily)
 ```
 
-Diversity uses Hill-number entropy metrics at the rotation scale, with mixture expansion and species-level plant-day aggregation.
-
----
-
-## 4.3 Inverse Disturbance
-
-```{r}
+### Inverse Disturbance
+```{r, eval = FALSE}
 compute_disturbance(inputs$daily_dist, inputs$rot_bounds)
 ```
 
-Disturbance is computed using a mechanistic mixing-efficiency × depth model:
-
-- cumulative mechanical energy  
-- profile penetration (Tₜ)  
-- annual aggregation  
-- rotation averaging  
-- scaling to 0–100  
-
----
-
-## 4.4 Organic Inputs
-
-```{r}
+### Organic Inputs
+```{r, eval = FALSE}
 compute_orginput(inputs$rot_bounds, inputs$amend, inputs$animal)
 ```
 
-Organic inputs combine amendment and animal events using user-defined weights.
-
 ---
 
-# 5. Interpreting SHMI
+# **5. Interpreting SHMI**
 
 The final SHMI score reflects:
 
-- year-round cover  
+- year‑round cover  
 - crop diversity  
 - reduced soil disturbance  
 - organic inputs  
@@ -228,9 +173,9 @@ Higher SHMI values indicate management systems that are more supportive of soil 
 
 # Conclusion
 
-The SHMI package provides a fast, reproducible, and biologically grounded framework for quantifying soil health management across diverse systems.
+The SHMI package provides a fast, reproducible, and biologically grounded framework for quantifying soil‑health management across diverse systems.
 
-For more details, see:
+For more details:
 
 - `?prepare_shmi_inputs`  
 - `?build_shmi`  

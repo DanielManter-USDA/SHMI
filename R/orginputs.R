@@ -147,9 +147,9 @@ compute_orginput <- function(rot_bounds,
   } else {
     animals_scaled <- animals_rate %>%
       dplyr::mutate(
-        Animals = scales::rescale(events_per_year, to = c(0, 100))
+        OrgInputs = scales::rescale(events_per_year, to = c(0, 100))
       ) %>%
-      dplyr::select(MGT_combo, Animals)
+      dplyr::select(MGT_combo, OrgInputs)
   }
 
   animals_scaled

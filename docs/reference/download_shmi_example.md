@@ -1,21 +1,26 @@
 # Download the example SHMI Excel file
 
 Saves a fully populated example SHMI Excel workbook to a user-specified
-path. This file demonstrates the correct SHMI input structure and
+directory. This file demonstrates the correct SHMI input structure and
 contains realistic management data for testing the complete SHMI
 workflow.
 
 ## Usage
 
 ``` r
-download_shmi_example(path = ".")
+download_shmi_example(path = ".", overwrite = TRUE)
 ```
 
 ## Arguments
 
 - path:
 
-  Directory where the example file should be saved.
+  Directory where the example file should be saved. Defaults to the
+  current working directory (\`"."\`).
+
+- overwrite:
+
+  Logical. Overwrite the file if it already exists?
 
 ## Value
 
@@ -41,19 +46,17 @@ this example file contains real data and can be passed directly to
 \[prepare_shmi_inputs()\], \[build_shmi()\]
 
 Other SHMI helper functions:
-[`download_shmi_template()`](https://danielmanter-usda.github.io/SHMI/reference/download_shmi_template.md),
-[`shmi_example`](https://danielmanter-usda.github.io/SHMI/reference/shmi_example.md)
+[`download_shmi_template()`](https://danielmanter-usda.github.io/SHMI/reference/download_shmi_template.md)
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-# Save example file to Desktop
-download_shmi_example("~/Desktop")
+# Save example file to your working directory
+my_file <- download_shmi_example()
 
 # Run the full SHMI workflow
-example_file <- file.path("~/Desktop", "SHMI_example_1.xlsx")
-inputs <- prepare_shmi_inputs(example_file)
+inputs <- prepare_shmi_inputs(my_file)
 result <- build_shmi(inputs)
 head(result$indicator_df)
 } # }

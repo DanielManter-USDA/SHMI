@@ -46,7 +46,7 @@
     <li><a class="dropdown-item" href="articles/Cover.html">Cover Index</a></li>
     <li><a class="dropdown-item" href="articles/Diversity.html">Diversity Index</a></li>
     <li><a class="dropdown-item" href="articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="articles/Animals.html">Organic Inputs Index</a></li>
+    <li><a class="dropdown-item" href="articles/OrgInputs.html">Organic Inputs Index</a></li>
     <li><a class="dropdown-item" href="articles/SHMI.html">Final SHMI Index</a></li>
   </ul>
 </li>
@@ -146,71 +146,59 @@
 <div class="section level1">
 <h1 id="blue_book-quick-start">📘 Quick Start<a class="anchor" aria-label="anchor" href="#blue_book-quick-start"></a>
 </h1>
-<p>SHMI supports <strong>three user‑friendly workflows</strong>:</p>
+<p>SHMI supports two primary workflows, depending on whether you want to test the package or analyze your own management data.</p>
 <hr>
 </div>
 <div class="section level1">
-<h1 id="id_1-minimal-rnative-workflow">
-<strong>1. Minimal R‑native workflow</strong><a class="anchor" aria-label="anchor" href="#id_1-minimal-rnative-workflow"></a>
+<h1 id="id_1-use-the-fully-populated-example-excel-file">
+<strong>1. Use the fully populated example Excel file</strong><a class="anchor" aria-label="anchor" href="#id_1-use-the-fully-populated-example-excel-file"></a>
 </h1>
-<p><em>(No Excel required)</em></p>
+<p><em>(Fastest way to test the complete SHMI workflow)</em></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://danielmanter-usda.github.io/SHMI/">SHMI</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Load the built-in example dataset</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">shmi_example</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Compute SHMI</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">shmi_example</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span></span></code></pre></div>
-<p>The built‑in shmi_example dataset has already been processed through <code><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code>, so it can be passed directly to <code><a href="reference/build_shmi.html">build_shmi()</a></code>.</p>
-<p>This is ideal for teaching, demos, and unit tests.</p>
-<hr>
-</div>
-<div class="section level1">
-<h1 id="id_2-download-the-fully-populated-example-excel-file">
-<strong>2. Download the fully populated example Excel file</strong><a class="anchor" aria-label="anchor" href="#id_2-download-the-fully-populated-example-excel-file"></a>
-</h1>
+<span><span class="co"># Save the example Excel file to your working directory</span></span>
+<span><span class="va">my_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/download_shmi_example.html">download_shmi_example</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>If you want to save it somewhere specific (e.g., your desktop)</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://danielmanter-usda.github.io/SHMI/">SHMI</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Save example Excel file to working directory</span></span>
-<span><span class="fu"><a href="reference/download_shmi_example.html">download_shmi_example</a></span><span class="op">(</span><span class="st">"SHMI_example.xlsx"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Prepare inputs</span></span>
-<span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="st">"SHMI_example.xlsx"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Compute SHMI</span></span>
+<code class="sourceCode R"><span><span class="va">my_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/download_shmi_example.html">download_shmi_example</a></span><span class="op">(</span>path <span class="op">=</span> <span class="st">"~/Desktop"</span><span class="op">)</span></span></code></pre></div>
+<p>Now run the full workflow</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="va">my_file</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span></span></code></pre></div>
-<p>This file contains <strong>realistic management data</strong> and is ready to use immediately.</p>
+<p>This example file contains example management data and is already formatted correctly. It is ideal for:</p>
+<ul>
+<li>testing SHMI end‑to‑end</li>
+<li>verifying installation and dependencies</li>
+<li>learning the expected input structure</li>
+</ul>
 <hr>
 </div>
 <div class="section level1">
-<h1 id="id_3-download-the-blank-shmi-template">
-<strong>3. Download the blank SHMI template</strong><a class="anchor" aria-label="anchor" href="#id_3-download-the-blank-shmi-template"></a>
+<h1 id="id_2-use-the-blank-shmi-template">
+<strong>2. Use the blank SHMI template</strong><a class="anchor" aria-label="anchor" href="#id_2-use-the-blank-shmi-template"></a>
 </h1>
-<p>(This is the standard workflow for analyzing your own management data)</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p><em>(Standard workflow for analyzing your own management data)</em></p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://danielmanter-usda.github.io/SHMI/">SHMI</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Download a blank SHMI template to a known location</span></span>
-<span><span class="va">path</span> <span class="op">&lt;-</span> <span class="st">"myDir/SHMI_template.xlsx"</span></span>
-<span><span class="fu"><a href="reference/download_shmi_template.html">download_shmi_template</a></span><span class="op">(</span>path <span class="op">=</span> <span class="va">path</span><span class="op">)</span></span>
+<span><span class="co"># Choose where to save the blank template (full file path)</span></span>
+<span><span class="va">template_file</span> <span class="op">&lt;-</span> <span class="st">"myDir/SHMI_template.xlsx"</span></span>
+<span></span>
+<span><span class="co"># Download the blank template</span></span>
+<span><span class="fu"><a href="reference/download_shmi_template.html">download_shmi_template</a></span><span class="op">(</span>path <span class="op">=</span> <span class="va">template_file</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># (1) Open "myDir/SHMI_template.xlsx" in Excel</span></span>
 <span><span class="co"># (2) Enter your management data into each sheet</span></span>
-<span><span class="co"># (3) Save the completed file as "myDir/my_shmi_inputs.xlsx"</span></span>
-<span></span>
-<span><span class="co"># Prepare inputs</span></span>
-<span><span class="va">user_file</span> <span class="op">&lt;-</span> <span class="st">"myDir/my_shmi_inputs.xlsx"</span></span>
+<span><span class="co"># (3) Save the completed file as "myDir/my_SHMI_inputs.xlsx"</span></span></code></pre></div>
+<p>Then run:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">user_file</span> <span class="op">&lt;-</span> <span class="st">"myDir/my_SHMI_inputs.xlsx"</span></span>
 <span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="va">user_file</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Compute SHMI</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">)</span></span>
-<span></span>
 <span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span></span></code></pre></div>
 <p><strong>Important:</strong> The template is intentionally blank. It contains the required sheets and column structure, but no management data. You must fill in your crop, disturbance, amendment, and animal records before running <code><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code>. <code><a href="reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code> performs full validation and will return clear, actionable error messages if:</p>
 <ul>

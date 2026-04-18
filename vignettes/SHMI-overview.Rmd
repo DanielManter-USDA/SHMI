@@ -37,19 +37,20 @@ Download the blank template:
 ```{r, eval = FALSE}
 library(SHMI)
 
-download_shmi_template(path = "SHMI_template.xlsx")
+# Save the template to a specific file path
+template_file <- "SHMI_template.xlsx"
+download_shmi_template(path = template_file)
 ```
 
 Then:
-
 1. Open **SHMI_template.xlsx** in Excel  
 2. Enter your management data into each sheet  
-3. Save the completed file (e.g., `"my_shmi_inputs.xlsx"`)
+3. Save the completed file (e.g., `"my_SHMI_inputs.xlsx"`)
 
 Prepare the inputs:
 
 ```{r, eval = FALSE}
-inputs <- prepare_shmi_inputs("my_shmi_inputs.xlsx")
+inputs <- prepare_shmi_inputs("my_SHMI_inputs.xlsx")
 ```
 
 `prepare_shmi_inputs()`:
@@ -89,7 +90,7 @@ The output includes:
 - **Cover**  
 - **Diversity**  
 - **InvDist**  
-- **Animals**  
+- **OrgInputs**  
 - **SHMI** (weighted composite)
 
 Plus metadata:

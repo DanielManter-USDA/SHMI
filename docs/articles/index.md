@@ -13,6 +13,6 @@
 - [SHMI Disturbance
   Sub‑index](https://danielmanter-usda.github.io/SHMI/articles/Disturbance.md):
 - [SHMI Organic Inputs
-  Sub‑index](https://danielmanter-usda.github.io/SHMI/articles/Animals.md):
+  Sub‑index](https://danielmanter-usda.github.io/SHMI/articles/OrgInputs.md):
 - [Soil Health Management Index
   (SHMI)](https://danielmanter-usda.github.io/SHMI/articles/SHMI.md):

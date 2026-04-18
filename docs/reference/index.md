@@ -25,8 +25,6 @@
   : Download the example SHMI Excel file
 - [`download_shmi_template()`](https://danielmanter-usda.github.io/SHMI/reference/download_shmi_template.md)
   : Download a blank SHMI Excel template
-- [`shmi_example`](https://danielmanter-usda.github.io/SHMI/reference/shmi_example.md)
-  : Example SHMI dataset
 
 ## Validation Functions
 

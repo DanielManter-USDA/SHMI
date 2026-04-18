@@ -43,7 +43,7 @@
     <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
     <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
     <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Animals.html">Organic Inputs Index</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs Index</a></li>
     <li><a class="dropdown-item" href="../articles/SHMI.html">Final SHMI Index</a></li>
   </ul>
 </li>
@@ -137,19 +137,16 @@ following sheets:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://danielmanter-usda.github.io/SHMI/">SHMI</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/download_shmi_template.html">download_shmi_template</a></span><span class="op">(</span>path <span class="op">=</span> <span class="st">"SHMI_template.xlsx"</span><span class="op">)</span></span></code></pre></div>
-<p>Then:</p>
-<ol style="list-style-type: decimal">
-<li>Open <strong>SHMI_template.xlsx</strong> in Excel<br>
-</li>
-<li>Enter your management data into each sheet<br>
-</li>
-<li>Save the completed file (e.g.,
-<code>"my_shmi_inputs.xlsx"</code>)</li>
-</ol>
+<span><span class="co"># Save the template to a specific file path</span></span>
+<span><span class="va">template_file</span> <span class="op">&lt;-</span> <span class="st">"SHMI_template.xlsx"</span></span>
+<span><span class="fu"><a href="../reference/download_shmi_template.html">download_shmi_template</a></span><span class="op">(</span>path <span class="op">=</span> <span class="va">template_file</span><span class="op">)</span></span></code></pre></div>
+<p>Then: 1. Open <strong>SHMI_template.xlsx</strong> in Excel<br>
+2. Enter your management data into each sheet<br>
+3. Save the completed file (e.g.,
+<code>"my_SHMI_inputs.xlsx"</code>)</p>
 <p>Prepare the inputs:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="st">"my_shmi_inputs.xlsx"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="st">"my_SHMI_inputs.xlsx"</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code>:</p>
 <ul>
 <li>validates required sheets and columns<br>
@@ -209,7 +206,7 @@ following sheets:</p>
 <strong>InvDist</strong><br>
 </li>
 <li>
-<strong>Animals</strong><br>
+<strong>OrgInputs</strong><br>
 </li>
 <li>
 <strong>SHMI</strong> (weighted composite)</li>

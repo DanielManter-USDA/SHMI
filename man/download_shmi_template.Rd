@@ -4,16 +4,19 @@
 \alias{download_shmi_template}
 \title{Download a blank SHMI Excel template}
 \usage{
-download_shmi_template(path = "SHMI_template.xlsx")
+download_shmi_template(path = "SHMI_template.xlsx", overwrite = TRUE)
 }
 \arguments{
-\item{path}{File path where the template should be saved.}
+\item{path}{Full file path where the template should be saved.
+Defaults to `"SHMI_template.xlsx"` in the current working directory.}
+
+\item{overwrite}{Logical. Overwrite the file if it already exists?}
 }
 \value{
 The path to the saved file (invisibly).
 }
 \description{
-Saves the official SHMI Excel template to a user-specified path.
+Saves the official SHMI Excel template to a user-specified file path.
 The template contains the required sheets and column names needed
 to enter management data for SHMI computation.
 }
@@ -21,13 +24,16 @@ to enter management data for SHMI computation.
 This function copies the internal SHMI template (stored in
 `inst/extdata/`) to a local file path. The template is intentionally
 blank and must be filled in by the user before running
-[`prepare_shmi_inputs()`]. Each sheet includes the required structure
-for crop diversity, disturbance, organic inputs, and management units.
+[`prepare_shmi_inputs()`]. It includes the required structure for
+crop diversity, disturbance, organic inputs, and management units.
 }
 \examples{
 \dontrun{
 # Save template to working directory
 download_shmi_template("SHMI_template.xlsx")
+
+# Save to a specific folder
+download_shmi_template(path = "~/Desktop/SHMI_template.xlsx")
 
 # After filling in the Excel file:
 inputs <- prepare_shmi_inputs("my_filled_template.xlsx")
@@ -40,7 +46,6 @@ result <- build_shmi(inputs)
   [prepare_shmi_inputs()], [build_shmi()]
 
 Other SHMI helper functions: 
-\code{\link{download_shmi_example}()},
-\code{\link{shmi_example}}
+\code{\link{download_shmi_example}()}
 }
 \concept{SHMI helper functions}

@@ -59,79 +59,71 @@ devtools::install_github("DanielManter-USDA/SHMI")
 
 # 📘 Quick Start
 
-SHMI supports **three user‑friendly workflows**:
+SHMI supports two primary workflows, depending on whether you want to
+test the package or analyze your own management data.
 
 ------------------------------------------------------------------------
 
-# **1. Minimal R‑native workflow**
+# **1. Use the fully populated example Excel file**
 
-*(No Excel required)*
+*(Fastest way to test the complete SHMI workflow)*
 
 ``` r
 library(SHMI)
 
-# Load the built-in example dataset
-data(shmi_example)
-
-# Compute SHMI
-result <- build_shmi(shmi_example)
-
-result$indicator_df
+# Save the example Excel file to your working directory
+my_file <- download_shmi_example()
 ```
 
-The built‑in shmi_example dataset has already been processed through
-[`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md),
-so it can be passed directly to
-[`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md).
-
-This is ideal for teaching, demos, and unit tests.
-
-------------------------------------------------------------------------
-
-# **2. Download the fully populated example Excel file**
+If you want to save it somewhere specific (e.g., your desktop)
 
 ``` r
-library(SHMI)
+my_file <- download_shmi_example(path = "~/Desktop")
+```
 
-# Save example Excel file to working directory
-download_shmi_example("SHMI_example.xlsx")
+Now run the full workflow
 
-# Prepare inputs
-inputs <- prepare_shmi_inputs("SHMI_example.xlsx")
-
-# Compute SHMI
+``` r
+inputs <- prepare_shmi_inputs(my_file)
 result <- build_shmi(inputs)
 
 result$indicator_df
 ```
 
-This file contains **realistic management data** and is ready to use
-immediately.
+This example file contains example management data and is already
+formatted correctly. It is ideal for:
+
+- testing SHMI end‑to‑end
+- verifying installation and dependencies
+- learning the expected input structure
 
 ------------------------------------------------------------------------
 
-# **3. Download the blank SHMI template**
+# **2. Use the blank SHMI template**
 
-(This is the standard workflow for analyzing your own management data)
+*(Standard workflow for analyzing your own management data)*
 
 ``` r
 library(SHMI)
 
-# Download a blank SHMI template to a known location
-path <- "myDir/SHMI_template.xlsx"
-download_shmi_template(path = path)
+# Choose where to save the blank template (full file path)
+template_file <- "myDir/SHMI_template.xlsx"
+
+# Download the blank template
+download_shmi_template(path = template_file)
 
 # (1) Open "myDir/SHMI_template.xlsx" in Excel
 # (2) Enter your management data into each sheet
-# (3) Save the completed file as "myDir/my_shmi_inputs.xlsx"
+# (3) Save the completed file as "myDir/my_SHMI_inputs.xlsx"
+```
 
-# Prepare inputs
-user_file <- "myDir/my_shmi_inputs.xlsx"
+Then run:
+
+``` r
+user_file <- "myDir/my_SHMI_inputs.xlsx"
 inputs <- prepare_shmi_inputs(user_file)
 
-# Compute SHMI
 result <- build_shmi(inputs)
-
 result$indicator_df
 ```
 

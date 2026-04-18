@@ -12,9 +12,9 @@ articles:
       - articles/Cover
       - articles/Diversity
       - articles/Disturbance
-      - articles/Animals
+      - articles/OrgInputs
       - articles/SHMI
-    show_source: false
+    show_source: FALSE
 
 navbar:
   title: "SHMI"
@@ -36,7 +36,7 @@ navbar:
         - text: "Disturbance Index"
           href: "articles/Disturbance.html"
         - text: "Organic Inputs Index"
-          href: "articles/Animals.html"
+          href: "articles/OrgInputs.html"
         - text: "Final SHMI Index"
           href: "articles/SHMI.html"
 
@@ -57,7 +57,7 @@ navbar:
           href: "reference/index.html#plotting-functions"
 
   right:
-    - search: false
+    - search: TRUE
     - icon: fa-github
       aria-label: "SHMI GitHub repository"
       href: https://github.com/DanielManter-USDA/SHMI
@@ -79,7 +79,6 @@ reference:
     contents:
       - download_shmi_example
       - download_shmi_template
-      - shmi_example
 
   - title: "Validation Functions"
     contents:

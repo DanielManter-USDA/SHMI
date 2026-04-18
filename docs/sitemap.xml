@@ -1,11 +1,11 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://danielmanter-usda.github.io/SHMI/404.html</loc></url>
-<url><loc>https://danielmanter-usda.github.io/SHMI/articles/Animals.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/articles/Background.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/articles/Cover.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/articles/Disturbance.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/articles/Diversity.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/articles/index.html</loc></url>
+<url><loc>https://danielmanter-usda.github.io/SHMI/articles/OrgInputs.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/articles/SHMI-overview.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/articles/SHMI.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/authors.html</loc></url>
@@ -23,7 +23,6 @@
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_lollipop.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/SHMI.html</loc></url>
-<url><loc>https://danielmanter-usda.github.io/SHMI/reference/shmi_example.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/validate_excel_input.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/validate_shmi_input.html</loc></url>
 </urlset>

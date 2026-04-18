@@ -4,40 +4,42 @@
 \alias{download_shmi_example}
 \title{Download the example SHMI Excel file}
 \usage{
-download_shmi_example(path = ".")
+download_shmi_example(path = ".", overwrite = TRUE)
 }
 \arguments{
-\item{path}{Directory where the example file should be saved.}
+\item{path}{Directory where the example file should be saved.
+Defaults to the current working directory (`"."`).}
+
+\item{overwrite}{Logical. Overwrite the file if it already exists?}
 }
 \value{
 The path to the saved file (invisibly).
 }
 \description{
 Saves a fully populated example SHMI Excel workbook to a user-specified
-path. This file demonstrates the correct SHMI input structure and contains
-realistic management data for testing the complete SHMI workflow.
+directory. This file demonstrates the correct SHMI input structure and
+contains realistic management data for testing the complete SHMI workflow.
 }
 \details{
-The example file is stored internally in `inst/extdata/` and includes
-valid entries for all required sheets (crop diversity, disturbance,
-organic inputs, and management units). It is intended for:
+The example file is stored internally in `inst/extdata/` and includes valid
+entries for all required sheets (crop diversity, disturbance, organic inputs,
+and management units). It is intended for:
 
 * testing the SHMI workflow end-to-end
 * verifying installation and dependencies
 * serving as a reference for how user-supplied data should be formatted
 
-Unlike the blank template provided by [`download_shmi_template()`],
-this example file contains real data and can be passed directly to
+Unlike the blank template provided by [`download_shmi_template()`], this
+example file contains real data and can be passed directly to
 [`prepare_shmi_inputs()`] without modification.
 }
 \examples{
 \dontrun{
-# Save example file to Desktop
-download_shmi_example("~/Desktop")
+# Save example file to your working directory
+my_file <- download_shmi_example()
 
 # Run the full SHMI workflow
-example_file <- file.path("~/Desktop", "SHMI_example_1.xlsx")
-inputs <- prepare_shmi_inputs(example_file)
+inputs <- prepare_shmi_inputs(my_file)
 result <- build_shmi(inputs)
 head(result$indicator_df)
 }
@@ -48,7 +50,6 @@ head(result$indicator_df)
   [prepare_shmi_inputs()], [build_shmi()]
 
 Other SHMI helper functions: 
-\code{\link{download_shmi_template}()},
-\code{\link{shmi_example}}
+\code{\link{download_shmi_template}()}
 }
 \concept{SHMI helper functions}

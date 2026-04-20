@@ -63,9 +63,7 @@ A data frame with:
 
 - `MGT_combo`
 
-- `events_per_year` — weighted organic-input frequency
-
-- `Animals` — final SHMI organic-input score (0–100)
+- `OrgInputs` — final SHMI organic-input score (0–100)
 
 ## Details
 

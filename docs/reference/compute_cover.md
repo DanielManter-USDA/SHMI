@@ -66,7 +66,9 @@ compute_cover(
 
 ## Value
 
-A data frame with one row per `MGT_combo` and a single column:
+A data frame with:
+
+- `MGT_combo`
 
 - `Cover` — SHMI cover score (0–100)
 

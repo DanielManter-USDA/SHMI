@@ -1,7 +1,5 @@
 ---
 title: "SHMI Background"
-pkgdown:
-  show_source: false
 ---
 
 A theory‑driven framework for a management‑based soil health index.

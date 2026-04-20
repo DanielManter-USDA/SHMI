@@ -1,10 +1,10 @@
-# SHMI Disturbance Sub‑index
+# Inverse Disturbance Subindex
 
 Mechanistic Inverse Disturbance (Mixing‑Efficiency × Depth Model)
 
 ## **Overview**
 
-The SHMI Disturbance sub‑index quantifies **mechanical soil
+The SHMI Inverse Disturbance subindex quantifies **mechanical soil
 disturbance** using a mechanistic soil‑mixing model based on **mixing
 efficiency** and **tillage depth**. Disturbance is computed at the
 **annual** scale and then averaged across the rotation. The final score

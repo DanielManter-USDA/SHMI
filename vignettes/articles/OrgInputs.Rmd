@@ -1,14 +1,12 @@
 ---
-title: "SHMI Organic Inputs Sub‑index"
-pkgdown:
-  show_source: false
+title: "Organic Inputs Sub‑index"
 ---
 
 Amendments + Animals (Weighted Annual Frequency)
 
 ## **Overview**
 
-The SHMI Organic Inputs sub‑index quantifies the **frequency of biological inputs**—organic amendments and animal presence—across the rotation. Each rotation year is assigned a weighted organic‑input presence based on user‑specified weights for amendments and animals. The final score is scaled to **0–100**, where higher values indicate more frequent biological inputs.
+The SHMI Organic Inputs subindex quantifies the **frequency of biological inputs**—organic amendments and animal presence—across the rotation. Each rotation year is assigned a weighted organic‑input presence based on user‑specified weights for amendments and animals. The final score is scaled to **0–100**, where higher values indicate more frequent biological inputs.
 
 This sub‑index captures management practices that add organic matter, stimulate microbial activity, and contribute to soil biological functioning.
 

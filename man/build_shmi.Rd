@@ -73,10 +73,10 @@ The SHMI computation proceeds in five stages:
     Sub-indices are normalized so their weights sum to 1, then combined into a
     single SHMI score:
     \deqn{
-      SHMI = w_{cover} \cdot Cover +
-             w_{div}   \cdot Diversity +
-             w_{dist}  \cdot InvDist +
-             w_{ani}   \cdot Animals
+      SHMI = w_{cover}    \cdot Cover +
+             w_{div}      \cdot Diversity +
+             w_{dist}     \cdot InvDist +
+             w_{orginput} \cdot Animals
     }
 
   \item \strong{Output assembly}:

@@ -94,11 +94,11 @@ rotation‑scale assessment of soil‑health management practices. It
 integrates four biologically grounded sub‑indices:</p>
 <ul>
 <li>
-<strong>Cover</strong> — seasonal plant presence<br>
+<strong>Cover/Roots</strong> — seasonal plant presence<br>
 </li>
 <li>
-<strong>Diversity</strong> — rotation‑scale crop diversity (Hill
-numbers)<br>
+<strong>Crop Diversity</strong> — rotation‑scale crop diversity
+(Hill numbers)<br>
 </li>
 <li>
 <strong>Inverse Disturbance</strong> — mechanistic mixing‑efficiency
@@ -208,8 +208,7 @@ following sheets:</p>
 <li>
 <strong>OrgInputs</strong><br>
 </li>
-<li>
-<strong>SHMI</strong> (weighted composite)</li>
+<li><strong>SHMI</strong></li>
 </ul>
 <p>Plus metadata:</p>
 <ul>
@@ -235,17 +234,23 @@ mode).<br>
 To explore scenarios or conduct research, you may override settings:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">custom</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  <span class="co"># cover</span></span>
+<span>  <span class="co"># cover/roots</span></span>
 <span>  w_winter <span class="op">=</span> <span class="fl">0.25</span>,</span>
 <span>  w_spring <span class="op">=</span> <span class="fl">0.25</span>,</span>
 <span>  w_summer <span class="op">=</span> <span class="fl">0.25</span>,</span>
 <span>  w_fall   <span class="op">=</span> <span class="fl">0.25</span>,</span>
 <span></span>
-<span>  <span class="co"># diversity</span></span>
+<span>  <span class="co"># crop diversity</span></span>
 <span>  hill    <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  max_div <span class="op">=</span> <span class="fl">8</span>,</span>
 <span></span>
-<span>  <span class="co"># SHMI pillar weights</span></span>
+<span>  <span class="co"># inverse disturbance</span></span>
+<span>  <span class="co"># NA</span></span>
+<span>  <span class="co"># organic inputs</span></span>
+<span>  w_amend   <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  w_animals <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  </span>
+<span>  <span class="co"># SHMI index weights</span></span>
 <span>  w_cover <span class="op">=</span> <span class="fl">0.25</span>,</span>
 <span>  w_div   <span class="op">=</span> <span class="fl">0.25</span>,</span>
 <span>  w_dist  <span class="op">=</span> <span class="fl">0.25</span>,</span>

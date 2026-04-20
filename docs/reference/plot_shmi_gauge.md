@@ -1,4 +1,4 @@
-# Plot SHMI gauge panels (Cover, Diversity, Inverse Disturbance, Animals, Overall SHMI)
+# Plot SHMI gauge panels (Cover, Diversity, Inverse Disturbance, OrgInputs, Overall SHMI)
 
 Creates a five horizontal gauge-style plot for SHMI and each sub-index.
 Each panel shows a 0–100 scale divided into five qualitative score bins
@@ -17,7 +17,7 @@ plot_shmi_gauge(shmi, MGT_combo = NULL, row = 1)
 
   A data frame containing SHMI component scores with columns: -
   \`MGT_combo\` - \`SHMI\` - \`Cover\` - \`Diversity\` - \`InvDist\` -
-  \`Animals\`
+  \`OrgInputs\`
 
 - MGT_combo:
 

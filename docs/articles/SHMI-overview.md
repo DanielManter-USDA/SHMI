@@ -6,8 +6,8 @@ The Soil Health Management Index (SHMI) provides a quantitative,
 rotation‑scale assessment of soil‑health management practices. It
 integrates four biologically grounded sub‑indices:
 
-- **Cover** — seasonal plant presence  
-- **Diversity** — rotation‑scale crop diversity (Hill numbers)  
+- **Cover/Roots** — seasonal plant presence  
+- **Crop Diversity** — rotation‑scale crop diversity (Hill numbers)  
 - **Inverse Disturbance** — mechanistic mixing‑efficiency × depth
   metric  
 - **Organic Inputs** — organic amendments and animal presence
@@ -87,7 +87,7 @@ The output includes:
 - **Diversity**  
 - **InvDist**  
 - **OrgInputs**  
-- **SHMI** (weighted composite)
+- **SHMI**
 
 Plus metadata:
 
@@ -105,17 +105,23 @@ To explore scenarios or conduct research, you may override settings:
 
 ``` r
 custom <- list(
-  # cover
+  # cover/roots
   w_winter = 0.25,
   w_spring = 0.25,
   w_summer = 0.25,
   w_fall   = 0.25,
 
-  # diversity
+  # crop diversity
   hill    = 2,
   max_div = 8,
 
-  # SHMI pillar weights
+  # inverse disturbance
+  # NA
+  # organic inputs
+  w_amend   = 1,
+  w_animals = 1,
+  
+  # SHMI index weights
   w_cover = 0.25,
   w_div   = 0.25,
   w_dist  = 0.25,

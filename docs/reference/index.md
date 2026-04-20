@@ -37,6 +37,6 @@
 
 - [`plot_shmi_gauge()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_gauge.md)
   : Plot SHMI gauge panels (Cover, Diversity, Inverse Disturbance,
-  Animals, Overall SHMI)
+  OrgInputs, Overall SHMI)
 - [`plot_shmi_lollipop()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_lollipop.md)
   : Plot SHMI values for multiple management units (lollipop chart)

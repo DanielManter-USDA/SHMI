@@ -1,10 +1,10 @@
-# SHMI Diversity Sub‑index
+# Crop Diversity Subindex
 
 Rotation‑Scale, Entropy‑Based Hill Diversity
 
 ## **Overview**
 
-The SHMI Diversity sub‑index quantifies the diversity of crops grown
+The SHMI Diversity subindex quantifies the diversity of crops grown
 across an entire rotation, accounting for both **species identity** and
 **time in the field**. Diversity is computed using **entropy‑based Hill
 numbers**, which generalize richness, Shannon entropy, and Simpson

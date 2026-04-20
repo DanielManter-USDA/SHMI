@@ -93,7 +93,7 @@ The SHMI computation proceeds in five stages:
 4.  **Weighted combination**: Sub-indices are normalized so their
     weights sum to 1, then combined into a single SHMI score: \$\$ SHMI
     = w\_{cover} \cdot Cover + w\_{div} \cdot Diversity + w\_{dist}
-    \cdot InvDist + w\_{ani} \cdot Animals \$\$
+    \cdot InvDist + w\_{orginput} \cdot Animals \$\$
 
 5.  **Output assembly**: Returns a tidy data frame of SHMI scores along
     with metadata describing the settings used and computation

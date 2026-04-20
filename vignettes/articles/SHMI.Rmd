@@ -1,7 +1,5 @@
 ---
 title: "Soil Health Management Index (SHMI)"
-pkgdown:
-  show_source: false
 ---
 
 Weighted Composite of Four Management Sub-indices

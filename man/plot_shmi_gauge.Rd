@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_shmi_gauge.R
 \name{plot_shmi_gauge}
 \alias{plot_shmi_gauge}
-\title{Plot SHMI gauge panels (Cover, Diversity, Inverse Disturbance, Animals, Overall SHMI)}
+\title{Plot SHMI gauge panels (Cover, Diversity, Inverse Disturbance, OrgInputs, Overall SHMI)}
 \usage{
 plot_shmi_gauge(shmi, MGT_combo = NULL, row = 1)
 }
@@ -13,7 +13,7 @@ plot_shmi_gauge(shmi, MGT_combo = NULL, row = 1)
 - `Cover`
 - `Diversity`
 - `InvDist`
-- `Animals`}
+- `OrgInputs`}
 
 \item{MGT_combo}{Optional. Character value specifying which management
 unit to plot. If supplied, this overrides `row`.}

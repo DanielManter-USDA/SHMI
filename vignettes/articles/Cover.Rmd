@@ -1,14 +1,12 @@
 ---
-title: "SHMI Cover Sub‑index"
-pkgdown:
-  show_source: false
+title: "Cover/Roots Subindex"
 ---
 
 Season‑Weighted Plant Presence
 
 ## **Overview**
 
-The SHMI Cover sub‑index quantifies the proportion of days within a crop rotation during which living plant cover is present, with explicit weighting of the four meteorological seasons. The indicator reflects the ecological principle that plant cover contributes differently to soil health depending on the time of year (e.g., winter cover is disproportionately valuable for erosion control).
+The SHMI Cover subindex quantifies the proportion of days within a crop rotation during which living plant cover is present, with explicit weighting of the four meteorological seasons. The indicator reflects the ecological principle that plant cover contributes differently to soil health depending on the time of year (e.g., winter cover is disproportionately valuable for erosion control).
 Cover is computed for each management unit (MGT_combo) using daily crop‑presence data and rotation start/end dates. The final score ranges from 0 to 100.
 
 ---

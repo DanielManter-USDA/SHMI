@@ -23,7 +23,8 @@ The package includes:
 
 - robust Excel ingestion and validation  
 - biologically realistic crop‑window harmonization  
-- fast vectorized daily‑grid construction  
+- fast vectorized daily‑grid construction
+- customizable date ranges
 - mechanistic disturbance modeling  
 - rotation‑scale aggregation  
 - official national SHMI settings (locked mode)  

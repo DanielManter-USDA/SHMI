@@ -1,10 +1,10 @@
-# SHMI Cover Sub‑index
+# Cover/Roots Subindex
 
 Season‑Weighted Plant Presence
 
 ## **Overview**
 
-The SHMI Cover sub‑index quantifies the proportion of days within a crop
+The SHMI Cover subindex quantifies the proportion of days within a crop
 rotation during which living plant cover is present, with explicit
 weighting of the four meteorological seasons. The indicator reflects the
 ecological principle that plant cover contributes differently to soil

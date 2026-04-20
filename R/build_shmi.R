@@ -53,10 +53,10 @@
 #'     Sub-indices are normalized so their weights sum to 1, then combined into a
 #'     single SHMI score:
 #'     \deqn{
-#'       SHMI = w_{cover} \cdot Cover +
-#'              w_{div}   \cdot Diversity +
-#'              w_{dist}  \cdot InvDist +
-#'              w_{ani}   \cdot Animals
+#'       SHMI = w_{cover}    \cdot Cover +
+#'              w_{div}      \cdot Diversity +
+#'              w_{dist}     \cdot InvDist +
+#'              w_{orginput} \cdot Animals
 #'     }
 #'
 #'   \item \strong{Output assembly}:
@@ -124,7 +124,7 @@ build_shmi <- function(shmi_inputs,
     w_cover    = 0.492,
     w_div      = 0.052,
     w_dist     = 0.131,
-    w_ani      = 0.324
+    w_orginput = 0.324
   )
 
   # --------------------------------------------------------------------------
@@ -214,20 +214,20 @@ build_shmi <- function(shmi_inputs,
     by = "MGT_combo"
   )
 
-  w_sum   <- settings$w_cover + settings$w_div + settings$w_dist + settings$w_ani
+  w_sum   <- settings$w_cover + settings$w_div + settings$w_dist + settings$w_orginput
 
-  w_cover <- settings$w_cover / w_sum
-  w_div   <- settings$w_div   / w_sum
-  w_dist  <- settings$w_dist  / w_sum
-  w_ani   <- settings$w_ani   / w_sum
+  w_cover    <- settings$w_cover    / w_sum
+  w_div      <- settings$w_div      / w_sum
+  w_dist     <- settings$w_dist     / w_sum
+  w_orginput <- settings$w_orginput / w_sum
 
   indicator_df <- indicator_df %>%
     dplyr::mutate(
       SHMI = (
-          w_cover * .data$Cover +
-          w_div   * .data$Diversity +
-          w_dist  * .data$InvDist +
-          w_ani   * .data$OrgInputs
+          w_cover    * .data$Cover +
+          w_div      * .data$Diversity +
+          w_dist     * .data$InvDist +
+          w_orginput * .data$OrgInputs
       )
     ) %>%
     dplyr::select(.data$MGT_combo, .data$SHMI,

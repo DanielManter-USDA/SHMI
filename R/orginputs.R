@@ -66,8 +66,7 @@
 #' @return A data frame with:
 #'   \itemize{
 #'     \item \code{MGT_combo}
-#'     \item \code{events_per_year} — weighted organic-input frequency
-#'     \item \code{Animals} — final SHMI organic-input score (0–100)
+#'     \item \code{OrgInputs} — final SHMI organic-input score (0–100)
 #'   }
 #'
 #' @export

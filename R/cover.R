@@ -40,8 +40,9 @@
 #'
 #' Days where \code{CD_name == "fallow"} are treated as zero cover.
 #'
-#' @return A data frame with one row per \code{MGT_combo} and a single column:
+#' @return A data frame with:
 #'   \itemize{
+#'     \item \code{MGT_combo}
 #'     \item \code{Cover} — SHMI cover score (0–100)
 #'   }
 #'

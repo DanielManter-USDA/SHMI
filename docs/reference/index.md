@@ -6,6 +6,8 @@
   : Prepare and Validate SHMI Input Data from an Excel Workbook
 - [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
   : Build SHMI Scores from Prepared Inputs
+- [`prepare_shmi_yield()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_yield.md)
+  : Prepare crop-specific yield data for SHMI analysis
 
 ## Sub-index Functions
 
@@ -40,3 +42,5 @@
   OrgInputs, Overall SHMI)
 - [`plot_shmi_lollipop()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_lollipop.md)
   : Plot SHMI values for multiple management units (lollipop chart)
+- [`plot_yield_stability()`](https://danielmanter-usda.github.io/SHMI/reference/plot_yield_stability.md)
+  : Plot yield stability using Taylor's Law

@@ -190,6 +190,60 @@ prepare_shmi_inputs <- function(path,
     df
   }
 
+  # ---- Robust date parser ----
+  parse_shmi_date <- function(x) {
+
+    vapply(
+      x,
+      FUN = function(val) {
+
+        # 0. NA stays NA
+        if (is.na(val)) {
+          return(as.Date(NA))
+        }
+
+        # 1. Already a Date
+        if (inherits(val, "Date")) {
+          return(val)
+        }
+
+        # 2. POSIXct/POSIXt (readxl sometimes returns this)
+        if (inherits(val, "POSIXt")) {
+          return(as.Date(val))
+        }
+
+        # 3. Excel numeric or numeric-as-character
+        if (is.numeric(val) || (is.character(val) && grepl("^[0-9]+$", val))) {
+          num <- suppressWarnings(as.numeric(val))
+          if (!is.na(num)) {
+            return(as.Date(num, origin = "1899-12-30"))
+          }
+        }
+
+        # 4. Character dates in many formats
+        if (is.character(val)) {
+          parsed <- suppressWarnings(
+            lubridate::parse_date_time(
+              val,
+              orders = c(
+                "Ymd", "Y-m-d",
+                "mdY", "m/d/Y",
+                "dmy", "d/m/Y"
+              )
+            )
+          )
+          if (!is.na(parsed)) {
+            return(as.Date(parsed))
+          }
+        }
+
+        # 5. Fallback
+        return(as.Date(NA))
+      },
+      FUN.VALUE = as.Date(NA)
+    )
+  }
+
   require_cols <- function(df, cols, sheet) {
     missing <- setdiff(cols, names(df))
     if (length(missing) > 0) {
@@ -218,27 +272,6 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   # 4. Load all sheets
   # ------------------------------------------------------------
-  parse_date_safe <- function(x) {
-    suppressWarnings({
-      # Try ymd first
-      d <- lubridate::ymd(x, quiet = TRUE)
-
-      # If still NA, try mdy
-      d[is.na(d)] <- lubridate::mdy(x[is.na(d)], quiet = TRUE)
-
-      # If still NA, try dmy
-      d[is.na(d)] <- lubridate::dmy(x[is.na(d)], quiet = TRUE)
-
-      # If still NA, try Excel serial numbers
-      suppressWarnings({
-        nums <- suppressWarnings(as.numeric(x))
-        d[is.na(d) & !is.na(nums)] <- as.Date(nums[is.na(d) & !is.na(nums)], origin = "1899-12-30")
-      })
-
-      # Final: return Date or NA
-      d
-    })
-  }
 
   # ---- Load Crop_Diversity ----
   crop <- safe_read(
@@ -255,9 +288,9 @@ prepare_shmi_inputs <- function(path,
   # Convert dates
   crop <- crop %>%
     mutate(
-      CD_plant_date = as.Date(CD_plant_date),
-      CD_harv_date  = as.Date(CD_harv_date),
-      CD_term_date  = as.Date(CD_term_date)
+      CD_plant_date = as.Date(unname(parse_shmi_date(CD_plant_date))),
+      CD_harv_date  = as.Date(unname(parse_shmi_date(CD_harv_date))),
+      CD_term_date  = as.Date(unname(parse_shmi_date(CD_term_date)))
     )
 
   # ---- Apply year overrides BEFORE validation ----
@@ -283,7 +316,8 @@ prepare_shmi_inputs <- function(path,
 
   # 1. At least one end date must exist
   no_end <- crop %>%
-    filter(is.na(CD_harv_date) & is.na(CD_term_date))
+    group_by(MGT_combo, CD_seq_num) %>%
+    filter(all(is.na(CD_harv_date)) & all(is.na(CD_term_date)))
 
   if (nrow(no_end) > 0) {
     stop(
@@ -352,11 +386,7 @@ prepare_shmi_inputs <- function(path,
   # ---- Define crop_end consistently ----
   crop <- crop %>%
     mutate(
-      crop_end = case_when(
-        !is.na(CD_term_date) ~ CD_term_date,   # annuals + final perennial termination
-        !is.na(CD_harv_date) ~ CD_harv_date,   # perennial harvest without termination
-        TRUE ~ NA_Date_
-      )
+      crop_end = coalesce(CD_term_date, CD_harv_date)
     )
 
   # ---- 5. CD_seq_num must be chronological ----
@@ -402,6 +432,11 @@ prepare_shmi_inputs <- function(path,
     skip = 3
   )
 
+  dist <- dist %>%
+    mutate(
+      SD_date = as.Date(unname(parse_shmi_date(SD_date)))
+    )
+
   if (!is.null(start_date_override)) {
     dist <- dist %>%
       filter(SD_date >= start_date_override)
@@ -417,6 +452,10 @@ prepare_shmi_inputs <- function(path,
     required_cols = c("MGT_combo", "SA_date"),
     skip = 3
   )
+  amend <- amend %>%
+    mutate(
+      SA_date = as.Date(unname(parse_shmi_date(SA_date)))
+    )
 
   if (!is.null(start_date_override)) {
     amend <- amend %>%
@@ -434,6 +473,12 @@ prepare_shmi_inputs <- function(path,
     skip = 3
   )
 
+  animal <- animal %>%
+    mutate(
+      AD_start_date = as.Date(unname(parse_shmi_date(AD_start_date))),
+      AD_end_date   = as.Date(unname(parse_shmi_date(AD_end_date)))
+    )
+
   if (!is.null(start_date_override)) {
     animal <- animal %>%
       filter(
@@ -449,6 +494,28 @@ prepare_shmi_inputs <- function(path,
         AD_end_date   <= end_date_override
       )
   }
+
+  # --- validate dates
+  check_bad_dates <- function(df, cols, sheet) {
+    for (col in cols) {
+      if (col %in% names(df)) {
+        bad <- which(is.na(df[[col]]) & !is.na(as.character(df[[col]])))
+        if (length(bad) > 0) {
+          stop(
+            "Unparseable dates in sheet '", sheet, "' column '", col, "'.\n",
+            "Examples: ", paste(head(df[[col]][bad], 5), collapse = ", "),
+            "\nFix the Excel file or convert these to valid dates.",
+            call. = FALSE
+          )
+        }
+      }
+    }
+  }
+
+  check_bad_dates(crop, c("CD_plant_date", "CD_harv_date", "CD_term_date"), "Crop_Diversity")
+  check_bad_dates(dist,  c("SD_date"), "Soil_Disturbance")
+  check_bad_dates(amend, c("SA_date"), "Soil_Amendments")
+  check_bad_dates(animal, c("AD_start_date", "AD_end_date"), "Animal_Diversity")
 
   # ------------------------------------------------------------
   # 5. Harmonize crop windows
@@ -608,6 +675,7 @@ prepare_shmi_inputs <- function(path,
   # 10. Daily disturbance summary
   # ------------------------------------------------------------
   daily_dist <- dist %>%
+    filter(!is.na(SD_date)) %>%
     mutate(
       date = as.Date(SD_date),
       SD_depth_cm = pmin(SD_depth * 2.54, 30)

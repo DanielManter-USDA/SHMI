@@ -67,6 +67,7 @@ reference:
     contents:
       - prepare_shmi_inputs
       - build_shmi
+      - prepare_shmi_yield
 
   - title: "Sub-index Functions"
     contents:
@@ -89,6 +90,7 @@ reference:
     contents:
       - plot_shmi_gauge
       - plot_shmi_lollipop
+      - plot_yield_stability
 
 home:
   title: "SHMI"

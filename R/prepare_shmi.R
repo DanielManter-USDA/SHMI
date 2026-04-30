@@ -94,6 +94,9 @@ prepare_shmi_inputs <- function(path,
                                 start_date_override = NULL,
                                 end_date_override = NULL) {
 
+  cli::cli_progress_bar("Importing Excel file")
+  cli::cli_progress_step("Validating inputs...")
+
   # Validate Excel file before ingestion
   val <- validate_excel_input(path)
 
@@ -103,9 +106,8 @@ prepare_shmi_inputs <- function(path,
     stop("Fix the errors above and re-run prepare_shmi_inputs().")
   }
 
-  message("✅ Excel input validation passed.\n")
   message("Input summary:")
-  print(val$summary)
+  message(val$summary)
 
   if (length(val$warnings) > 0) {
     message("\nWarnings:")
@@ -147,7 +149,6 @@ prepare_shmi_inputs <- function(path,
 
     # If sheet doesn't exist
     if (!sheet %in% readxl::excel_sheets(path)) {
-      if (verbose) message("Sheet '", sheet, "' not found; returning empty tibble.")
       return(tibble::tibble(!!!setNames(
         replicate(length(required_cols), logical(), simplify = FALSE),
         required_cols
@@ -161,7 +162,6 @@ prepare_shmi_inputs <- function(path,
 
     # If empty, return zero-row tibble with correct columns
     if (nrow(df) == 0) {
-      if (verbose) message("Sheet '", sheet, "' is empty; returning empty tibble.")
       return(tibble::tibble(!!!setNames(
         replicate(length(required_cols), logical(), simplify = FALSE),
         required_cols
@@ -258,6 +258,8 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   # 3. Load MGT first (needed for joins)
   # ------------------------------------------------------------
+  cli::cli_progress_step("Reading Mgt_Unit...")
+
   mgt <- read_xlsx(path, sheet = "Mgt_Unit", skip = 3, range = NULL) %>%
     select(user_name, MGT_combo) %>%
     janitor::remove_empty("rows") %>%
@@ -272,6 +274,7 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   # 4. Load all sheets
   # ------------------------------------------------------------
+  cli::cli_progress_step("Reading Crop_Diversity...")
 
   # ---- Load Crop_Diversity ----
   crop <- safe_read(
@@ -426,6 +429,8 @@ prepare_shmi_inputs <- function(path,
   }
 
   # ---- Load Soil_Disturbance ----
+  cli::cli_progress_step("Reading Soil_Disturbance...")
+
   dist <- safe_read(
     "Soil_Disturbance",
     required_cols = c("MGT_combo", "SD_date", "SD_mixeff"),
@@ -447,6 +452,8 @@ prepare_shmi_inputs <- function(path,
   }
 
   # ---- Load Soil_Amendments ----
+  cli::cli_progress_step("Reading Soil_Amendments...")
+
   amend <- safe_read(
     "Soil_Amendments",
     required_cols = c("MGT_combo", "SA_date"),
@@ -467,6 +474,8 @@ prepare_shmi_inputs <- function(path,
   }
 
   # ---- Load Animal_Diversity ----
+  cli::cli_progress_step("Reading Animal_Diversity...")
+
   animal <- safe_read(
     "Animal_Diversity",
     required_cols = c("MGT_combo", "AD_start_date", "AD_end_date"),
@@ -520,6 +529,8 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   # 5. Harmonize crop windows
   # ------------------------------------------------------------
+  cli::cli_progress_step("Evaluating crop windows...")
+
   harmonize_crop_windows <- function(crop) {
 
     crop %>%
@@ -592,6 +603,8 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   # 6. Bounds helper
   # ------------------------------------------------------------
+  cli::cli_progress_step("Computing rotation bounds...")
+
   compute_bounds <- function(crop_harmonized, dist, amend, animal) {
 
     # Helper: drop NULL or empty data frames
@@ -674,6 +687,8 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   # 10. Daily disturbance summary
   # ------------------------------------------------------------
+  cli::cli_progress_step("Computing daily disturbance grid...")
+
   daily_dist <- dist %>%
     filter(!is.na(SD_date)) %>%
     mutate(
@@ -690,6 +705,7 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   # 11. Build daily grid
   # ------------------------------------------------------------
+  cli::cli_progress_step("Computing daily crop presence...")
 
   build_daily_grid <- function(crop_harmonized, rot_bounds, daily_dist, verbose = FALSE) {
 
@@ -745,6 +761,7 @@ prepare_shmi_inputs <- function(path,
 
   daily <- build_daily_grid(crop_harmonized, rot_bounds, daily_dist)
 
+  cli::cli_progress_done()
   # ------------------------------------------------------------
   # 12. Return everything in one clean list
   # ------------------------------------------------------------

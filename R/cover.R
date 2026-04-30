@@ -62,23 +62,19 @@ compute_cover <- function(daily,
     dplyr::group_by(MGT_combo, date) %>%
     dplyr::summarize(
       crop_present = as.integer(any(crop_present == 1L)),  # TRUE if ANY crop present
-      CD_name = dplyr::first(CD_name),
+      is_fallow = any(CD_name %in% "fallow", na.rm = TRUE),
       .groups = "drop"
     ) %>%
     dplyr::mutate(
+      crop_present = if_else(is_fallow, 0L, crop_present),
       month = lubridate::month(date),
       season = dplyr::case_when(
         month %in% c(12, 1, 2)  ~ "winter",
         month %in% c(3, 4, 5)   ~ "spring",
         month %in% c(6, 7, 8)   ~ "summer",
         month %in% c(9, 10, 11) ~ "fall"
-      ),
-      crop_present = dplyr::case_when(
-        CD_name == "fallow" ~ 0L,
-        TRUE ~ crop_present
       )
     )
-
 
   # 2. Compute plant-days and possible days per season
   crop_days <- crop_season %>%

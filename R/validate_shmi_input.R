@@ -102,13 +102,41 @@ validate_shmi_input <- function(shmi_inputs) {
   dups <- shmi_inputs$daily %>%
     dplyr::count(MGT_combo, date) %>%
     dplyr::filter(n > 1)
+
   if (nrow(dups) > 0) {
-    errors <- c(errors, "Duplicate (MGT_combo, date) rows found in daily table")
+
+    # Count overlaps per MGT_combo
+    dups_by_combo <- dups %>%
+      dplyr::count(MGT_combo, name = "n_dups")
+
+    # Create one warning per MGT_combo
+    combo_warnings <- purrr::map_chr(
+      seq_len(nrow(dups_by_combo)),
+      ~ paste0(
+        "Note: ", dups_by_combo$n_dups[.x],
+        " overlapping crop-day rows detected for MGT_combo '",
+        dups_by_combo$MGT_combo[.x],
+        "'. This is normal for interseeding/relay systems. Cover will collapse these automatically."
+      )
+    )
+
+    warnings <- c(warnings, combo_warnings)
   }
 
+  # ---- check crop_harmonized ----
+  required_crop_cols <- c("CD_name", "CD_seq_num", "crop_start", "crop_end")
+  missing_crop_cols <- setdiff(required_crop_cols, names(shmi_inputs$crop_harmonized))
+  if (length(missing_crop_cols) > 0) {
+    errors <- c(errors, paste("crop_harmonized missing columns:", paste(missing_crop_cols, collapse=", ")))
+  }
   # ---- Check crop_present ----
   if (any(!shmi_inputs$daily$crop_present %in% c(0,1,NA))) {
     errors <- c(errors, "daily$crop_present contains values other than 0, 1, or NA")
+  }
+
+  # ---- check daily ----
+  if (!"CD_name" %in% names(shmi_inputs$daily)) {
+    errors <- c(errors, "daily table must contain CD_name for diversity calculation")
   }
 
   # ---- Summaries (non-fatal) ----
@@ -117,7 +145,10 @@ validate_shmi_input <- function(shmi_inputs) {
     years = length(unique(lubridate::year(shmi_inputs$daily$date))),
     species = length(unique(shmi_inputs$crop_harmonized$CD_name)),
     mixtures = sum(grepl("\\+", shmi_inputs$crop_harmonized$CD_name)),
-    fallow_days = sum(shmi_inputs$daily$CD_name == "fallow", na.rm = TRUE)
+    fallow_days = shmi_inputs$daily %>%
+      dplyr::filter(CD_name == "fallow") %>%
+      dplyr::distinct(MGT_combo, date) %>%
+      nrow()
   )
 
   # ---- Final output ----

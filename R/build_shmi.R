@@ -91,6 +91,18 @@ build_shmi <- function(shmi_inputs,
                        settings = NULL,
                        expert_mode = FALSE) {
 
+  steps <- c(
+    "Validating inputs",
+    "Computing cover",
+    "Computing diversity",
+    "Computing disturbance",
+    "Computing organic inputs",
+    "Assembling indicators"
+  )
+
+  cli::cli_progress_bar("Building SHMI...")
+  cli::cli_progress_step("Validating inputs...")
+
   val <- validate_shmi_input(shmi_inputs)
   # If validation fails: stop immediately
   if (!val$ok) {
@@ -98,9 +110,6 @@ build_shmi <- function(shmi_inputs,
     message("Errors:\n", paste0(" - ", val$errors, collapse = "\n"))
     stop("Fix the errors above and re-run build_shmi().")
   }
-
-  # If validation succeeds: print summary and continue
-  message("✅ SHMI input validation passed.\n")
 
   # --------------------------------------------------------------------------
   # 1. Official national SHMI settings (locked mode)
@@ -173,6 +182,7 @@ build_shmi <- function(shmi_inputs,
   # --------------------------------------------------------------------------
 
   # Cover
+  cli::cli_progress_step("Computing cover...")
   cover <- compute_cover(
     daily       = daily,
     rot_bounds  = rot_bounds,
@@ -183,6 +193,7 @@ build_shmi <- function(shmi_inputs,
   )
 
   # Diversity
+  cli::cli_progress_step("Computing diversity...")
   diversity <- compute_diversity(
     crop_harmonized = crop_harmonized,
     daily           = daily,
@@ -191,12 +202,14 @@ build_shmi <- function(shmi_inputs,
   )
 
   # Disturbance (inverse disturbance pillar)
+  cli::cli_progress_step("Computing disturbance...")
   invdist <- compute_disturbance(
     daily_dist    = daily_dist,
     rot_bounds    = rot_bounds
   )
 
   # Organic inputs (amendments + animals)
+  cli::cli_progress_step("Computing organic inputs...")
   orginput <- compute_orginput(
     rot_bounds  = rot_bounds,
     amend       = amend,
@@ -208,6 +221,7 @@ build_shmi <- function(shmi_inputs,
   # --------------------------------------------------------------------------
   # 5. Combine sub-indices
   # --------------------------------------------------------------------------
+  cli::cli_progress_step("Combining indices...")
   indicator_df <- purrr::reduce(
     list(cover, diversity, invdist, orginput),
     dplyr::full_join,
@@ -235,8 +249,10 @@ build_shmi <- function(shmi_inputs,
                   .data$InvDist, .data$OrgInputs) %>%
     dplyr::arrange(.data$MGT_combo)
 
+  cli::cli_progress_done()
+
   if (!expert_mode) {
-    message("SHMI computed using official national settings.")
+    message("\n\nSHMI computed using official national settings.")
   }
 
   # --------------------------------------------------------------------------

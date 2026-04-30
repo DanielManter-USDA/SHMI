@@ -1,6 +1,7 @@
 #' @import dplyr
 #' @import tidyr
 #' @import lubridate
+#' @import cli
 #' @import purrr
 #' @import readxl
 #' @import stringr

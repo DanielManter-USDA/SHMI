@@ -243,7 +243,7 @@ build_shmi <- function(shmi_inputs,
   yield_summary <- NULL
   if (!is.null(yield)) {
     yield_summary <- yield %>%
-      dplyr::group_by(MGT_combo) %>%
+      dplyr::group_by(MGT_combo, CD_name) %>%
       dplyr::summarize(
         yield_mean = mean(yield_kg_ha, na.rm = TRUE),
         yield_var  = stats::var(yield_kg_ha, na.rm = TRUE),
@@ -251,7 +251,8 @@ build_shmi <- function(shmi_inputs,
         yield_max  = max(yield_kg_ha, na.rm = TRUE),
         yield_n    = sum(!is.na(yield_kg_ha)),
         .groups = "drop"
-      )
+      ) %>%
+      dplyr::rename("crop" = "CD_name")
   }
 
   # N-rate summary

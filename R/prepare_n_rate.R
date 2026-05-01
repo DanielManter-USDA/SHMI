@@ -4,7 +4,8 @@
                             start_date_override = NULL,
                             end_date_override   = NULL) {
 
-  amend <- safe_read(
+  amend <- .safe_read(
+    path,
     "Soil_Amendments",
     required_cols = c("MGT_combo", "SA_date", "SA_N", "SA_units"),
     skip = 3
@@ -13,7 +14,7 @@
   # Convert dates
   amend <- amend %>%
     mutate(
-      SA_date = as.Date(parse_shmi_date(SA_date))
+      SA_date = as.Date(.parse_shmi_date(SA_date))
     )
 
   # ---- Clip by overrides (instantaneous events) ----

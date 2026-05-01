@@ -177,116 +177,6 @@ prepare_shmi_inputs <- function(path,
     dplyr::select(df, all_of(cols))
   }
 
-  safe_read <- function(sheet, required_cols, ...) {
-
-    # If sheet doesn't exist
-    if (!sheet %in% readxl::excel_sheets(path)) {
-      return(tibble::tibble(!!!setNames(
-        replicate(length(required_cols), logical(), simplify = FALSE),
-        required_cols
-      )))
-    }
-
-    # Try reading
-    df <- readxl::read_xlsx(path, sheet = sheet, ...)
-    df <- janitor::remove_empty(df, "rows")
-    df <- janitor::remove_empty(df, "cols")
-
-    # If empty, return zero-row tibble with correct columns
-    if (nrow(df) == 0) {
-      return(tibble::tibble(!!!setNames(
-        replicate(length(required_cols), logical(), simplify = FALSE),
-        required_cols
-      )))
-    }
-
-    # Ensure required columns exist
-    missing <- setdiff(required_cols, names(df))
-    if (length(missing) > 0) {
-      stop(
-        "Sheet '", sheet, "' is missing required columns: ",
-        paste(missing, collapse = ", "),
-        call. = FALSE
-      )
-    }
-
-    # Remove malformed rows with NA MGT_combo
-    if ("MGT_combo" %in% names(df)) {
-      bad <- sum(is.na(df$MGT_combo))
-      if (bad > 0 && verbose) {
-        message("Removed ", bad, " rows with NA MGT_combo from sheet '", sheet, "'.")
-      }
-      df <- df %>% dplyr::filter(!is.na(MGT_combo))
-    }
-
-    df
-  }
-
-  # ---- Robust date parser ----
-  parse_shmi_date <- function(x) {
-
-    vapply(
-      x,
-      FUN = function(val) {
-
-        # 0. NA stays NA
-        if (is.na(val)) {
-          return(as.Date(NA))
-        }
-
-        # 1. Already a Date
-        if (inherits(val, "Date")) {
-          return(val)
-        }
-
-        # 2. POSIXct/POSIXt (readxl sometimes returns this)
-        if (inherits(val, "POSIXt")) {
-          return(as.Date(val))
-        }
-
-        # 3. Excel numeric or numeric-as-character
-        if (is.numeric(val) || (is.character(val) && grepl("^[0-9]+$", val))) {
-          num <- suppressWarnings(as.numeric(val))
-          if (!is.na(num)) {
-            return(as.Date(num, origin = "1899-12-30"))
-          }
-        }
-
-        # 4. Character dates in many formats
-        if (is.character(val)) {
-          parsed <- suppressWarnings(
-            lubridate::parse_date_time(
-              val,
-              orders = c(
-                "Ymd", "Y-m-d",
-                "mdY", "m/d/Y",
-                "dmy", "d/m/Y"
-              )
-            )
-          )
-          if (!is.na(parsed)) {
-            return(as.Date(parsed))
-          }
-        }
-
-        # 5. Fallback
-        return(as.Date(NA))
-      },
-      FUN.VALUE = as.Date(NA)
-    )
-  }
-
-  require_cols <- function(df, cols, sheet) {
-    missing <- setdiff(cols, names(df))
-    if (length(missing) > 0) {
-      stop(
-        "Sheet '", sheet, "' is missing required columns: ",
-        paste(missing, collapse = ", "),
-        call. = FALSE
-      )
-    }
-  }
-
   # ------------------------------------------------------------
   # 3. Load MGT first (needed for joins)
   # ------------------------------------------------------------
@@ -309,7 +199,8 @@ prepare_shmi_inputs <- function(path,
   cli::cli_progress_step("Reading Crop_Diversity...")
 
   # ---- Load Crop_Diversity ----
-  crop <- safe_read(
+  crop <- .safe_read(
+    path,
     "Crop_Diversity",
     required_cols = c("MGT_combo", "CD_seq_num", "CD_plant_date", "CD_term_date"),
     skip = 3
@@ -323,9 +214,9 @@ prepare_shmi_inputs <- function(path,
   # Convert dates
   crop <- crop %>%
     mutate(
-      CD_plant_date = as.Date(unname(parse_shmi_date(CD_plant_date))),
-      CD_harv_date  = as.Date(unname(parse_shmi_date(CD_harv_date))),
-      CD_term_date  = as.Date(unname(parse_shmi_date(CD_term_date)))
+      CD_plant_date = as.Date(unname(.parse_shmi_date(CD_plant_date))),
+      CD_harv_date  = as.Date(unname(.parse_shmi_date(CD_harv_date))),
+      CD_term_date  = as.Date(unname(.parse_shmi_date(CD_term_date)))
     )
 
   # ---- Apply year overrides BEFORE validation ----
@@ -469,7 +360,8 @@ prepare_shmi_inputs <- function(path,
   # ---- Load Soil_Disturbance ----
   cli::cli_progress_step("Reading Soil_Disturbance...")
 
-  dist <- safe_read(
+  dist <- .safe_read(
+    path,
     "Soil_Disturbance",
     required_cols = c("MGT_combo", "SD_date", "SD_mixeff"),
     skip = 3
@@ -477,7 +369,7 @@ prepare_shmi_inputs <- function(path,
 
   dist <- dist %>%
     mutate(
-      SD_date = as.Date(unname(parse_shmi_date(SD_date)))
+      SD_date = as.Date(unname(.parse_shmi_date(SD_date)))
     )
 
   if (!is.null(start_date_override)) {
@@ -491,14 +383,15 @@ prepare_shmi_inputs <- function(path,
   # ---- Load Soil_Amendments ----
   cli::cli_progress_step("Reading Soil_Amendments...")
 
-  amend <- safe_read(
+  amend <- .safe_read(
+    path,
     "Soil_Amendments",
     required_cols = c("MGT_combo", "SA_date"),
     skip = 3
   )
   amend <- amend %>%
     mutate(
-      SA_date = as.Date(unname(parse_shmi_date(SA_date)))
+      SA_date = as.Date(unname(.parse_shmi_date(SA_date)))
     )
 
   if (!is.null(start_date_override)) {
@@ -513,7 +406,8 @@ prepare_shmi_inputs <- function(path,
   # ---- Load Animal_Diversity ----
   cli::cli_progress_step("Reading Animal_Diversity...")
 
-  animal <- safe_read(
+  animal <- .safe_read(
+    path,
     "Animal_Diversity",
     required_cols = c("MGT_combo", "AD_start_date", "AD_end_date"),
     skip = 3
@@ -521,8 +415,8 @@ prepare_shmi_inputs <- function(path,
 
   animal <- animal %>%
     mutate(
-      AD_start_date = as.Date(unname(parse_shmi_date(AD_start_date))),
-      AD_end_date   = as.Date(unname(parse_shmi_date(AD_end_date)))
+      AD_start_date = as.Date(unname(.parse_shmi_date(AD_start_date))),
+      AD_end_date   = as.Date(unname(.parse_shmi_date(AD_end_date)))
     )
 
   if (!is.null(start_date_override)) {

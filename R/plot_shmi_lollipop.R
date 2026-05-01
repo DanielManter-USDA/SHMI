@@ -38,7 +38,7 @@ plot_shmi_lollipop <- function(shmi) {
     ) +
     ggplot2::geom_text(
       ggplot2::aes(label = SHMI),
-      hjust = -0.4, size = 4
+      hjust = -0.4, size = 3
     ) +
     ggplot2::scale_x_continuous(limits = c(0, 100),
                                 expand = ggplot2::expansion(mult = c(0, 0.1))) +
@@ -47,7 +47,7 @@ plot_shmi_lollipop <- function(shmi) {
       y = "Management Unit",
       title = "SHMI Across Management Units"
     ) +
-    ggplot2::theme_minimal(base_size = 14) +
+    ggplot2::theme_minimal(base_size = 12) +
     ggplot2::theme(
       panel.grid.major.y = ggplot2::element_blank(),
       panel.grid.minor = ggplot2::element_blank()

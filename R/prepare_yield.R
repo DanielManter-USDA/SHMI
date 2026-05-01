@@ -4,7 +4,8 @@
                            start_date_override = NULL,
                            end_date_override   = NULL) {
 
-  yield <- safe_read(
+  yield <- .safe_read(
+    path,
     "Crop_Diversity",
     required_cols = c("MGT_combo", "CD_seq_num",
                       "CD_plant_date", "CD_term_date",
@@ -15,8 +16,8 @@
   # Convert dates
   yield <- yield %>%
     mutate(
-      CD_plant_date = as.Date(parse_shmi_date(CD_plant_date)),
-      CD_term_date  = as.Date(parse_shmi_date(CD_term_date))
+      CD_plant_date = as.Date(.parse_shmi_date(CD_plant_date)),
+      CD_term_date  = as.Date(.parse_shmi_date(CD_term_date))
     )
 
   # ---- Window clipping ----

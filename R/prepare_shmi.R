@@ -11,10 +11,11 @@
 #'   \item management‑unit filtering
 #'   \item crop‑level biological validation (chronology, annual/perennial rules)
 #'   \item harmonization of crop windows across mixtures
-#'   \item construction of rotation bounds
+#'   \item construction of rotation bounds (full‑year expansion)
 #'   \item daily grid expansion (fast vectorized implementation)
 #'   \item mechanistic daily disturbance processing (mixing efficiency × depth)
 #'   \item assembly of amendment and animal event tables
+#'   \item optional extraction of yield and nitrogen‑rate data
 #' }
 #'
 #' @param path Path to the SHMI Excel workbook. Must contain the standard SHMI
@@ -29,12 +30,25 @@
 #'   describing sheet ingestion, validation steps, and grid construction.
 #'
 #' @param start_date_override Optional \code{Date} or date‑coercible value.
-#'   If supplied, all crop, disturbance, amendment, and animal events occurring
-#'   before this date are removed, and rotation bounds are clipped accordingly.
+#'   If supplied, all crop, disturbance, amendment, animal, yield, and N‑rate
+#'   events occurring before this date are removed, and rotation bounds are
+#'   clipped accordingly.
 #'
 #' @param end_date_override Optional \code{Date} or date‑coercible value.
 #'   If supplied, all events occurring after this date are removed, and rotation
 #'   bounds are clipped accordingly.
+#'
+#' @param calc_yield Logical, default = FALSE.
+#'   If \code{TRUE}, yield (kg/ha) is extracted from \code{Crop_Diversity},
+#'   clipped by date overrides, unit‑standardized, and returned for each
+#'   \code{MGT_combo × crop event}. If \code{FALSE}, yield is not processed and
+#'   the returned list contains \code{yield = NULL}.
+#'
+#' @param calc_n_rate Logical, default = FALSE.
+#'   If \code{TRUE}, nitrogen rate (kg N/ha) is extracted from
+#'   \code{Amendment_Diversity}, clipped by date overrides, unit‑standardized,
+#'   and summarized for each \code{MGT_combo × year}. If \code{FALSE}, N‑rate is
+#'   not processed and the returned list contains \code{n_rate = NULL}.
 #'
 #' @details
 #' The function enforces biologically realistic crop windows, including:
@@ -45,10 +59,21 @@
 #' }
 #'
 #' Rotation bounds are computed from all available event types (crop,
-#' disturbance, amendment, animal). Empty sheets contribute no bounds.
+#' disturbance, amendment, animal) and expanded to full calendar years to ensure
+#' consistent SHMI computation. Date overrides further restrict all event types,
+#' including optional yield and N‑rate extraction.
 #'
 #' Daily grids are generated using a fully vectorized expansion, ensuring
 #' extremely fast performance even for large datasets.
+#'
+#' Yield extraction (if enabled) preserves one row per crop event, applies
+#' override‑aware clipping, and converts all supported units to kg/ha. Missing
+#' yield or missing units are retained as \code{NA}.
+#'
+#' Nitrogen‑rate extraction (if enabled) uses the \code{SA_N} field as the
+#' authoritative N applied, converts units to kg N/ha, clips by overrides, and
+#' returns one row per \code{MGT_combo × year}. Missing \code{SA_N} values are
+#' retained as \code{NA}.
 #'
 #' Additionally, this function automatically performs front‑end validation of
 #' the Excel input file using \code{validate_excel_input()}. The validator checks
@@ -73,6 +98,10 @@
 #'   \item{\code{dist}}{Disturbance event table.}
 #'   \item{\code{amend}}{Amendment event table.}
 #'   \item{\code{animal}}{Animal event table.}
+#'   \item{\code{yield}}{(Optional) Crop‑event‑level yield table (kg/ha), or
+#'         \code{NULL} if \code{calc_yield = FALSE}.}
+#'   \item{\code{n_rate}}{(Optional) Year‑level nitrogen‑rate table (kg N/ha),
+#'         or \code{NULL} if \code{calc_n_rate = FALSE}.}
 #' }
 #'
 #' @section Error Handling:
@@ -84,15 +113,18 @@
 #'   \item date overrides produce empty rotations
 #' }
 #'
-#' @seealso \code{\link{build_shmi}} for computing SHMI scores from the returned
-#'   object.
+#' @seealso
+#'   \code{\link{build_shmi}} for computing SHMI scores and optional rotation‑level
+#'   summaries of yield and nitrogen rate.
 #'
 #' @export
 prepare_shmi_inputs <- function(path,
                                 exclude = NULL,
                                 verbose = TRUE,
                                 start_date_override = NULL,
-                                end_date_override = NULL) {
+                                end_date_override   = NULL,
+                                calc_yield  = FALSE,
+                                calc_n_rate = FALSE) {
 
   cli::cli_progress_bar("Importing Excel file")
   cli::cli_progress_step("Validating inputs...")
@@ -298,20 +330,26 @@ prepare_shmi_inputs <- function(path,
 
   # ---- Apply year overrides BEFORE validation ----
   if (!is.null(start_date_override)) {
+    S <- as.Date(start_date_override)
+
     crop <- crop %>%
-      filter(
-        CD_plant_date >= start_date_override |
-        CD_harv_date  >= start_date_override |
-        CD_term_date  >= start_date_override
+      # 1. Drop crops that end before S
+      filter(CD_term_date >= S) %>%
+      # 2. Clip windows that overlap S
+      mutate(
+        CD_plant_date = if_else(CD_plant_date < S, S, CD_plant_date)
       )
   }
 
   if (!is.null(end_date_override)) {
+    E <- as.Date(end_date_override)
+
     crop <- crop %>%
-      filter(
-        CD_plant_date <= end_date_override |
-        CD_harv_date  <= end_date_override |
-        CD_term_date  <= end_date_override
+      # 1. Drop crops that start after E
+      filter(CD_plant_date <= E) %>%
+      # 2. Clip windows that overlap E
+      mutate(
+        CD_term_date = if_else(CD_term_date > E, E, CD_term_date)
       )
   }
 
@@ -443,12 +481,11 @@ prepare_shmi_inputs <- function(path,
     )
 
   if (!is.null(start_date_override)) {
-    dist <- dist %>%
-      filter(SD_date >= start_date_override)
+    dist <- dist %>% filter(SD_date >= S)
   }
 
   if (!is.null(end_date_override)) {
-    dist <- dist %>% filter(SD_date <= end_date_override)
+    dist <- dist %>% filter(SD_date <= E)
   }
 
   # ---- Load Soil_Amendments ----
@@ -466,11 +503,11 @@ prepare_shmi_inputs <- function(path,
 
   if (!is.null(start_date_override)) {
     amend <- amend %>%
-      filter(SA_date >= start_date_override)
+      filter(SA_date >= S)
   }
 
   if (!is.null(end_date_override)) {
-    amend <- amend %>% filter(SA_date <= end_date_override)
+    amend <- amend %>% filter(SA_date <= E)
   }
 
   # ---- Load Animal_Diversity ----
@@ -489,18 +526,26 @@ prepare_shmi_inputs <- function(path,
     )
 
   if (!is.null(start_date_override)) {
+    S <- as.Date(start_date_override)
+
     animal <- animal %>%
-      filter(
-        AD_start_date >= start_date_override |
-        AD_end_date   >= start_date_override
+      # 1. Drop windows that end before S
+      filter(AD_end_date >= S) %>%
+      # 2. Clip windows that overlap S
+      mutate(
+        AD_start_date = if_else(AD_start_date < S, S, AD_start_date)
       )
   }
 
   if (!is.null(end_date_override)) {
+    E <- as.Date(end_date_override)
+
     animal <- animal %>%
-      filter(
-        AD_start_date <= end_date_override |
-        AD_end_date   <= end_date_override
+      # 1. Drop windows that start after E
+      filter(AD_start_date <= E) %>%
+      # 2. Clip windows that overlap E
+      mutate(
+        AD_end_date = if_else(AD_end_date > E, E, AD_end_date)
       )
   }
 
@@ -590,22 +635,14 @@ prepare_shmi_inputs <- function(path,
 
   crop_harmonized <- harmonize_crop_windows(crop)
 
-  if (!is.null(start_date_override)) {
-    crop_harmonized <- crop_harmonized %>%
-      mutate(crop_start = pmax(crop_start, start_date_override))
-  }
-
-  if (!is.null(end_date_override)) {
-    crop_harmonized <- crop_harmonized %>%
-      mutate(crop_end = pmin(crop_end, end_date_override))
-  }
-
   # ------------------------------------------------------------
   # 6. Bounds helper
   # ------------------------------------------------------------
   cli::cli_progress_step("Computing rotation bounds...")
 
-  compute_bounds <- function(crop_harmonized, dist, amend, animal) {
+  compute_bounds <- function(crop_harmonized, dist, amend, animal,
+                             start_date_override = NULL,
+                             end_date_override   = NULL) {
 
     # Helper: drop NULL or empty data frames
     clean_df <- function(df, date_cols) {
@@ -622,16 +659,14 @@ prepare_shmi_inputs <- function(path,
       df
     }
 
-    crop_h  <- clean_df(crop_harmonized, c("crop_start", "crop_end"))
-    dist_h  <- clean_df(dist,           c("SD_date"))
-    amend_h <- clean_df(amend,          c("SA_date"))
-    animal_h<- clean_df(animal,         c("AD_start_date", "AD_end_date"))
+    crop_h   <- clean_df(crop_harmonized, c("crop_start", "crop_end"))
+    dist_h   <- clean_df(dist,           c("SD_date"))
+    amend_h  <- clean_df(amend,          c("SA_date"))
+    animal_h <- clean_df(animal,         c("AD_start_date", "AD_end_date"))
 
-    # Build list of non-null data frames
     dfs <- list(crop_h, dist_h, amend_h, animal_h)
     dfs <- dfs[!vapply(dfs, is.null, logical(1))]
 
-    # If no data at all, error
     if (length(dfs) == 0) {
       stop("No valid crop, disturbance, amendment, or animal data found.", call. = FALSE)
     }
@@ -649,34 +684,44 @@ prepare_shmi_inputs <- function(path,
 
     df_list <- list()
 
-    if (!is.null(crop_h))  df_list[[length(df_list)+1]] <- summarize_bounds(crop_h,  "crop_start", "crop_end")
-    if (!is.null(dist_h))  df_list[[length(df_list)+1]] <- summarize_bounds(dist_h,  "SD_date",   "SD_date")
-    if (!is.null(amend_h)) df_list[[length(df_list)+1]] <- summarize_bounds(amend_h, "SA_date",   "SA_date")
-    if (!is.null(animal_h))df_list[[length(df_list)+1]] <- summarize_bounds(animal_h,"AD_start_date","AD_end_date")
+    if (!is.null(crop_h))   df_list[[length(df_list)+1]] <- summarize_bounds(crop_h,   "crop_start",    "crop_end")
+    if (!is.null(dist_h))   df_list[[length(df_list)+1]] <- summarize_bounds(dist_h,   "SD_date",       "SD_date")
+    if (!is.null(amend_h))  df_list[[length(df_list)+1]] <- summarize_bounds(amend_h,  "SA_date",       "SA_date")
+    if (!is.null(animal_h)) df_list[[length(df_list)+1]] <- summarize_bounds(animal_h, "AD_start_date", "AD_end_date")
 
-    # Combine
     df_all <- bind_rows(df_list)
 
+    # ---- FULL-YEAR LOGIC ----
     rot_bounds <- df_all %>%
       group_by(MGT_combo) %>%
       summarize(
-        rot_start = min(start, na.rm = TRUE),
-        rot_end   = max(end,   na.rm = TRUE),
+        # Determine calendar-year bounds from actual data
+        yr_min = min(lubridate::year(start), na.rm = TRUE),
+        yr_max = max(lubridate::year(end),   na.rm = TRUE),
+
+        # Full-year defaults
+        rot_start_default = as.Date(paste0(yr_min, "-01-01")),
+        rot_end_default   = as.Date(paste0(yr_max, "-12-31")),
+
+        # Apply overrides if present
+        rot_start = if (!is.null(start_date_override))
+          as.Date(start_date_override)
+        else
+          rot_start_default,
+
+        rot_end   = if (!is.null(end_date_override))
+          as.Date(end_date_override)
+        else
+          rot_end_default,
+
         .groups = "drop"
-      )
+      ) %>%
+      select(MGT_combo, rot_start, rot_end)
 
     rot_bounds
   }
 
   rot_bounds <- compute_bounds(crop_harmonized, dist, amend, animal)
-
-  if (!is.null(start_date_override)) {
-    rot_bounds$rot_start <- pmax(rot_bounds$rot_start, start_date_override)
-  }
-
-  if (!is.null(end_date_override)) {
-    rot_bounds$rot_end <- pmin(rot_bounds$rot_end, end_date_override)
-  }
 
   rot_bounds <- rot_bounds %>%
     dplyr::mutate(
@@ -761,6 +806,30 @@ prepare_shmi_inputs <- function(path,
 
   daily <- build_daily_grid(crop_harmonized, rot_bounds, daily_dist)
 
+  # ------------------------------------------------------------
+  # Get yield data
+  # ------------------------------------------------------------
+  if (calc_yield) {
+    cli::cli_progress_step("Computing crop yields...")
+
+    yield <- .prepare_yield(path,
+                            start_date_override = start_date_override,
+                            end_date_override = end_date_override
+    )
+  } else {
+    yield <- NULL
+  }
+
+  if (calc_n_rate) {
+    cli::cli_progress_step("Computing N rates...")
+
+    n_rate <- .prepare_n_rate(path,
+                              start_date_override = start_date_override,
+                              end_date_override   = end_date_override)
+  } else {
+    n_rate <- NULL
+  }
+
   cli::cli_progress_done()
   # ------------------------------------------------------------
   # 12. Return everything in one clean list
@@ -774,6 +843,8 @@ prepare_shmi_inputs <- function(path,
     crop            = crop,
     dist            = dist,
     amend           = amend,
-    animal          = animal
+    animal          = animal,
+    yield           = yield,
+    n_rate          = n_rate
   )
 }

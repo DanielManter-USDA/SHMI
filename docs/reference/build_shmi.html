@@ -90,6 +90,10 @@ at minimum:</p><ul><li><p><code>rot_bounds</code> — rotation start/end dates</
 <li><p><code>daily_dist</code> — daily disturbance table</p></li>
 <li><p><code>amend</code> — amendment events</p></li>
 <li><p><code>animal</code> — animal events</p></li>
+</ul><p>Additional optional elements:</p><ul><li><p><code>yield</code> — crop-event-level yield data (kg/ha), if
+    <code>calc_yield = TRUE</code> in <code><a href="prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code></p></li>
+<li><p><code>n_rate</code> — year-level nitrogen application data (kg N/ha), if
+    <code>calc_n_rate = TRUE</code> in <code><a href="prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code></p></li>
 </ul></dd>
 
 
@@ -111,7 +115,10 @@ not comparable to the national SHMI scale.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with:</p><ul><li><p><code>indicator_df</code> — data frame with columns:
       <code>MGT_combo</code>, <code>SHMI</code>, <code>Cover</code>, <code>Diversity</code>,
-      <code>InvDist</code>, <code>Animals</code></p></li>
+      <code>InvDist</code>, <code>OrgInputs</code>, and (if available) yield and N-rate
+      summaries.</p></li>
+<li><p><code>yield_summary</code> — rotation-level yield summaries (or <code>NULL</code>)</p></li>
+<li><p><code>n_rate_summary</code> — rotation-level N-rate summaries (or <code>NULL</code>)</p></li>
 <li><p><code>settings_used</code> — the settings actually applied</p></li>
 <li><p><code>expert_mode</code> — logical flag</p></li>
 <li><p><code>shmi_version</code> — version string for reproducibility</p></li>
@@ -119,13 +126,21 @@ not comparable to the national SHMI scale.</p></dd>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The SHMI computation proceeds in five stages:</p>
+    <p>Optionally, if yield or nitrogen-rate data were computed in
+<code><a href="prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code> (via <code>calc_yield = TRUE</code> or
+<code>calc_n_rate = TRUE</code>), this function also produces rotation-level
+summaries of yield (kg/ha) and nitrogen application rate (kg N/ha). These
+summaries are merged into the final SHMI output and returned as separate
+tables for downstream modeling (e.g., N-response curves, ANOVA at N100,
+yield stability analysis).</p>
+
+<p>The SHMI computation proceeds in five stages:</p>
 <ol><li><p><strong>Settings</strong>:
     In locked mode, the official national SHMI settings are always used.
     In expert mode, user-supplied settings override defaults.</p></li>
 <li><p><strong>Input validation</strong>:
     Ensures that all required elements from <code><a href="prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code> are
-    present.</p></li>
+    present and structurally valid.</p></li>
 <li><p><strong>Pillar computation</strong>:</p><ul><li><p>Cover — via <code><a href="compute_cover.html">compute_cover()</a></code></p></li>
 <li><p>Diversity — via <code><a href="compute_diversity.html">compute_diversity()</a></code></p></li>
 <li><p>Inverse disturbance — via <code><a href="compute_disturbance.html">compute_disturbance()</a></code></p></li>
@@ -138,21 +153,20 @@ not comparable to the national SHMI scale.</p></dd>
       SHMI = w_{cover}    \cdot Cover +
              w_{div}      \cdot Diversity +
              w_{dist}     \cdot InvDist +
-             w_{orginput} \cdot Animals
+             w_{orginput} \cdot OrgInputs
     $$</p></li>
+<li><p><strong>Optional rotation-level summaries</strong>:
+    If yield or nitrogen-rate data are present in <code>shmi_inputs</code>, the
+    function computes rotation-level summaries:</p><ul><li><p><code>yield_mean</code>, <code>yield_var</code>, <code>yield_min</code>,
+            <code>yield_max</code>, <code>yield_n</code></p></li>
+<li><p><code>n_rate_mean</code>, <code>n_rate_var</code>, <code>n_rate_min</code>,
+            <code>n_rate_max</code>, <code>n_years</code></p></li>
+</ul><p>These summaries are merged into the final SHMI table and also returned
+    separately for downstream analysis.</p></li>
 <li><p><strong>Output assembly</strong>:
     Returns a tidy data frame of SHMI scores along with metadata describing
     the settings used and computation timestamp.</p></li>
-</ol><p>Additionally, before computing SHMI sub-indices, this function automatically
-validates the internal SHMI data list using <code><a href="validate_shmi_input.html">validate_shmi_input()</a></code>.
-The validator checks for structural completeness (e.g., required tables,
-required columns, valid date types, no duplicated daily rows, no missing
-<code>MGT_combo</code> values) and ensures that the harmonized data produced by
-<code><a href="prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code> is consistent and ready for SHMI computation.</p>
-<p>If validation fails, execution stops immediately with explicit error messages.
-Users must correct the input data or Excel file before re-running
-<code>build_shmi()</code>.</p>
-    </div>
+</ol></div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

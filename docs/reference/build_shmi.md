@@ -35,6 +35,16 @@ build_shmi(shmi_inputs, settings = NULL, expert_mode = FALSE)
 
   - `animal` — animal events
 
+  Additional optional elements:
+
+  - `yield` — crop-event-level yield data (kg/ha), if
+    `calc_yield = TRUE` in
+    [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
+
+  - `n_rate` — year-level nitrogen application data (kg N/ha), if
+    `calc_n_rate = TRUE` in
+    [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
+
 - settings:
 
   Optional named list of SHMI settings (seasonal cover weights, Hill
@@ -54,7 +64,12 @@ build_shmi(shmi_inputs, settings = NULL, expert_mode = FALSE)
 A list with:
 
 - `indicator_df` — data frame with columns: `MGT_combo`, `SHMI`,
-  `Cover`, `Diversity`, `InvDist`, `Animals`
+  `Cover`, `Diversity`, `InvDist`, `OrgInputs`, and (if available) yield
+  and N-rate summaries.
+
+- `yield_summary` — rotation-level yield summaries (or `NULL`)
+
+- `n_rate_summary` — rotation-level N-rate summaries (or `NULL`)
 
 - `settings_used` — the settings actually applied
 
@@ -66,6 +81,14 @@ A list with:
 
 ## Details
 
+Optionally, if yield or nitrogen-rate data were computed in
+[`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
+(via `calc_yield = TRUE` or `calc_n_rate = TRUE`), this function also
+produces rotation-level summaries of yield (kg/ha) and nitrogen
+application rate (kg N/ha). These summaries are merged into the final
+SHMI output and returned as separate tables for downstream modeling
+(e.g., N-response curves, ANOVA at N100, yield stability analysis).
+
 The SHMI computation proceeds in five stages:
 
 1.  **Settings**: In locked mode, the official national SHMI settings
@@ -74,7 +97,7 @@ The SHMI computation proceeds in five stages:
 
 2.  **Input validation**: Ensures that all required elements from
     [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
-    are present.
+    are present and structurally valid.
 
 3.  **Pillar computation**:
 
@@ -93,21 +116,19 @@ The SHMI computation proceeds in five stages:
 4.  **Weighted combination**: Sub-indices are normalized so their
     weights sum to 1, then combined into a single SHMI score: \$\$ SHMI
     = w\_{cover} \cdot Cover + w\_{div} \cdot Diversity + w\_{dist}
-    \cdot InvDist + w\_{orginput} \cdot Animals \$\$
+    \cdot InvDist + w\_{orginput} \cdot OrgInputs \$\$
 
-5.  **Output assembly**: Returns a tidy data frame of SHMI scores along
+5.  **Optional rotation-level summaries**: If yield or nitrogen-rate
+    data are present in `shmi_inputs`, the function computes
+    rotation-level summaries:
+
+    - `yield_mean`, `yield_var`, `yield_min`, `yield_max`, `yield_n`
+
+    - `n_rate_mean`, `n_rate_var`, `n_rate_min`, `n_rate_max`, `n_years`
+
+    These summaries are merged into the final SHMI table and also
+    returned separately for downstream analysis.
+
+6.  **Output assembly**: Returns a tidy data frame of SHMI scores along
     with metadata describing the settings used and computation
     timestamp.
-
-Additionally, before computing SHMI sub-indices, this function
-automatically validates the internal SHMI data list using
-[`validate_shmi_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_shmi_input.md).
-The validator checks for structural completeness (e.g., required tables,
-required columns, valid date types, no duplicated daily rows, no missing
-`MGT_combo` values) and ensures that the harmonized data produced by
-[`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
-is consistent and ready for SHMI computation.
-
-If validation fails, execution stops immediately with explicit error
-messages. Users must correct the input data or Excel file before
-re-running `build_shmi()`.

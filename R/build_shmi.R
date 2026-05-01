@@ -8,6 +8,14 @@
 #' (locked mode). In expert mode, users may override settings, but resulting
 #' scores are no longer comparable to the national SHMI scale.
 #'
+#' Optionally, if yield or nitrogen-rate data were computed in
+#' \code{prepare_shmi_inputs()} (via \code{calc_yield = TRUE} or
+#' \code{calc_n_rate = TRUE}), this function also produces rotation-level
+#' summaries of yield (kg/ha) and nitrogen application rate (kg N/ha). These
+#' summaries are merged into the final SHMI output and returned as separate
+#' tables for downstream modeling (e.g., N-response curves, ANOVA at N100,
+#' yield stability analysis).
+#'
 #' @param shmi_inputs A list returned by \code{prepare_shmi_inputs()}, containing
 #'   at minimum:
 #'   \itemize{
@@ -17,6 +25,13 @@
 #'     \item \code{daily_dist} — daily disturbance table
 #'     \item \code{amend} — amendment events
 #'     \item \code{animal} — animal events
+#'   }
+#'   Additional optional elements:
+#'   \itemize{
+#'     \item \code{yield} — crop-event-level yield data (kg/ha), if
+#'       \code{calc_yield = TRUE} in \code{prepare_shmi_inputs()}
+#'     \item \code{n_rate} — year-level nitrogen application data (kg N/ha), if
+#'       \code{calc_n_rate = TRUE} in \code{prepare_shmi_inputs()}
 #'   }
 #'
 #' @param settings Optional named list of SHMI settings (seasonal cover weights,
@@ -39,7 +54,7 @@
 #'
 #'   \item \strong{Input validation}:
 #'     Ensures that all required elements from \code{prepare_shmi_inputs()} are
-#'     present.
+#'     present and structurally valid.
 #'
 #'   \item \strong{Pillar computation}:
 #'     \itemize{
@@ -56,30 +71,34 @@
 #'       SHMI = w_{cover}    \cdot Cover +
 #'              w_{div}      \cdot Diversity +
 #'              w_{dist}     \cdot InvDist +
-#'              w_{orginput} \cdot Animals
+#'              w_{orginput} \cdot OrgInputs
 #'     }
+#'
+#'   \item \strong{Optional rotation-level summaries}:
+#'     If yield or nitrogen-rate data are present in \code{shmi_inputs}, the
+#'     function computes rotation-level summaries:
+#'     \itemize{
+#'       \item \code{yield_mean}, \code{yield_var}, \code{yield_min},
+#'             \code{yield_max}, \code{yield_n}
+#'       \item \code{n_rate_mean}, \code{n_rate_var}, \code{n_rate_min},
+#'             \code{n_rate_max}, \code{n_years}
+#'     }
+#'     These summaries are merged into the final SHMI table and also returned
+#'     separately for downstream analysis.
 #'
 #'   \item \strong{Output assembly}:
 #'     Returns a tidy data frame of SHMI scores along with metadata describing
 #'     the settings used and computation timestamp.
 #' }
 #'
-#' Additionally, before computing SHMI sub-indices, this function automatically
-#' validates the internal SHMI data list using \code{validate_shmi_input()}.
-#' The validator checks for structural completeness (e.g., required tables,
-#' required columns, valid date types, no duplicated daily rows, no missing
-#' \code{MGT_combo} values) and ensures that the harmonized data produced by
-#' \code{prepare_shmi_inputs()} is consistent and ready for SHMI computation.
-#'
-#' If validation fails, execution stops immediately with explicit error messages.
-#' Users must correct the input data or Excel file before re-running
-#' \code{build_shmi()}.
-#'
 #' @return A list with:
 #'   \itemize{
 #'     \item \code{indicator_df} — data frame with columns:
 #'       \code{MGT_combo}, \code{SHMI}, \code{Cover}, \code{Diversity},
-#'       \code{InvDist}, \code{Animals}
+#'       \code{InvDist}, \code{OrgInputs}, and (if available) yield and N-rate
+#'       summaries.
+#'     \item \code{yield_summary} — rotation-level yield summaries (or \code{NULL})
+#'     \item \code{n_rate_summary} — rotation-level N-rate summaries (or \code{NULL})
 #'     \item \code{settings_used} — the settings actually applied
 #'     \item \code{expert_mode} — logical flag
 #'     \item \code{shmi_version} — version string for reproducibility
@@ -176,6 +195,8 @@ build_shmi <- function(shmi_inputs,
   daily_dist      <- shmi_inputs$daily_dist
   amend           <- shmi_inputs$amend
   animal          <- shmi_inputs$animal
+  yield           <- shmi_inputs$yield
+  n_rate          <- shmi_inputs$n_rate
 
   # --------------------------------------------------------------------------
   # 4. Compute sub-indices
@@ -218,6 +239,36 @@ build_shmi <- function(shmi_inputs,
     w_animal    = settings$w_animals
   )
 
+  # Yield summary
+  yield_summary <- NULL
+  if (!is.null(yield)) {
+    yield_summary <- yield %>%
+      dplyr::group_by(MGT_combo) %>%
+      dplyr::summarize(
+        yield_mean = mean(yield_kg_ha, na.rm = TRUE),
+        yield_var  = stats::var(yield_kg_ha, na.rm = TRUE),
+        yield_min  = min(yield_kg_ha, na.rm = TRUE),
+        yield_max  = max(yield_kg_ha, na.rm = TRUE),
+        yield_n    = sum(!is.na(yield_kg_ha)),
+        .groups = "drop"
+      )
+  }
+
+  # N-rate summary
+  n_rate_summary <- NULL
+  if (!is.null(n_rate)) {
+    n_rate_summary <- n_rate %>%
+      dplyr::group_by(MGT_combo) %>%
+      dplyr::summarize(
+        n_rate_mean = mean(N_kg_ha, na.rm = TRUE),
+        n_rate_var  = stats::var(N_kg_ha, na.rm = TRUE),
+        n_rate_min  = min(N_kg_ha, na.rm = TRUE),
+        n_rate_max  = max(N_kg_ha, na.rm = TRUE),
+        n_years     = sum(!is.na(N_kg_ha)),
+        .groups = "drop"
+      )
+  }
+
   # --------------------------------------------------------------------------
   # 5. Combine sub-indices
   # --------------------------------------------------------------------------
@@ -249,6 +300,16 @@ build_shmi <- function(shmi_inputs,
                   .data$InvDist, .data$OrgInputs) %>%
     dplyr::arrange(.data$MGT_combo)
 
+  if (!is.null(yield_summary)) {
+    indicator_df <- indicator_df %>%
+      dplyr::left_join(yield_summary, by = "MGT_combo")
+  }
+
+  if (!is.null(n_rate_summary)) {
+    indicator_df <- indicator_df %>%
+      dplyr::left_join(n_rate_summary, by = "MGT_combo")
+  }
+
   cli::cli_progress_done()
 
   if (!expert_mode) {
@@ -260,6 +321,8 @@ build_shmi <- function(shmi_inputs,
   # --------------------------------------------------------------------------
   list(
     indicator_df = indicator_df,
+    yield_summary = yield_summary,
+    n_rate_summary = n_rate_summary,
     settings_used = settings,
     expert_mode   = expert_mode,
     shmi_version  = "1.0.2",

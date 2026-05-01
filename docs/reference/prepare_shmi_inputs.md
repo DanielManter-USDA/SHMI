@@ -14,7 +14,9 @@ prepare_shmi_inputs(
   exclude = NULL,
   verbose = TRUE,
   start_date_override = NULL,
-  end_date_override = NULL
+  end_date_override = NULL,
+  calc_yield = FALSE,
+  calc_n_rate = FALSE
 )
 ```
 
@@ -40,14 +42,30 @@ prepare_shmi_inputs(
 - start_date_override:
 
   Optional `Date` or date‑coercible value. If supplied, all crop,
-  disturbance, amendment, and animal events occurring before this date
-  are removed, and rotation bounds are clipped accordingly.
+  disturbance, amendment, animal, yield, and N‑rate events occurring
+  before this date are removed, and rotation bounds are clipped
+  accordingly.
 
 - end_date_override:
 
   Optional `Date` or date‑coercible value. If supplied, all events
   occurring after this date are removed, and rotation bounds are clipped
   accordingly.
+
+- calc_yield:
+
+  Logical, default = FALSE. If `TRUE`, yield (kg/ha) is extracted from
+  `Crop_Diversity`, clipped by date overrides, unit‑standardized, and
+  returned for each `MGT_combo × crop event`. If `FALSE`, yield is not
+  processed and the returned list contains `yield = NULL`.
+
+- calc_n_rate:
+
+  Logical, default = FALSE. If `TRUE`, nitrogen rate (kg N/ha) is
+  extracted from `Amendment_Diversity`, clipped by date overrides,
+  unit‑standardized, and summarized for each `MGT_combo × year`. If
+  `FALSE`, N‑rate is not processed and the returned list contains
+  `n_rate = NULL`.
 
 ## Value
 
@@ -89,6 +107,16 @@ A named list containing:
 
   Animal event table.
 
+- `yield`:
+
+  (Optional) Crop‑event‑level yield table (kg/ha), or `NULL` if
+  `calc_yield = FALSE`.
+
+- `n_rate`:
+
+  (Optional) Year‑level nitrogen‑rate table (kg N/ha), or `NULL` if
+  `calc_n_rate = FALSE`.
+
 ## Details
 
 The function performs:
@@ -101,13 +129,15 @@ The function performs:
 
 - harmonization of crop windows across mixtures
 
-- construction of rotation bounds
+- construction of rotation bounds (full‑year expansion)
 
 - daily grid expansion (fast vectorized implementation)
 
 - mechanistic daily disturbance processing (mixing efficiency × depth)
 
 - assembly of amendment and animal event tables
+
+- optional extraction of yield and nitrogen‑rate data
 
 The function enforces biologically realistic crop windows, including:
 
@@ -118,10 +148,21 @@ The function enforces biologically realistic crop windows, including:
 - mixtures are collapsed to event‑level windows
 
 Rotation bounds are computed from all available event types (crop,
-disturbance, amendment, animal). Empty sheets contribute no bounds.
+disturbance, amendment, animal) and expanded to full calendar years to
+ensure consistent SHMI computation. Date overrides further restrict all
+event types, including optional yield and N‑rate extraction.
 
 Daily grids are generated using a fully vectorized expansion, ensuring
 extremely fast performance even for large datasets.
+
+Yield extraction (if enabled) preserves one row per crop event, applies
+override‑aware clipping, and converts all supported units to kg/ha.
+Missing yield or missing units are retained as `NA`.
+
+Nitrogen‑rate extraction (if enabled) uses the `SA_N` field as the
+authoritative N applied, converts units to kg N/ha, clips by overrides,
+and returns one row per `MGT_combo × year`. Missing `SA_N` values are
+retained as `NA`.
 
 Additionally, this function automatically performs front‑end validation
 of the Excel input file using
@@ -149,4 +190,5 @@ The function stops with informative errors if:
 ## See also
 
 [`build_shmi`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
-for computing SHMI scores from the returned object.
+for computing SHMI scores and optional rotation‑level summaries of yield
+and nitrogen rate.

@@ -9,7 +9,9 @@ prepare_shmi_inputs(
   exclude = NULL,
   verbose = TRUE,
   start_date_override = NULL,
-  end_date_override = NULL
+  end_date_override = NULL,
+  calc_yield = FALSE,
+  calc_n_rate = FALSE
 )
 }
 \arguments{
@@ -25,12 +27,25 @@ exclude from processing. Default is \code{NULL}.}
 describing sheet ingestion, validation steps, and grid construction.}
 
 \item{start_date_override}{Optional \code{Date} or date‑coercible value.
-If supplied, all crop, disturbance, amendment, and animal events occurring
-before this date are removed, and rotation bounds are clipped accordingly.}
+If supplied, all crop, disturbance, amendment, animal, yield, and N‑rate
+events occurring before this date are removed, and rotation bounds are
+clipped accordingly.}
 
 \item{end_date_override}{Optional \code{Date} or date‑coercible value.
 If supplied, all events occurring after this date are removed, and rotation
 bounds are clipped accordingly.}
+
+\item{calc_yield}{Logical, default = FALSE.
+If \code{TRUE}, yield (kg/ha) is extracted from \code{Crop_Diversity},
+clipped by date overrides, unit‑standardized, and returned for each
+\code{MGT_combo × crop event}. If \code{FALSE}, yield is not processed and
+the returned list contains \code{yield = NULL}.}
+
+\item{calc_n_rate}{Logical, default = FALSE.
+If \code{TRUE}, nitrogen rate (kg N/ha) is extracted from
+\code{Amendment_Diversity}, clipped by date overrides, unit‑standardized,
+and summarized for each \code{MGT_combo × year}. If \code{FALSE}, N‑rate is
+not processed and the returned list contains \code{n_rate = NULL}.}
 }
 \value{
 A named list containing:
@@ -46,6 +61,10 @@ A named list containing:
   \item{\code{dist}}{Disturbance event table.}
   \item{\code{amend}}{Amendment event table.}
   \item{\code{animal}}{Animal event table.}
+  \item{\code{yield}}{(Optional) Crop‑event‑level yield table (kg/ha), or
+        \code{NULL} if \code{calc_yield = FALSE}.}
+  \item{\code{n_rate}}{(Optional) Year‑level nitrogen‑rate table (kg N/ha),
+        or \code{NULL} if \code{calc_n_rate = FALSE}.}
 }
 }
 \description{
@@ -61,10 +80,11 @@ The function performs:
   \item management‑unit filtering
   \item crop‑level biological validation (chronology, annual/perennial rules)
   \item harmonization of crop windows across mixtures
-  \item construction of rotation bounds
+  \item construction of rotation bounds (full‑year expansion)
   \item daily grid expansion (fast vectorized implementation)
   \item mechanistic daily disturbance processing (mixing efficiency × depth)
   \item assembly of amendment and animal event tables
+  \item optional extraction of yield and nitrogen‑rate data
 }
 
 
@@ -76,10 +96,21 @@ The function enforces biologically realistic crop windows, including:
 }
 
 Rotation bounds are computed from all available event types (crop,
-disturbance, amendment, animal). Empty sheets contribute no bounds.
+disturbance, amendment, animal) and expanded to full calendar years to ensure
+consistent SHMI computation. Date overrides further restrict all event types,
+including optional yield and N‑rate extraction.
 
 Daily grids are generated using a fully vectorized expansion, ensuring
 extremely fast performance even for large datasets.
+
+Yield extraction (if enabled) preserves one row per crop event, applies
+override‑aware clipping, and converts all supported units to kg/ha. Missing
+yield or missing units are retained as \code{NA}.
+
+Nitrogen‑rate extraction (if enabled) uses the \code{SA_N} field as the
+authoritative N applied, converts units to kg N/ha, clips by overrides, and
+returns one row per \code{MGT_combo × year}. Missing \code{SA_N} values are
+retained as \code{NA}.
 
 Additionally, this function automatically performs front‑end validation of
 the Excel input file using \code{validate_excel_input()}. The validator checks
@@ -103,6 +134,6 @@ The function stops with informative errors if:
 }
 
 \seealso{
-\code{\link{build_shmi}} for computing SHMI scores from the returned
-  object.
+\code{\link{build_shmi}} for computing SHMI scores and optional rotation‑level
+  summaries of yield and nitrogen rate.
 }

@@ -71,7 +71,9 @@ list of objects used directly by <code><a href="build_shmi.html">build_shmi()</a
 <span>  exclude <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  start_date_override <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  end_date_override <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  end_date_override <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  calc_yield <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  calc_n_rate <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -98,14 +100,31 @@ describing sheet ingestion, validation steps, and grid construction.</p></dd>
 
 <dt id="arg-start-date-override">start_date_override<a class="anchor" aria-label="anchor" href="#arg-start-date-override"></a></dt>
 <dd><p>Optional <code>Date</code> or date‑coercible value.
-If supplied, all crop, disturbance, amendment, and animal events occurring
-before this date are removed, and rotation bounds are clipped accordingly.</p></dd>
+If supplied, all crop, disturbance, amendment, animal, yield, and N‑rate
+events occurring before this date are removed, and rotation bounds are
+clipped accordingly.</p></dd>
 
 
 <dt id="arg-end-date-override">end_date_override<a class="anchor" aria-label="anchor" href="#arg-end-date-override"></a></dt>
 <dd><p>Optional <code>Date</code> or date‑coercible value.
 If supplied, all events occurring after this date are removed, and rotation
 bounds are clipped accordingly.</p></dd>
+
+
+<dt id="arg-calc-yield">calc_yield<a class="anchor" aria-label="anchor" href="#arg-calc-yield"></a></dt>
+<dd><p>Logical, default = FALSE.
+If <code>TRUE</code>, yield (kg/ha) is extracted from <code>Crop_Diversity</code>,
+clipped by date overrides, unit‑standardized, and returned for each
+<code>MGT_combo × crop event</code>. If <code>FALSE</code>, yield is not processed and
+the returned list contains <code>yield = NULL</code>.</p></dd>
+
+
+<dt id="arg-calc-n-rate">calc_n_rate<a class="anchor" aria-label="anchor" href="#arg-calc-n-rate"></a></dt>
+<dd><p>Logical, default = FALSE.
+If <code>TRUE</code>, nitrogen rate (kg N/ha) is extracted from
+<code>Amendment_Diversity</code>, clipped by date overrides, unit‑standardized,
+and summarized for each <code>MGT_combo × year</code>. If <code>FALSE</code>, N‑rate is
+not processed and the returned list contains <code>n_rate = NULL</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -139,6 +158,14 @@ bounds are clipped accordingly.</p></dd>
   <dt><code>animal</code></dt>
 <dd><p>Animal event table.</p></dd>
 
+  <dt><code>yield</code></dt>
+<dd><p>(Optional) Crop‑event‑level yield table (kg/ha), or
+        <code>NULL</code> if <code>calc_yield = FALSE</code>.</p></dd>
+
+  <dt><code>n_rate</code></dt>
+<dd><p>(Optional) Year‑level nitrogen‑rate table (kg N/ha),
+        or <code>NULL</code> if <code>calc_n_rate = FALSE</code>.</p></dd>
+
 
 </dl></div>
     <div class="section level2">
@@ -147,17 +174,27 @@ bounds are clipped accordingly.</p></dd>
 <li><p>management‑unit filtering</p></li>
 <li><p>crop‑level biological validation (chronology, annual/perennial rules)</p></li>
 <li><p>harmonization of crop windows across mixtures</p></li>
-<li><p>construction of rotation bounds</p></li>
+<li><p>construction of rotation bounds (full‑year expansion)</p></li>
 <li><p>daily grid expansion (fast vectorized implementation)</p></li>
 <li><p>mechanistic daily disturbance processing (mixing efficiency × depth)</p></li>
 <li><p>assembly of amendment and animal event tables</p></li>
+<li><p>optional extraction of yield and nitrogen‑rate data</p></li>
 </ul><p>The function enforces biologically realistic crop windows, including:</p><ul><li><p>annual crops must terminate within the same year</p></li>
 <li><p>perennials may span years but must follow valid chronology</p></li>
 <li><p>mixtures are collapsed to event‑level windows</p></li>
 </ul><p>Rotation bounds are computed from all available event types (crop,
-disturbance, amendment, animal). Empty sheets contribute no bounds.</p>
+disturbance, amendment, animal) and expanded to full calendar years to ensure
+consistent SHMI computation. Date overrides further restrict all event types,
+including optional yield and N‑rate extraction.</p>
 <p>Daily grids are generated using a fully vectorized expansion, ensuring
 extremely fast performance even for large datasets.</p>
+<p>Yield extraction (if enabled) preserves one row per crop event, applies
+override‑aware clipping, and converts all supported units to kg/ha. Missing
+yield or missing units are retained as <code>NA</code>.</p>
+<p>Nitrogen‑rate extraction (if enabled) uses the <code>SA_N</code> field as the
+authoritative N applied, converts units to kg N/ha, clips by overrides, and
+returns one row per <code>MGT_combo × year</code>. Missing <code>SA_N</code> values are
+retained as <code>NA</code>.</p>
 <p>Additionally, this function automatically performs front‑end validation of
 the Excel input file using <code><a href="validate_excel_input.html">validate_excel_input()</a></code>. The validator checks
 for required sheets, required columns, valid date formats, consistent
@@ -178,8 +215,8 @@ messages. Users must correct the Excel file before re‑running
 </ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="build_shmi.html">build_shmi</a></code> for computing SHMI scores from the returned
-  object.</p></div>
+    <div class="dont-index"><p><code><a href="build_shmi.html">build_shmi</a></code> for computing SHMI scores and optional rotation‑level
+  summaries of yield and nitrogen rate.</p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

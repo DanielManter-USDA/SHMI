@@ -301,16 +301,6 @@ build_shmi <- function(shmi_inputs,
                   .data$InvDist, .data$OrgInputs) %>%
     dplyr::arrange(.data$MGT_combo)
 
-  if (!is.null(yield_summary)) {
-    indicator_df <- indicator_df %>%
-      dplyr::left_join(yield_summary, by = "MGT_combo")
-  }
-
-  if (!is.null(n_rate_summary)) {
-    indicator_df <- indicator_df %>%
-      dplyr::left_join(n_rate_summary, by = "MGT_combo")
-  }
-
   cli::cli_progress_done()
 
   if (!expert_mode) {

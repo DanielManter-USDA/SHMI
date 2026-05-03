@@ -39,7 +39,7 @@
 #' @noRd
 .plot_yield_stability <- function(yield_df,
                                   crop = NULL,
-                                  facet = TRUE,
+                                  facet_var = NULL,
                                   label = FALSE,
                                   add_lm = TRUE,
                                   point_size = 3,
@@ -60,9 +60,20 @@
     stop("yield_df has zero rows; nothing to plot.", call. = FALSE)
   }
 
-  # ---- summarize to (MGT_combo × crop) ----
+  # ---- summarize to (MGT_combo × crop x facet_var) ----
+  group_vars <- c("MGT_combo", "crop" = "CD_name")
+
+  # If user supplied a facet_var, include it in the grouping
+  if (!is.null(facet_var)) {
+    missing_fv <- setdiff(facet_var, names(yield_df))
+    if (length(missing_fv) > 0) {
+      stop("facet_var not found in data: ", paste(missing_fv, collapse = ", "), call. = FALSE)
+    }
+    group_vars <- c(group_vars, facet_var)
+  }
+
   yield_summary <- yield_df %>%
-    dplyr::group_by(MGT_combo, crop = CD_name) %>%
+    dplyr::group_by(dplyr::across(all_of(group_vars))) %>%
     dplyr::summarize(
       mean_yield = mean(yield_kg_ha, na.rm = TRUE),
       var_yield  = stats::var(yield_kg_ha, na.rm = TRUE),
@@ -150,8 +161,8 @@
   }
 
   # ---- faceting ----
-  if (facet && is.null(crop)) {
-    p <- p + ggplot2::facet_wrap(~ crop, scales = "free")
+  if (!is.null(facet_var)) {
+    p <- p + facet_wrap(vars(!!!rlang::syms(facet_var)), scales = "free")
   }
 
   return(p)

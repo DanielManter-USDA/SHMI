@@ -16,13 +16,6 @@ at minimum:
   \item \code{daily_dist} — daily disturbance table
   \item \code{amend} — amendment events
   \item \code{animal} — animal events
-}
-Additional optional elements:
-\itemize{
-  \item \code{yield} — crop-event-level yield data (kg/ha), if
-    \code{calc_yield = TRUE} in \code{prepare_shmi_inputs()}
-  \item \code{n_rate} — year-level nitrogen application data (kg N/ha), if
-    \code{calc_n_rate = TRUE} in \code{prepare_shmi_inputs()}
 }}
 
 \item{settings}{Optional named list of SHMI settings (seasonal cover weights,
@@ -42,8 +35,6 @@ A list with:
       \code{MGT_combo}, \code{SHMI}, \code{Cover}, \code{Diversity},
       \code{InvDist}, \code{OrgInputs}, and (if available) yield and N-rate
       summaries.
-    \item \code{yield_summary} — rotation-level yield summaries (or \code{NULL})
-    \item \code{n_rate_summary} — rotation-level N-rate summaries (or \code{NULL})
     \item \code{settings_used} — the settings actually applied
     \item \code{expert_mode} — logical flag
     \item \code{shmi_version} — version string for reproducibility
@@ -60,15 +51,6 @@ animals). By default, the function uses the official national SHMI settings
 scores are no longer comparable to the national SHMI scale.
 }
 \details{
-Optionally, if yield or nitrogen-rate data were computed in
-\code{prepare_shmi_inputs()} (via \code{calc_yield = TRUE} or
-\code{calc_n_rate = TRUE}), this function also produces rotation-level
-summaries of yield (kg/ha) and nitrogen application rate (kg N/ha). These
-summaries are merged into the final SHMI output and returned as separate
-tables for downstream modeling (e.g., N-response curves, ANOVA at N100,
-yield stability analysis).
-
-
 The SHMI computation proceeds in five stages:
 
 \enumerate{
@@ -97,18 +79,6 @@ The SHMI computation proceeds in five stages:
              w_{dist}     \cdot InvDist +
              w_{orginput} \cdot OrgInputs
     }
-
-  \item \strong{Optional rotation-level summaries}:
-    If yield or nitrogen-rate data are present in \code{shmi_inputs}, the
-    function computes rotation-level summaries:
-    \itemize{
-      \item \code{yield_mean}, \code{yield_var}, \code{yield_min},
-            \code{yield_max}, \code{yield_n}
-      \item \code{n_rate_mean}, \code{n_rate_var}, \code{n_rate_min},
-            \code{n_rate_max}, \code{n_years}
-    }
-    These summaries are merged into the final SHMI table and also returned
-    separately for downstream analysis.
 
   \item \strong{Output assembly}:
     Returns a tidy data frame of SHMI scores along with metadata describing

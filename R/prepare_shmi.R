@@ -126,7 +126,6 @@ prepare_shmi_inputs <- function(path,
                                 calc_yield  = FALSE,
                                 calc_n_rate = FALSE) {
 
-  cli::cli_progress_bar("Importing Excel file")
   cli::cli_progress_step("Validating inputs...")
 
   # Validate Excel file before ingestion
@@ -138,8 +137,8 @@ prepare_shmi_inputs <- function(path,
     stop("Fix the errors above and re-run prepare_shmi_inputs().")
   }
 
-  message("Input summary:")
-  message(val$summary)
+  # message("Input summary:")
+  # message(val$summary)
 
   if (length(val$warnings) > 0) {
     message("\nWarnings:")
@@ -164,10 +163,10 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   # 1. Exclusion lists
   # ------------------------------------------------------------
-  if (verbose) {
-    message("Excluding ", length(exclude), " management units:")
-    message(paste("  -", exclude, collapse = "\n"))
-  }
+  # if (verbose) {
+  #   message("Excluding ", length(exclude), " management units:")
+  #   message(paste("  -", exclude, collapse = "\n"))
+  # }
 
   # ------------------------------------------------------------
   # 2. Helper to read + filter sheets
@@ -180,25 +179,29 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   # 3. Load MGT first (needed for joins)
   # ------------------------------------------------------------
-  cli::cli_progress_step("Reading Mgt_Unit...")
+  cli::cli_progress_step("Reading Excel file...")
 
-  mgt <- read_xlsx(path, sheet = "Mgt_Unit", skip = 3, range = NULL) %>%
+  mgt <- .safe_read(
+    path,
+    required_cols = c("MGT_combo", "MGT_study", "MGT_farm", "MGT_field", "MGT_trt"),
+    "Mgt_Unit",
+    skip = 3,
+  ) %>%
     select(user_name, MGT_combo) %>%
     janitor::remove_empty("rows") %>%
     filter(!(MGT_combo %in% exclude))
 
-  if (verbose) {
-    included <- unique(mgt$MGT_combo)
-    message("\nIncluded ", length(included), " management units for sheet Mgt_Unit:")
-    message(paste("  -", included, collapse = "\n"))
-  }
+  # if (verbose) {
+  #   included <- unique(mgt$MGT_combo)
+  #   message("\nIncluded ", length(included), " management units for sheet Mgt_Unit:")
+  #   message(paste("  -", included, collapse = "\n"))
+  # }
 
   # ------------------------------------------------------------
   # 4. Load all sheets
   # ------------------------------------------------------------
-  cli::cli_progress_step("Reading Crop_Diversity...")
 
-  # ---- Load Crop_Diversity ----
+  #   ---- Load Crop_Diversity ----
   crop <- .safe_read(
     path,
     "Crop_Diversity",
@@ -206,12 +209,9 @@ prepare_shmi_inputs <- function(path,
     skip = 3
   )
 
-  # CD_harv_date is OPTIONAL — add it if missing
-  if (!"CD_harv_date" %in% names(crop)) {
-    crop$CD_harv_date <- NA
-  }
+  if (!"CD_harv_date" %in% names(crop)) crop$CD_harv_date <- NA
+  if (!"CD_cat" %in% names(crop))       crop$CD_cat       <- NA_character_
 
-  # Convert dates
   crop <- crop %>%
     mutate(
       CD_plant_date = as.Date(unname(.parse_shmi_date(CD_plant_date))),
@@ -219,109 +219,106 @@ prepare_shmi_inputs <- function(path,
       CD_term_date  = as.Date(unname(.parse_shmi_date(CD_term_date)))
     )
 
-  # ---- Apply year overrides BEFORE validation ----
+  #   ---- Load Soil_Disturbance ----
+  dist <- .safe_read(
+    path,
+    "Soil_Disturbance",
+    required_cols = c("MGT_combo", "SD_date", "SD_mixeff"),
+    skip = 3
+  )
+
+  dist <- dist %>%
+    mutate(SD_date = as.Date(unname(.parse_shmi_date(SD_date))))
+
+  #   ---- Apply year overrides BEFORE inference ----
+
   if (!is.null(start_date_override)) {
     S <- as.Date(start_date_override)
-
-    crop <- crop %>%
-      # 1. Drop crops that end before S
-      filter(CD_term_date >= S) %>%
-      # 2. Clip windows that overlap S
-      mutate(
-        CD_plant_date = if_else(CD_plant_date < S, S, CD_plant_date)
-      )
+    crop <- crop %>% filter(is.na(CD_term_date) | CD_term_date >= S) %>%
+      mutate(CD_plant_date = if_else(CD_plant_date < S, S, CD_plant_date))
+    dist <- dist %>% filter(SD_date >= S)
   }
 
   if (!is.null(end_date_override)) {
     E <- as.Date(end_date_override)
-
-    crop <- crop %>%
-      # 1. Drop crops that start after E
-      filter(CD_plant_date <= E) %>%
-      # 2. Clip windows that overlap E
-      mutate(
-        CD_term_date = if_else(CD_term_date > E, E, CD_term_date)
-      )
+    crop <- crop %>% filter(CD_plant_date <= E) %>%
+      mutate(CD_term_date = if_else(!is.na(CD_term_date) & CD_term_date > E, E, CD_term_date))
+    dist <- dist %>% filter(SD_date <= E)
   }
 
-  # ---- VALIDATION BLOCK ----
+  #   ---- INFER TERMINATION DATES (planting + disturbance) ----
 
-  # 1. At least one end date must exist
-  no_end <- crop %>%
+  # 1. Next planting date
+  crop <- crop %>%
+    arrange(MGT_combo, CD_seq_num) %>%
+    group_by(MGT_combo) %>%
+    mutate(next_plant = lead(CD_plant_date)) %>%
+    ungroup()
+
+  # 2. Next disturbance date
+  dist2 <- dist %>%
+    arrange(MGT_combo, SD_date) %>%
+    group_by(MGT_combo) %>%
+    mutate(next_dist = lead(SD_date)) %>%
+    ungroup()
+
+  # Join disturbance info to crops
+  safe_min_after <- function(x, threshold) {
+    vals <- x[x > threshold]
+    if (length(vals) == 0) return(as.Date(NA))  # NA_Date_
+    as.Date(min(vals))                          # ensure Date class
+  }
+
+  crop <- crop %>%
+    left_join(dist2, by = "MGT_combo") %>%
     group_by(MGT_combo, CD_seq_num) %>%
-    filter(all(is.na(CD_harv_date)) & all(is.na(CD_term_date)))
+    summarize(
+      CD_name  = paste(unique(CD_name),  collapse = " + "),
+      CD_plant_date = first(CD_plant_date),
+      CD_harv_date  = first(CD_harv_date),
+      CD_term_date  = first(CD_term_date),
+      next_plant    = first(next_plant),
+      next_dist_after = safe_min_after(SD_date, CD_plant_date),
+      .groups = "drop"
+    )
 
-  if (nrow(no_end) > 0) {
+  # For each crop, find the earliest disturbance AFTER planting
+  crop$inferred_end <- pmin(
+    crop$next_plant - 1,
+    crop$next_dist_after - 1,
+    na.rm = TRUE
+  )
+
+  # 4. Final crop_end hierarchy
+  crop$crop_end <- dplyr::coalesce(
+    crop$CD_term_date,
+    crop$CD_harv_date,
+    crop$inferred_end
+  )
+
+  #   ---- VALIDATION (AFTER inference) ----
+
+  # 1. Every crop must now have an end date
+  missing_end <- crop %>% filter(is.na(crop_end))
+  if (nrow(missing_end) > 0) {
     stop(
-      "Error: Crop rows with no harvest or termination date:\n",
-      paste0("  - ", no_end$MGT_combo, " seq ", no_end$CD_seq_num),
+      "Error: Some crops still have no end date even after inference:\n",
+      paste0("  - ", missing_end$MGT_combo, " seq ", missing_end$CD_seq_num),
       call. = FALSE
     )
   }
 
-  # 2. Annual vs perennial logic
-  annual    <- crop %>% filter(CD_cat == "Annual")
-  perennial <- crop %>% filter(CD_cat != "Annual")
-
-  # Annuals MUST have CD_term_date
-  bad_annual_missing_term <- annual %>% filter(is.na(CD_term_date))
-
-  if (nrow(bad_annual_missing_term) > 0) {
-    stop(
-      "Error: Annual crops must have a termination date (CD_term_date):\n",
-      paste0("  - ", bad_annual_missing_term$MGT_combo,
-             " seq ", bad_annual_missing_term$CD_seq_num),
-      call. = FALSE
-    )
-  }
-
-  # Annuals: if CD_harv_date exists, it must equal CD_term_date
-  bad_annual_harv <- annual %>%
-    filter(!is.na(CD_harv_date) & CD_harv_date != CD_term_date)
-
-  if (nrow(bad_annual_harv) > 0) {
-    stop(
-      "Error: Annual crops must have CD_harv_date equal to CD_term_date (or leave CD_harv_date blank):\n",
-      paste0("  - ", bad_annual_harv$MGT_combo,
-             " seq ", bad_annual_harv$CD_seq_num),
-      call. = FALSE
-    )
-  }
-
-  # 3. Harvest after termination (impossible)
-  bad_order <- crop %>%
-    filter(!is.na(CD_harv_date), !is.na(CD_term_date), CD_harv_date > CD_term_date)
-
+  # 2. crop_end must be >= planting date
+  bad_order <- crop %>% filter(crop_end < CD_plant_date)
   if (nrow(bad_order) > 0) {
     stop(
-      "Error: CD_harv_date is after CD_term_date for:\n",
+      "Error: crop_end is before planting date:\n",
       paste0("  - ", bad_order$MGT_combo, " seq ", bad_order$CD_seq_num),
       call. = FALSE
     )
   }
 
-  # 4. Harvest or termination before planting (impossible)
-  bad_within_row <- crop %>%
-    filter(
-      (!is.na(CD_harv_date) & CD_harv_date < CD_plant_date) |
-        (!is.na(CD_term_date) & CD_term_date < CD_plant_date)
-    )
-
-  if (nrow(bad_within_row) > 0) {
-    stop(
-      "Error: Crop has harvest or termination before planting:\n",
-      paste0("  - ", bad_within_row$MGT_combo, " seq ", bad_within_row$CD_seq_num),
-      call. = FALSE
-    )
-  }
-
-  # ---- Define crop_end consistently ----
-  crop <- crop %>%
-    mutate(
-      crop_end = coalesce(CD_term_date, CD_harv_date)
-    )
-
-  # ---- 5. CD_seq_num must be chronological ----
+  # 3. CD_seq_num chronological
   bad_seq <- crop %>%
     group_by(MGT_combo) %>%
     arrange(CD_seq_num) %>%
@@ -333,7 +330,7 @@ prepare_shmi_inputs <- function(path,
 
   if (nrow(bad_seq) > 0) {
     stop(
-      "Error: CD_seq_num is not chronological for the following rows:\n",
+      "Error: CD_seq_num is not chronological:\n",
       paste0("  - ", bad_seq$MGT_combo, " seq ", bad_seq$CD_seq_num,
              " (", bad_seq$CD_plant_date, ") > seq ", bad_seq$next_seq,
              " (", bad_seq$next_start, ")", collapse = "\n"),
@@ -341,7 +338,7 @@ prepare_shmi_inputs <- function(path,
     )
   }
 
-  # ---- 6. Same-day planting must share same CD_seq_num ----
+  # 4. Same-day planting must share same CD_seq_num
   bad_same_date <- crop %>%
     group_by(MGT_combo, CD_plant_date) %>%
     filter(n() > 1) %>%
@@ -357,32 +354,8 @@ prepare_shmi_inputs <- function(path,
     )
   }
 
-  # ---- Load Soil_Disturbance ----
-  cli::cli_progress_step("Reading Soil_Disturbance...")
-
-  dist <- .safe_read(
-    path,
-    "Soil_Disturbance",
-    required_cols = c("MGT_combo", "SD_date", "SD_mixeff"),
-    skip = 3
-  )
-
-  dist <- dist %>%
-    mutate(
-      SD_date = as.Date(unname(.parse_shmi_date(SD_date)))
-    )
-
-  if (!is.null(start_date_override)) {
-    dist <- dist %>% filter(SD_date >= S)
-  }
-
-  if (!is.null(end_date_override)) {
-    dist <- dist %>% filter(SD_date <= E)
-  }
 
   # ---- Load Soil_Amendments ----
-  cli::cli_progress_step("Reading Soil_Amendments...")
-
   amend <- .safe_read(
     path,
     "Soil_Amendments",
@@ -404,8 +377,6 @@ prepare_shmi_inputs <- function(path,
   }
 
   # ---- Load Animal_Diversity ----
-  cli::cli_progress_step("Reading Animal_Diversity...")
-
   animal <- .safe_read(
     path,
     "Animal_Diversity",
@@ -498,12 +469,9 @@ prepare_shmi_inputs <- function(path,
         end_raw   = if_else(is.infinite(end_raw),   NA_Date_, end_raw)
       ) %>%
       summarize(
-        CD_group = paste(unique(CD_group), collapse = " + "),
-        CD_name  = paste(unique(CD_name),  collapse = " + "),
+        CD_name  = paste(unique(CD_name), collapse = " + "),
 
         # Start date logic:
-        # - If first crop and missing start_raw → fallback to Jan 1 of start_yr
-        # - Otherwise use start_raw
         crop_start = first(
           if_else(
             is_first & is.na(start_raw),
@@ -513,8 +481,6 @@ prepare_shmi_inputs <- function(path,
         ),
 
         # End date logic:
-        # - If last crop and missing end_raw → fallback to Dec 31 of end_yr
-        # - Otherwise use end_raw
         crop_end = first(
           if_else(
             is_last & is.na(end_raw),
@@ -526,6 +492,7 @@ prepare_shmi_inputs <- function(path,
         .groups = "drop"
       )
   }
+
 
   crop_harmonized <- harmonize_crop_windows(crop)
 

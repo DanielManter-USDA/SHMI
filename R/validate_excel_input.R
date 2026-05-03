@@ -76,8 +76,8 @@ validate_excel_input <- function(path) {
                  "mgt_lat", "mgt_lon", "mgt_state", "mgt_county",
                  "mgt_trt", "mgt_tile_drain", "mgt_tile_years"),
 
-    Crop_Diversity = c("mgt_combo", "cd_seq_num", "cd_mix", "cd_cat",
-                       "cd_group", "cd_name", "cd_plant_date",
+    Crop_Diversity = c("mgt_combo", "cd_seq_num", "cd_mix",
+                       "cd_name", "cd_plant_date",
                        "cd_harv_date", "cd_term_date"),
 
     Soil_Disturbance = c("mgt_combo", "sd_phase", "sd_date",

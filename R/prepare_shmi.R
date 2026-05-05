@@ -187,7 +187,7 @@ prepare_shmi_inputs <- function(path,
     "Mgt_Unit",
     skip = 3,
   ) %>%
-    select(user_name, MGT_combo) %>%
+    select(user_name, MGT_combo, MGT_study, MGT_farm, MGT_field, MGT_trt) %>%
     janitor::remove_empty("rows") %>%
     filter(!(MGT_combo %in% exclude))
 

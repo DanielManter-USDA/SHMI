@@ -150,6 +150,7 @@ build_shmi <- function(shmi_inputs,
     )
   }
 
+  mgt             <- shmi_inputs$mgt
   rot_bounds      <- shmi_inputs$rot_bounds
   crop_harmonized <- shmi_inputs$crop_harmonized
   daily           <- shmi_inputs$daily
@@ -203,7 +204,7 @@ build_shmi <- function(shmi_inputs,
   # --------------------------------------------------------------------------
   cli::cli_progress_step("Combining indices...")
   indicator_df <- purrr::reduce(
-    list(cover, diversity, invdist, orginput),
+    list(mgt, cover, diversity, invdist, orginput),
     dplyr::full_join,
     by = "MGT_combo"
   )
@@ -224,7 +225,9 @@ build_shmi <- function(shmi_inputs,
           w_orginput * .data$OrgInputs
       )
     ) %>%
-    dplyr::select(.data$MGT_combo, .data$SHMI,
+    dplyr::select(.data$MGT_combo, .data$MGT_study, .data$MGT_farm,
+                  .data$MGT_field, .data$MGT_trt,
+                  .data$SHMI,
                   .data$Cover, .data$Diversity,
                   .data$InvDist, .data$OrgInputs) %>%
     dplyr::arrange(.data$MGT_combo)

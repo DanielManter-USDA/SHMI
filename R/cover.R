@@ -7,14 +7,9 @@
 #' normalized by the expected number of days per season (one‑quarter of the
 #' rotation length), and the final cover score is scaled to 0–100.
 #'
-#' @param daily A daily data frame produced by \code{prepare_shmi_inputs()},
-#'   containing at least:
-#'   \itemize{
-#'     \item \code{MGT_combo} — management unit identifier
-#'     \item \code{date} — calendar date
-#'     \item \code{crop_present} — 1 if a crop is present, 0 otherwise
-#'     \item \code{CD_name} — crop name (used to treat "fallow" as 0 cover)
-#'   }
+#' @param crop_harmonized A data frame produced by
+#'   \code{prepare_shmi_inputs()}, containing one row per crop event with
+#'   harmonized start/end dates and mixture names.
 #'
 #' @param rot_bounds A data frame with rotation start and end dates for each
 #'   \code{MGT_combo}, containing:
@@ -47,28 +42,62 @@
 #'   }
 #'
 #' @export
-compute_cover <- function(daily,
+compute_cover <- function(crop_harmonized,
                           rot_bounds,
                           w_winter = 0.130,
                           w_spring = 0.129,
                           w_summer = 0.513,
                           w_fall   = 0.227) {
 
-  # 1. Collapse to one row per day per field
-  crop_season <- daily %>%
-    dplyr::mutate(
-      crop_present = dplyr::coalesce(crop_present, 0L)  # convert NA → 0
+  # ---- 1. Build interval union per MGT_combo ----
+  interval_union <- crop_harmonized %>%
+    arrange(MGT_combo, crop_start, crop_end) %>%
+    group_by(MGT_combo) %>%
+    reframe({
+
+      starts <- as.numeric(crop_start)   # force numeric for safe comparisons
+      ends   <- as.numeric(crop_end)
+
+      out_start <- c()
+      out_end   <- c()
+
+      cur_start <- starts[1]
+      cur_end   <- ends[1]
+
+      for (i in seq_along(starts)[-1]) {
+        if (starts[i] <= cur_end + 1) {
+          cur_end <- max(cur_end, ends[i])
+        } else {
+          out_start <- c(out_start, cur_start)
+          out_end   <- c(out_end,   cur_end)
+          cur_start <- starts[i]
+          cur_end   <- ends[i]
+        }
+      }
+
+      out_start <- c(out_start, cur_start)
+      out_end   <- c(out_end,   cur_end)
+
+      tibble::tibble(
+        crop_start = as.Date(out_start, origin = "1970-01-01"),
+        crop_end   = as.Date(out_end,   origin = "1970-01-01")
+      )
+    })
+
+  # ---- 2. Assign each day in each merged interval to a season ----
+  cover_days <- interval_union %>%
+    mutate(
+      n_days = as.integer(crop_end - crop_start) + 1L
     ) %>%
-    dplyr::group_by(MGT_combo, date) %>%
-    dplyr::summarize(
-      crop_present = as.integer(any(crop_present == 1L)),  # TRUE if ANY crop present
-      is_fallow = any(CD_name %in% "fallow", na.rm = TRUE),
-      .groups = "drop"
+    tidyr::uncount(n_days) %>%
+    group_by(MGT_combo, crop_start, crop_end) %>%
+    mutate(
+      date = crop_start + (row_number() - 1L)
     ) %>%
-    dplyr::mutate(
-      crop_present = if_else(is_fallow, 0L, crop_present),
+    ungroup() %>%
+    mutate(
       month = lubridate::month(date),
-      season = dplyr::case_when(
+      season = case_when(
         month %in% c(12, 1, 2)  ~ "winter",
         month %in% c(3, 4, 5)   ~ "spring",
         month %in% c(6, 7, 8)   ~ "summer",
@@ -76,57 +105,62 @@ compute_cover <- function(daily,
       )
     )
 
-  # 2. Compute plant-days and possible days per season
-  crop_days <- crop_season %>%
-    dplyr::group_by(MGT_combo, season) %>%
+  # ---- 3. Count plant-days per season ----
+  season_counts <- cover_days %>%
+    dplyr::count(MGT_combo, season, name = "plant_days")
+
+  # ---- 4. Compute possible days per season from rot_bounds ----
+  rot_days <- rot_bounds %>%
+    dplyr::mutate(
+      rot_start = as.Date(rot_start),
+      rot_end   = as.Date(rot_end),
+      n_days = as.integer(rot_end - rot_start) + 1L
+    ) %>%
+    tidyr::uncount(n_days) %>%
+    dplyr::group_by(MGT_combo) %>%
+    dplyr::mutate(date = rot_start + (dplyr::row_number() - 1L)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      month = lubridate::month(date),
+      season = dplyr::case_when(
+        month %in% c(12, 1, 2)  ~ "winter",
+        month %in% c(3, 4, 5)   ~ "spring",
+        month %in% c(6, 7, 8)   ~ "summer",
+        month %in% c(9, 10, 11) ~ "fall"
+      )
+    ) %>%
+    dplyr::count(MGT_combo, season, name = "days_possible")
+
+  # ---- 5. Merge plant-days and possible-days ----
+  season_totals <- dplyr::full_join(season_counts, rot_days,
+                                    by = c("MGT_combo", "season")) %>%
+    tidyr::replace_na(list(plant_days = 0, days_possible = 0))
+
+  # ---- 6. Compute seasonal proportions ----
+  season_totals <- season_totals %>%
+    dplyr::mutate(
+      prop = dplyr::if_else(days_possible > 0,
+                            plant_days / days_possible,
+                            0)
+    )
+
+  # ---- 7. Normalize weights ----
+  w_sum <- w_winter + w_spring + w_summer + w_fall
+  w <- c(
+    winter = w_winter / w_sum,
+    spring = w_spring / w_sum,
+    summer = w_summer / w_sum,
+    fall   = w_fall   / w_sum
+  )
+
+  # ---- 8. Weighted cover score ----
+  cover <- season_totals %>%
+    dplyr::mutate(weight = w[season]) %>%
+    dplyr::group_by(MGT_combo) %>%
     dplyr::summarize(
-      plant_days = sum(crop_present),
-      days_possible = dplyr::n(),
+      Cover = 100 * sum(weight * prop),
       .groups = "drop"
     )
 
-  # 3. Pivot to wide format
-  season_totals <- crop_days %>%
-    tidyr::pivot_wider(
-      names_from = season,
-      values_from = c(plant_days, days_possible),
-      values_fill = 0,
-      names_sort = TRUE
-    )
-
-  # 4. Compute seasonal proportions (bounded 0–1)
-  season_totals <- season_totals %>%
-    dplyr::mutate(
-      prop_winter = plant_days_winter / days_possible_winter,
-      prop_spring = plant_days_spring / days_possible_spring,
-      prop_summer = plant_days_summer / days_possible_summer,
-      prop_fall   = plant_days_fall   / days_possible_fall
-    ) %>%
-    dplyr::mutate(
-      prop_winter = dplyr::if_else(is.nan(prop_winter), 0, prop_winter),
-      prop_spring = dplyr::if_else(is.nan(prop_spring), 0, prop_spring),
-      prop_summer = dplyr::if_else(is.nan(prop_summer), 0, prop_summer),
-      prop_fall   = dplyr::if_else(is.nan(prop_fall),   0, prop_fall)
-    )
-
-  # 5. Normalize weights
-  w_sum <- w_winter + w_spring + w_summer + w_fall
-  w_winter_n <- w_winter / w_sum
-  w_spring_n <- w_spring / w_sum
-  w_summer_n <- w_summer / w_sum
-  w_fall_n   <- w_fall   / w_sum
-
-  # 6. Weighted cover score (guaranteed 0–100)
-  season_totals <- season_totals %>%
-    dplyr::mutate(
-      Cover = 100 * (
-        w_winter_n * prop_winter +
-          w_spring_n * prop_spring +
-          w_summer_n * prop_summer +
-          w_fall_n   * prop_fall
-      )
-    ) %>%
-    dplyr::select(MGT_combo, Cover)
-
-  season_totals
+  cover
 }

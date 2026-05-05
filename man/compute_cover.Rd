@@ -5,7 +5,7 @@
 \title{Compute the SHMI Cover Sub-index (Season‑Weighted Plant Presence)}
 \usage{
 compute_cover(
-  daily,
+  crop_harmonized,
   rot_bounds,
   w_winter = 0.13,
   w_spring = 0.129,
@@ -14,14 +14,9 @@ compute_cover(
 )
 }
 \arguments{
-\item{daily}{A daily data frame produced by \code{prepare_shmi_inputs()},
-containing at least:
-\itemize{
-  \item \code{MGT_combo} — management unit identifier
-  \item \code{date} — calendar date
-  \item \code{crop_present} — 1 if a crop is present, 0 otherwise
-  \item \code{CD_name} — crop name (used to treat "fallow" as 0 cover)
-}}
+\item{crop_harmonized}{A data frame produced by
+\code{prepare_shmi_inputs()}, containing one row per crop event with
+harmonized start/end dates and mixture names.}
 
 \item{rot_bounds}{A data frame with rotation start and end dates for each
 \code{MGT_combo}, containing:

@@ -2,16 +2,16 @@
 
 Performs structural and semantic validation of the input data list used
 by \`build_shmi()\`. This function checks for required tables, required
-columns, valid data types, missing or invalid values, duplicated rows,
-and rotation boundary consistency. It returns a structured list
-containing validation status, error messages, warnings, and a summary of
-key dataset properties.
+columns, valid data types, missing or invalid values, duplicated keys
+where they should be unique, and rotation boundary consistency. It
+returns a structured list containing validation status, error messages,
+warnings, and a summary of key dataset properties.
 
 This validator is designed to fail early and explicitly when critical
 issues are detected (e.g., missing \`MGT_combo\`, malformed dates,
-duplicated daily rows). Non-fatal issues are returned as warnings. A
+invalid crop windows). Non-fatal issues are returned as warnings. A
 summary of field counts, years, species richness, mixture counts, and
-fallow days is included for diagnostic transparency.
+fallow presence is included for diagnostic transparency.
 
 ## Usage
 
@@ -21,29 +21,42 @@ validate_shmi_input(shmi_inputs)
 
 ## Arguments
 
-- dat:
+- shmi_inputs:
 
   A named list of SHMI input tables, typically produced by
   \`prepare_shmi_inputs()\`. Must contain at least:
 
+  mgt
+
+  :   Management table with \`MGT_combo\` and metadata columns.
+
   crop_harmonized
 
-  :   A tibble of harmonized crop records with \`MGT_combo\`, \`date\`,
-      and \`CD_name\`.
-
-  daily
-
-  :   A tibble of daily crop presence with \`MGT_combo\`, \`date\`,
-      \`CD_name\`, and \`crop_present\`.
+  :   Tibble of harmonized crop records with \`MGT_combo\`, \`CD_name\`,
+      \`CD_seq_num\`, \`crop_start\`, \`crop_end\`.
 
   rot_bounds
 
-  :   A tibble defining rotation start and end dates for each
-      \`MGT_combo\`, with columns \`rot_start\` and \`rot_end\`.
+  :   Tibble defining rotation start and end dates for each
+      \`MGT_combo\`, with \`MGT_combo\`, \`rot_start\`, \`rot_end\`.
+
+  daily_dist
+
+  :   Daily disturbance table with \`MGT_combo\`, \`date\`, and
+      disturbance attributes.
+
+  amend
+
+  :   Amendment events with \`MGT_combo\` and \`SA_date\`.
+
+  animal
+
+  :   Animal events with \`MGT_combo\`, \`AD_start_date\`,
+      \`AD_end_date\`.
 
 ## Value
 
-A list with the following elements:
+A list with:
 
 - ok:
 
@@ -62,33 +75,4 @@ A list with the following elements:
 - summary:
 
   A tibble summarizing key dataset properties (fields, years, species,
-  mixtures, fallow days).
-
-## Details
-
-This function enforces SHMI input integrity by checking:
-
-- Presence of required tables and columns.
-
-- No missing \`MGT_combo\` values.
-
-- All date columns are of class \`Date\`.
-
-- Rotation boundaries are valid (\`rot_start\` ≤ \`rot_end\`).
-
-- No duplicated \`(MGT_combo, date)\` rows in the daily table.
-
-- \`crop_present\` contains only 0, 1, or \`NA\`.
-
-- Basic dataset diagnostics (fields, years, species richness, mixtures).
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-dat <- prepare_shmi_inputs("path/to/input/folder")
-val <- validate_shmi_input(dat)
-if (!val$ok) stop("Validation failed:\n", paste(val$errors, collapse = "\n"))
-print(val$summary)
-} # }
-```
+  mixtures, fallow presence).

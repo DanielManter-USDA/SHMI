@@ -72,7 +72,7 @@ entropy form (Shannon or Simpson). The final diversity score is scaled to
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_diversity</span><span class="op">(</span><span class="va">crop_harmonized</span>, <span class="va">daily</span>, hill <span class="op">=</span> <span class="fl">2</span>, max_div <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_diversity</span><span class="op">(</span><span class="va">crop_harmonized</span>, hill <span class="op">=</span> <span class="fl">2</span>, max_div <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -83,16 +83,6 @@ entropy form (Shannon or Simpson). The final diversity score is scaled to
 <dd><p>A data frame produced by
 <code><a href="prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code>, containing one row per crop event with
 harmonized start/end dates and mixture names.</p></dd>
-
-
-<dt id="arg-daily">daily<a class="anchor" aria-label="anchor" href="#arg-daily"></a></dt>
-<dd><p>A daily data frame from <code><a href="prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code>,
-containing:</p><ul><li><p><code>MGT_combo</code> — management unit identifier</p></li>
-<li><p><code>date</code> — calendar date</p></li>
-<li><p><code>CD_seq_num</code> — crop sequence number</p></li>
-<li><p><code>CD_name</code> — crop or mixture name</p></li>
-<li><p><code>crop_present</code> — 1 if crop present, 0 otherwise</p></li>
-</ul></dd>
 
 
 <dt id="arg-hill">hill<a class="anchor" aria-label="anchor" href="#arg-hill"></a></dt>

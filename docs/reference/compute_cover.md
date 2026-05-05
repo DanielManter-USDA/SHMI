@@ -12,7 +12,7 @@ cover score is scaled to 0–100.
 
 ``` r
 compute_cover(
-  daily,
+  crop_harmonized,
   rot_bounds,
   w_winter = 0.13,
   w_spring = 0.129,
@@ -23,19 +23,12 @@ compute_cover(
 
 ## Arguments
 
-- daily:
+- crop_harmonized:
 
-  A daily data frame produced by
+  A data frame produced by
   [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md),
-  containing at least:
-
-  - `MGT_combo` — management unit identifier
-
-  - `date` — calendar date
-
-  - `crop_present` — 1 if a crop is present, 0 otherwise
-
-  - `CD_name` — crop name (used to treat "fallow" as 0 cover)
+  containing one row per crop event with harmonized start/end dates and
+  mixture names.
 
 - rot_bounds:
 

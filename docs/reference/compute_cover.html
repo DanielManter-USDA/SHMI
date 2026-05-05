@@ -73,7 +73,7 @@ rotation length), and the final cover score is scaled to 0–100.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_cover</span><span class="op">(</span></span>
-<span>  <span class="va">daily</span>,</span>
+<span>  <span class="va">crop_harmonized</span>,</span>
 <span>  <span class="va">rot_bounds</span>,</span>
 <span>  w_winter <span class="op">=</span> <span class="fl">0.13</span>,</span>
 <span>  w_spring <span class="op">=</span> <span class="fl">0.129</span>,</span>
@@ -86,13 +86,10 @@ rotation length), and the final cover score is scaled to 0–100.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-daily">daily<a class="anchor" aria-label="anchor" href="#arg-daily"></a></dt>
-<dd><p>A daily data frame produced by <code><a href="prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code>,
-containing at least:</p><ul><li><p><code>MGT_combo</code> — management unit identifier</p></li>
-<li><p><code>date</code> — calendar date</p></li>
-<li><p><code>crop_present</code> — 1 if a crop is present, 0 otherwise</p></li>
-<li><p><code>CD_name</code> — crop name (used to treat "fallow" as 0 cover)</p></li>
-</ul></dd>
+<dl><dt id="arg-crop-harmonized">crop_harmonized<a class="anchor" aria-label="anchor" href="#arg-crop-harmonized"></a></dt>
+<dd><p>A data frame produced by
+<code><a href="prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code>, containing one row per crop event with
+harmonized start/end dates and mixture names.</p></dd>
 
 
 <dt id="arg-rot-bounds">rot_bounds<a class="anchor" aria-label="anchor" href="#arg-rot-bounds"></a></dt>

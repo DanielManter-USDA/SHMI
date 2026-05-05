@@ -4,22 +4,12 @@
 \alias{compute_diversity}
 \title{Compute Rotation-Scale Crop Diversity (Entropy-Based Hill Numbers)}
 \usage{
-compute_diversity(crop_harmonized, daily, hill = 2, max_div = 8)
+compute_diversity(crop_harmonized, hill = 2, max_div = 8)
 }
 \arguments{
 \item{crop_harmonized}{A data frame produced by
 \code{prepare_shmi_inputs()}, containing one row per crop event with
 harmonized start/end dates and mixture names.}
-
-\item{daily}{A daily data frame from \code{prepare_shmi_inputs()},
-containing:
-\itemize{
-  \item \code{MGT_combo} — management unit identifier
-  \item \code{date} — calendar date
-  \item \code{CD_seq_num} — crop sequence number
-  \item \code{CD_name} — crop or mixture name
-  \item \code{crop_present} — 1 if crop present, 0 otherwise
-}}
 
 \item{hill}{Hill-number order. Supported values:
 \itemize{

@@ -11,7 +11,7 @@ theoretical maximum.
 ## Usage
 
 ``` r
-compute_diversity(crop_harmonized, daily, hill = 2, max_div = 8)
+compute_diversity(crop_harmonized, hill = 2, max_div = 8)
 ```
 
 ## Arguments
@@ -22,22 +22,6 @@ compute_diversity(crop_harmonized, daily, hill = 2, max_div = 8)
   [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md),
   containing one row per crop event with harmonized start/end dates and
   mixture names.
-
-- daily:
-
-  A daily data frame from
-  [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md),
-  containing:
-
-  - `MGT_combo` — management unit identifier
-
-  - `date` — calendar date
-
-  - `CD_seq_num` — crop sequence number
-
-  - `CD_name` — crop or mixture name
-
-  - `crop_present` — 1 if crop present, 0 otherwise
 
 - hill:
 

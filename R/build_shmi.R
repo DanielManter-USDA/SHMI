@@ -13,7 +13,6 @@
 #'   \itemize{
 #'     \item \code{rot_bounds} — rotation start/end dates
 #'     \item \code{crop_harmonized} — harmonized crop windows
-#'     \item \code{daily} — daily crop presence table
 #'     \item \code{daily_dist} — daily disturbance table
 #'     \item \code{amend} — amendment events
 #'     \item \code{animal} — animal events
@@ -138,7 +137,7 @@ build_shmi <- function(shmi_inputs,
   # --------------------------------------------------------------------------
   # 3. Check and extract inputs
   # --------------------------------------------------------------------------
-  required <- c("rot_bounds", "crop_harmonized", "daily", "daily_dist",
+  required <- c("rot_bounds", "crop_harmonized", "daily_dist",
                 "amend", "animal")
 
   missing <- setdiff(required, names(shmi_inputs))
@@ -153,7 +152,6 @@ build_shmi <- function(shmi_inputs,
   mgt             <- shmi_inputs$mgt
   rot_bounds      <- shmi_inputs$rot_bounds
   crop_harmonized <- shmi_inputs$crop_harmonized
-  daily           <- shmi_inputs$daily
   daily_dist      <- shmi_inputs$daily_dist
   amend           <- shmi_inputs$amend
   animal          <- shmi_inputs$animal
@@ -165,8 +163,8 @@ build_shmi <- function(shmi_inputs,
   # Cover
   cli::cli_progress_step("Computing cover...")
   cover <- compute_cover(
-    daily       = daily,
-    rot_bounds  = rot_bounds,
+    crop_harmonized = crop_harmonized,
+    rot_bounds      = rot_bounds,
     w_winter    = settings$w_winter,
     w_spring    = settings$w_spring,
     w_summer    = settings$w_summer,
@@ -177,7 +175,6 @@ build_shmi <- function(shmi_inputs,
   cli::cli_progress_step("Computing diversity...")
   diversity <- compute_diversity(
     crop_harmonized = crop_harmonized,
-    daily           = daily,
     hill            = settings$hill,
     max_div         = settings$max_div
   )
@@ -233,6 +230,7 @@ build_shmi <- function(shmi_inputs,
     dplyr::arrange(.data$MGT_combo)
 
   cli::cli_progress_done()
+  cli::cli_progress_cleanup()
 
   if (!expert_mode) {
     message("\n\nSHMI computed using official national settings.")

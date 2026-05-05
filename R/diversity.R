@@ -11,16 +11,6 @@
 #'   \code{prepare_shmi_inputs()}, containing one row per crop event with
 #'   harmonized start/end dates and mixture names.
 #'
-#' @param daily A daily data frame from \code{prepare_shmi_inputs()},
-#'   containing:
-#'   \itemize{
-#'     \item \code{MGT_combo} — management unit identifier
-#'     \item \code{date} — calendar date
-#'     \item \code{CD_seq_num} — crop sequence number
-#'     \item \code{CD_name} — crop or mixture name
-#'     \item \code{crop_present} — 1 if crop present, 0 otherwise
-#'   }
-#'
 #' @param hill Hill-number order. Supported values:
 #'   \itemize{
 #'     \item \code{0}: species richness
@@ -67,75 +57,75 @@
 #'
 #' @export
 compute_diversity <- function(crop_harmonized,
-                              daily,
                               hill = 2,
                               max_div = 8) {
 
-  # 1. Daily plant-days summary
-  daily_sum <- daily %>%
-    ungroup() %>%
-    mutate(year = lubridate::year(date)) %>%
-    group_by(MGT_combo, CD_seq_num, CD_name, year) %>%
-    summarise(days = sum(crop_present), .groups = "drop") %>%
-    filter(!is.na(CD_seq_num))
-
-  # 2. Expand mixtures
+  # ---- 1. Expand mixtures into species ----
   expand_mixtures <- function(df) {
+
     placeholder <- df %>%
-      filter(str_detect(CD_name, "-species")) %>%
-      mutate(
-        mix_n = as.integer(str_extract(CD_name, "\\d+")),
-        species = map(mix_n, ~ paste0("species_", seq_len(.x)))
+      dplyr::filter(stringr::str_detect(CD_name, "-species")) %>%
+      dplyr::mutate(
+        mix_n = as.integer(stringr::str_extract(CD_name, "\\d+")),
+        species = purrr::map(mix_n, ~ paste0("species_", seq_len(.x)))
       ) %>%
-      unnest(species)
+      tidyr::unnest(species)
 
     realmix <- df %>%
-      filter(!str_detect(CD_name, "-species")) %>%
-      mutate(species = str_split(CD_name, "\\s*\\+\\s*")) %>%
-      unnest(species) %>%
-      mutate(species = str_trim(species))
+      dplyr::filter(!stringr::str_detect(CD_name, "-species")) %>%
+      dplyr::mutate(
+        species = stringr::str_split(CD_name, "\\s*\\+\\s*")
+      ) %>%
+      tidyr::unnest(species) %>%
+      dplyr::mutate(species = stringr::str_trim(species))
 
-    bind_rows(placeholder, realmix) %>%
-      select(MGT_combo, species, year, days)
+    dplyr::bind_rows(placeholder, realmix) %>%
+      dplyr::select(MGT_combo, species, crop_start, crop_end)
   }
 
-  species_expanded <- expand_mixtures(daily_sum)
+  expanded <- expand_mixtures(crop_harmonized)
 
-  # 3. Compute annual plant-days
-  plant_days <- species_expanded %>%
-    mutate(days = ifelse(species == "fallow", 0, days)) %>%
-    group_by(MGT_combo, species, year) %>%
-    summarise(days = sum(days), .groups = "drop")
+  # ---- 2. Compute interval length per species ----
+  species_days <- expanded %>%
+    dplyr::mutate(
+      days = as.integer(crop_end - crop_start) + 1L,
+      days = dplyr::if_else(species == "fallow", 0L, days)
+    ) %>%
+    dplyr::group_by(MGT_combo, species) %>%
+    dplyr::summarize(
+      days = sum(days),
+      .groups = "drop"
+    )
 
-  # 4. Rotation diversity (now entropy-based)
-  div_rot <- plant_days %>%
-    group_by(MGT_combo, species) %>%
-    summarise(days = sum(days), .groups = "drop") %>%
-    group_by(MGT_combo) %>%
-    mutate(p = days / sum(days)) %>%
-    summarise(
-      D = case_when(
+  # ---- 3. Compute species proportions ----
+  div_rot <- species_days %>%
+    dplyr::group_by(MGT_combo) %>%
+    dplyr::mutate(
+      p = days / sum(days)
+    ) %>%
+    dplyr::summarize(
+      D = dplyr::case_when(
         hill == 0 ~ sum(p > 0),                         # richness
         hill == 1 ~ -sum(p * log(p), na.rm = TRUE),     # Shannon entropy
         TRUE      ~ -log(sum(p^2, na.rm = TRUE))        # Simpson entropy (entropy form)
       ),
       .groups = "drop"
     ) %>%
-    mutate(
-      D = ifelse(is.na(D), 0, D),
+    dplyr::mutate(
+      D = dplyr::if_else(is.na(D), 0, D),
       D = pmin(D, max_div)
     )
 
-  # 7. Final scaling (0–100)
+  # ---- 4. Scale to 0–100 ----
   div_final <- div_rot %>%
-    mutate(
-      Diversity_raw = case_when(
-        hill == 0 ~ D / max_div,          # richness scaled by max_div
-        TRUE      ~ D / log(max_div)      # entropies scaled by log(max_div)
+    dplyr::mutate(
+      Diversity_raw = dplyr::case_when(
+        hill == 0 ~ D / max_div,
+        TRUE      ~ D / log(max_div)
       ),
       Diversity = pmin(Diversity_raw, 1) * 100
     ) %>%
-    select(MGT_combo, Diversity)
+    dplyr::select(MGT_combo, Diversity)
 
-  return(div_final)
+  div_final
 }

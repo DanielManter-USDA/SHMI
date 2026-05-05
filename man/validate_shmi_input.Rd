@@ -7,19 +7,23 @@
 validate_shmi_input(shmi_inputs)
 }
 \arguments{
-\item{dat}{A named list of SHMI input tables, typically produced by
+\item{shmi_inputs}{A named list of SHMI input tables, typically produced by
 `prepare_shmi_inputs()`. Must contain at least:
 \describe{
-  \item{crop_harmonized}{A tibble of harmonized crop records with
-    `MGT_combo`, `date`, and `CD_name`.}
-  \item{daily}{A tibble of daily crop presence with `MGT_combo`, `date`,
-    `CD_name`, and `crop_present`.}
-  \item{rot_bounds}{A tibble defining rotation start and end dates for each
-    `MGT_combo`, with columns `rot_start` and `rot_end`.}
+  \item{mgt}{Management table with `MGT_combo` and metadata columns.}
+  \item{crop_harmonized}{Tibble of harmonized crop records with
+    `MGT_combo`, `CD_name`, `CD_seq_num`, `crop_start`, `crop_end`.}
+  \item{rot_bounds}{Tibble defining rotation start and end dates for each
+    `MGT_combo`, with `MGT_combo`, `rot_start`, `rot_end`.}
+  \item{daily_dist}{Daily disturbance table with `MGT_combo`, `date`,
+    and disturbance attributes.}
+  \item{amend}{Amendment events with `MGT_combo` and `SA_date`.}
+  \item{animal}{Animal events with `MGT_combo`, `AD_start_date`,
+    `AD_end_date`.}
 }}
 }
 \value{
-A list with the following elements:
+A list with:
 \describe{
   \item{ok}{Logical. `TRUE` if validation passed with no errors; `FALSE`
     otherwise.}
@@ -27,40 +31,20 @@ A list with the following elements:
     `build_shmi()` should stop execution.}
   \item{warnings}{Character vector of non-fatal issues.}
   \item{summary}{A tibble summarizing key dataset properties (fields, years,
-    species, mixtures, fallow days).}
+    species, mixtures, fallow presence).}
 }
 }
 \description{
 Performs structural and semantic validation of the input data list used by
 `build_shmi()`. This function checks for required tables, required columns,
-valid data types, missing or invalid values, duplicated rows, and rotation
-boundary consistency. It returns a structured list containing validation
-status, error messages, warnings, and a summary of key dataset properties.
+valid data types, missing or invalid values, duplicated keys where they
+should be unique, and rotation boundary consistency. It returns a structured
+list containing validation status, error messages, warnings, and a summary
+of key dataset properties.
 
 This validator is designed to fail early and explicitly when critical issues
-are detected (e.g., missing `MGT_combo`, malformed dates, duplicated daily
-rows). Non-fatal issues are returned as warnings. A summary of field counts,
-years, species richness, mixture counts, and fallow days is included for
-diagnostic transparency.
-}
-\details{
-This function enforces SHMI input integrity by checking:
-\itemize{
-  \item Presence of required tables and columns.
-  \item No missing `MGT_combo` values.
-  \item All date columns are of class `Date`.
-  \item Rotation boundaries are valid (`rot_start` ≤ `rot_end`).
-  \item No duplicated `(MGT_combo, date)` rows in the daily table.
-  \item `crop_present` contains only 0, 1, or `NA`.
-  \item Basic dataset diagnostics (fields, years, species richness, mixtures).
-}
-}
-\examples{
-\dontrun{
-dat <- prepare_shmi_inputs("path/to/input/folder")
-val <- validate_shmi_input(dat)
-if (!val$ok) stop("Validation failed:\n", paste(val$errors, collapse = "\n"))
-print(val$summary)
-}
-
+are detected (e.g., missing `MGT_combo`, malformed dates, invalid crop
+windows). Non-fatal issues are returned as warnings. A summary of field
+counts, years, species richness, mixture counts, and fallow presence is
+included for diagnostic transparency.
 }

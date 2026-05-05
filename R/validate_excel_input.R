@@ -20,8 +20,8 @@
 #' @export
 validate_excel_input <- function(path) {
 
-  errors <- c()
-  warnings <- c()
+  errors   <- character()
+  warnings <- character()
 
   # ---- Required sheets ----
   required_sheets <- c(
@@ -36,35 +36,42 @@ validate_excel_input <- function(path) {
   missing_sheets <- setdiff(required_sheets, sheets_present)
 
   if (length(missing_sheets) > 0) {
-    errors <- c(errors, paste("Missing required sheets:",
-                              paste(missing_sheets, collapse = ", ")))
+    errors <- c(errors, paste(
+      "Missing required sheets:",
+      paste(missing_sheets, collapse = ", ")
+    ))
     return(list(ok = FALSE, errors = errors, warnings = warnings))
   }
 
-  # ---- Helper to read a sheet safely ----
-  read_sheet <- function(path, sheet) {
-    df <- suppressWarnings(
-      readxl::read_excel(path, sheet = sheet, skip = 3)
-    )
+  # ---- Load sheets using .safe_read() ----
+  mu <- .safe_read(path,
+                   "Mgt_Unit",
+                   required_cols = c("MGT_combo", "MGT_study", "MGT_farm", "MGT_field", "MGT_trt"),
+                   skip = 3)
 
-    if (is.null(df) || nrow(df) == 0) {
-      return(tibble::tibble())
-    }
+  cd <- .safe_read(path,
+                   "Crop_Diversity",
+                   required_cols = c("MGT_combo", "CD_seq_num", "CD_plant_date", "CD_term_date"),
+                   skip = 3)
 
-    df <- janitor::clean_names(df)
-    df
-  }
+  sd <- .safe_read(path,
+                   "Soil_Disturbance",
+                   required_cols = c("MGT_combo", "SD_date", "SD_mixeff"),
+                   skip = 3)
 
-  # ---- Load sheets ----
-  mu <- read_sheet(path, "Mgt_Unit")
-  cd <- read_sheet(path, "Crop_Diversity")
-  sd <- read_sheet(path, "Soil_Disturbance")
-  sa <- read_sheet(path, "Soil_Amendments")
-  ad <- read_sheet(path, "Animal_Diversity")
+  sa <- .safe_read(path,
+                   "Soil_Amendments",
+                   required_cols = c("MGT_combo", "SA_date"),
+                   skip = 3)
+
+  ad <- .safe_read(path,
+                   "Animal_Diversity",
+                   required_cols = c("MGT_combo", "AD_start_date", "AD_end_date"),
+                   skip = 3)
 
   sheets <- list(
-    Mgt_Unit = mu,
-    Crop_Diversity = cd,
+    Mgt_Unit        = mu,
+    Crop_Diversity  = cd,
     Soil_Disturbance = sd,
     Soil_Amendments = sa,
     Animal_Diversity = ad
@@ -72,23 +79,27 @@ validate_excel_input <- function(path) {
 
   # ---- Required columns per sheet ----
   req_cols <- list(
-    Mgt_Unit = c("mgt_combo", "mgt_study", "mgt_farm", "mgt_field",
-                 "mgt_lat", "mgt_lon", "mgt_state", "mgt_county",
-                 "mgt_trt", "mgt_tile_drain", "mgt_tile_years"),
+    Mgt_Unit = c(
+      "MGT_combo", "MGT_study", "MGT_farm", "MGT_field", "MGT_trt"
+    ),
 
-    Crop_Diversity = c("mgt_combo", "cd_seq_num", "cd_mix",
-                       "cd_name", "cd_plant_date",
-                       "cd_harv_date", "cd_term_date"),
+    Crop_Diversity = c(
+      "MGT_combo", "CD_seq_num",
+      "CD_name", "CD_plant_date", "CD_term_date"
+    ),
 
-    Soil_Disturbance = c("mgt_combo", "sd_phase", "sd_date",
-                         "sd_equip_cat", "sd_equip", "sd_mixeff",
-                         "sd_depth"),
+    Soil_Disturbance = c(
+      "MGT_combo", "SD_date",
+      "SD_equip_cat", "SD_equip", "SD_mixeff", "SD_depth"
+    ),
 
-    Soil_Amendments = c("mgt_combo", "sa_cat", "sa_source",
-                        "sa_date", "sa_rate", "sa_units"),
+    Soil_Amendments = c(
+      "MGT_combo", "SA_date"
+    ),
 
-    Animal_Diversity = c("mgt_combo", "ad_type", "ad_intensity",
-                         "ad_count", "ad_start_date", "ad_end_date")
+    Animal_Diversity = c(
+      "MGT_combo", "AD_start_date", "AD_end_date"
+    )
   )
 
   for (nm in names(req_cols)) {
@@ -99,8 +110,7 @@ validate_excel_input <- function(path) {
     missing <- setdiff(req_cols[[nm]], names(df))
     if (length(missing) > 0) {
       errors <- c(errors, paste0(
-        "Sheet ", nm,
-        " is missing required columns: ",
+        "Sheet ", nm, " is missing required columns: ",
         paste(missing, collapse = ", ")
       ))
     }
@@ -108,35 +118,33 @@ validate_excel_input <- function(path) {
 
   # ---- Check MGT_combo consistency ----
   all_mgt <- list(
-    Mgt_Unit = mu,
-    Crop_Diversity = cd,
+    Mgt_Unit        = mu,
+    Crop_Diversity  = cd,
     Soil_Disturbance = sd,
     Soil_Amendments = sa,
     Animal_Diversity = ad
   )
 
+  # No NA MGT_combo
   for (nm in names(all_mgt)) {
     df <- all_mgt[[nm]]
-
     if (nrow(df) == 0) next
 
-    df <- dplyr::filter(df, !is.na(mgt_combo))
-
-    if (any(is.na(df$mgt_combo))) {
-      errors <- c(errors, paste0("Sheet ", nm,
-                                 " contains NA MGT_combo values"))
+    if (any(is.na(df$MGT_combo))) {
+      errors <- c(errors, paste0(
+        "Sheet ", nm, " contains NA MGT_combo values"
+      ))
     }
   }
 
   # Cross-sheet consistency
-  mu_set <- unique(mu$mgt_combo)
+  mu_set <- unique(mu$MGT_combo)
 
   for (nm in names(all_mgt)[-1]) {
     df <- all_mgt[[nm]]
-
     if (nrow(df) == 0) next
 
-    combos <- df$mgt_combo
+    combos <- df$MGT_combo
     combos <- combos[!is.na(combos)]
 
     missing <- setdiff(unique(combos), mu_set)
@@ -150,48 +158,16 @@ validate_excel_input <- function(path) {
     }
   }
 
-  # ---- Date parsing helper ----
-  parse_date <- function(x) {
-    if (is.numeric(x)) return(as.Date(x, origin = "1899-12-30"))
-    suppressWarnings(as.Date(x))
-  }
-
-  # ---- Date validation ----
-  date_cols <- list(
-    Crop_Diversity = c("cd_plant_date", "cd_harv_date", "cd_term_date"),
-    Soil_Disturbance = "sd_date",
-    Soil_Amendments = "sa_date",
-    Animal_Diversity = c("ad_start_date", "ad_end_date")
-  )
-
-  for (nm in names(date_cols)) {
-    df <- sheets[[nm]]
-
-    if (nrow(df) == 0) next
-
-    for (col in date_cols[[nm]]) {
-
-      # Parse the date BEFORE checking class
-      df[[col]] <- parse_date(df[[col]])
-
-      if (!inherits(df[[col]], "Date")) {
-        errors <- c(errors, paste0(
-          "Column ", col,
-          " in sheet ", nm,
-          " is not a valid Date"
-        ))
-      }
-    }
-  }
-
-  # ---- Mixture syntax ----
-  bad_mix <- cd$cd_mix[grepl("\\+\\+|\\+$|^\\+", cd$cd_mix)]
+  # ---- Mixture syntax warnings ----
+  bad_mix <- cd$CD_mix[grepl("\\+\\+|\\+$|^\\+", cd$CD_mix)]
   if (length(bad_mix) > 0) {
-    warnings <- c(warnings, paste("Malformed mixture entries:",
-                                  paste(unique(bad_mix), collapse = ", ")))
+    warnings <- c(warnings, paste(
+      "Malformed mixture entries:",
+      paste(unique(bad_mix), collapse = ", ")
+    ))
   }
 
-  # ---- Stray row detection ----
+  # ---- Stray blank rows ----
   stray_cd <- cd[rowSums(!is.na(cd[, setdiff(names(cd), "cd_notes")])) == 0, ]
   if (nrow(stray_cd) > 0) {
     warnings <- c(warnings, "Crop_Diversity contains stray blank rows")
@@ -199,18 +175,19 @@ validate_excel_input <- function(path) {
 
   # ---- Summary ----
   summary <- tibble::tibble(
-    sheets_present = length(sheets),
-    mgt_units = nrow(mu),
-    crop_rows = nrow(cd),
-    disturbance_rows = nrow(sd),
-    amendment_rows = nrow(sa),
-    animal_rows = nrow(ad)
+    sheets_present    = length(sheets),
+    mgt_units         = nrow(mu),
+    crop_rows         = nrow(cd),
+    disturbance_rows  = nrow(sd),
+    amendment_rows    = nrow(sa),
+    animal_rows       = nrow(ad)
   )
 
   list(
-    ok = length(errors) == 0,
-    errors = errors,
+    ok       = length(errors) == 0,
+    errors   = errors,
     warnings = warnings,
-    summary = summary
+    summary  = summary
   )
 }
+

@@ -56,17 +56,17 @@ validate_excel_input <- function(path) {
 
   sd <- .safe_read(path,
                    "Soil_Disturbance",
-                   required_cols = c("MGT_combo", "SD_date", "SD_mixeff"),
+                   required_cols = c("MGT_combo", "SD_date", "SD_mixeff", "SD_depth"),
                    skip = 3)
 
   sa <- .safe_read(path,
                    "Soil_Amendments",
-                   required_cols = c("MGT_combo", "SA_date"),
+                   required_cols = NULL,
                    skip = 3)
 
   ad <- .safe_read(path,
                    "Animal_Diversity",
-                   required_cols = c("MGT_combo", "AD_start_date", "AD_end_date"),
+                   required_cols = NULL,
                    skip = 3)
 
   sheets <- list(
@@ -89,17 +89,16 @@ validate_excel_input <- function(path) {
     ),
 
     Soil_Disturbance = c(
-      "MGT_combo", "SD_date",
-      "SD_equip_cat", "SD_equip", "SD_mixeff", "SD_depth"
-    ),
-
-    Soil_Amendments = c(
-      "MGT_combo", "SA_date"
-    ),
-
-    Animal_Diversity = c(
-      "MGT_combo", "AD_start_date", "AD_end_date"
+      "MGT_combo", "SD_date", "SD_mixeff", "SD_depth"
     )
+
+    # Soil_Amendments = c(
+    #   "MGT_combo", "SA_date"
+    # ),
+    #
+    # Animal_Diversity = c(
+    #   "MGT_combo", "AD_start_date", "AD_end_date"
+    # )
   )
 
   for (nm in names(req_cols)) {

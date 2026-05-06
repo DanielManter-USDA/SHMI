@@ -46,24 +46,22 @@
                                   text_size = 3) {
 
   # ---- validation ----
-  required_cols <- c("MGT_combo", "CD_name", "yield_kg_ha")
+  required_cols <- c("MGT_combo", "MGT_study", "MGT_farm", "MGT_field", "MGT_trt",
+                     "CD_name", "yield_kg_ha")
 
   missing <- setdiff(required_cols, names(yield_df))
   if (length(missing) > 0) {
-    stop(
-      "yield_df is missing required columns: ",
-      paste(missing, collapse = ", "),
-      call. = FALSE
-    )
+    stop("yield_df is missing required columns: ",
+         paste(missing, collapse = ", "), call. = FALSE)
   }
   if (nrow(yield_df) == 0) {
     stop("yield_df has zero rows; nothing to plot.", call. = FALSE)
   }
 
-  # ---- summarize to (MGT_combo × crop x facet_var) ----
-  group_vars <- c("MGT_combo", "crop" = "CD_name")
+  # ---- summarize to (MGT_combo × crop × facet_var) ----
+  group_vars <- c("MGT_combo", "MGT_study", "MGT_farm", "MGT_field", "MGT_trt",
+                  "crop" = "CD_name")
 
-  # If user supplied a facet_var, include it in the grouping
   if (!is.null(facet_var)) {
     missing_fv <- setdiff(facet_var, names(yield_df))
     if (length(missing_fv) > 0) {
@@ -84,31 +82,13 @@
 
   # ---- crop filtering ----
   if (!is.null(crop)) {
-
-    message("Requested crop: '", crop, "'")
-    message("Unique crops in data: ", paste(sort(unique(yield_summary$crop)), collapse = ", "))
-
-    keep <- yield_summary$crop == crop
-    yield_summary <- yield_summary[keep, , drop = FALSE]
-
-    message("Rows after filtering: ", nrow(yield_summary))
-
+    yield_summary <- yield_summary %>% dplyr::filter(crop == !!crop)
     if (nrow(yield_summary) == 0) {
       stop("No yield data found for crop '", crop, "'.", call. = FALSE)
     }
   }
 
   # ---- remove non-finite log values ----
-  bad_rows <- yield_summary %>%
-    dplyr::filter(!is.finite(log_mean) | !is.finite(log_var))
-
-  if (nrow(bad_rows) > 0) {
-    warning(
-      "Removed ", nrow(bad_rows), " rows with non-finite log values ",
-      "(e.g., zero variance or missing yield)."
-    )
-  }
-
   yield_summary <- yield_summary %>%
     dplyr::filter(is.finite(log_mean), is.finite(log_var))
 
@@ -133,8 +113,34 @@
       }
     )
 
-  # ---- regression line ----
+  # ---- facet-aware regression line + annotation ----
   if (add_lm) {
+
+    # Fit TL model per facet group
+    facet_groups <- if (is.null(facet_var)) {
+      list(yield_summary)
+    } else {
+      split(yield_summary, yield_summary[facet_var])
+    }
+
+    # Build annotation data frame
+    ann <- purrr::map_dfr(facet_groups, function(df) {
+
+      fit <- lm(log_var ~ log_mean, data = df)
+      sm  <- summary(fit)
+
+      b    <- coef(fit)[["log_mean"]]
+      b_se <- sm$coefficients["log_mean", "Std. Error"]
+      r2   <- sm$r.squared
+
+      tibble::tibble(
+        log_mean = -Inf,
+        log_var  = Inf,
+        label    = sprintf("b = %.3f ± %.3f\nR² = %.3f", b, b_se, r2),
+        !!!df[1, facet_var, drop = FALSE]
+      )
+    })
+
     p <- p +
       ggplot2::geom_smooth(
         method = "lm",
@@ -142,10 +148,10 @@
         color = "steelblue",
         linewidth = 0.8
       ) +
-      ggpubr::stat_regline_equation(
-        aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~~")),
-        label.x.npc = "left",
-        label.y.npc = "bottom",
+      ggplot2::geom_text(
+        data = ann,
+        ggplot2::aes(label = label),
+        hjust = -0.1, vjust = 1.2,
         size = 4
       )
   }
@@ -162,8 +168,9 @@
 
   # ---- faceting ----
   if (!is.null(facet_var)) {
-    p <- p + facet_wrap(vars(!!!rlang::syms(facet_var)), scales = "free")
+    p <- p + ggplot2::facet_wrap(vars(!!!rlang::syms(facet_var)), scales = "free")
   }
 
   return(p)
 }
+

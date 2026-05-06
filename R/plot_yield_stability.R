@@ -126,7 +126,31 @@
     # Build annotation data frame
     ann <- purrr::map_dfr(facet_groups, function(df) {
 
-      fit <- lm(log_var ~ log_mean, data = df)
+      # ---- skip empty or single-point groups ----
+      if (nrow(df) < 2) {
+        # Return an annotation placeholder so facet still renders cleanly
+        out <- tibble::tibble(
+          log_mean = -Inf,
+          log_var  = Inf,
+          label    = "Insufficient data",
+          !!!df[1, facet_var, drop = FALSE]
+        )
+        return(out)
+      }
+
+      # ---- safe regression ----
+      fit <- try(lm(log_var ~ log_mean, data = df), silent = TRUE)
+
+      if (inherits(fit, "try-error")) {
+        out <- tibble::tibble(
+          log_mean = -Inf,
+          log_var  = Inf,
+          label    = "Model failed",
+          !!!df[1, facet_var, drop = FALSE]
+        )
+        return(out)
+      }
+
       sm  <- summary(fit)
 
       b    <- coef(fit)[["log_mean"]]
@@ -146,7 +170,8 @@
         method = "lm",
         se = TRUE,
         color = "steelblue",
-        linewidth = 0.8
+        linewidth = 0.8,
+        na.rm = TRUE
       ) +
       ggplot2::geom_text(
         data = ann,

@@ -321,18 +321,33 @@ prepare_shmi_inputs <- function(path,
     required_cols = NULL,
     skip = 3
   )
-  amend <- amend %>%
-    mutate(
-      SA_date = as.Date(unname(.parse_shmi_date(SA_date)))
+
+  # If sheet is missing OR contains no valid amendment dates → skip
+  if (is.null(amend) || !("SA_date" %in% names(amend)) ||
+      all(is.na(.parse_shmi_date(amend$SA_date)))) {
+
+    amend <- tibble::tibble(
+      MGT_combo = character(),
+      SA_date   = as.Date(character()),
+      SA_cat    = character(),
+      SA_N      = numeric()
     )
 
-  if (!is.null(start_date_override)) {
-    amend <- amend %>%
-      filter(SA_date >= S)
-  }
+  } else {
 
-  if (!is.null(end_date_override)) {
-    amend <- amend %>% filter(SA_date <= E)
+    # Normal processing
+    amend <- amend %>%
+      mutate(
+        SA_date = as.Date(unname(.parse_shmi_date(SA_date)))
+      )
+
+    if (!is.null(start_date_override)) {
+      amend <- amend %>% filter(SA_date >= S)
+    }
+
+    if (!is.null(end_date_override)) {
+      amend <- amend %>% filter(SA_date <= E)
+    }
   }
 
   # ---- Load Animal_Diversity ----
@@ -343,34 +358,56 @@ prepare_shmi_inputs <- function(path,
     skip = 3
   )
 
-  animal <- animal %>%
-    mutate(
-      AD_start_date = as.Date(unname(.parse_shmi_date(AD_start_date))),
-      AD_end_date   = as.Date(unname(.parse_shmi_date(AD_end_date)))
+  # If sheet is missing OR contains no valid amendment dates → skip
+  if (is.null(animal) ||
+      !all(c("AD_start_date", "AD_end_date") %in% names(animal)) ||
+      (
+        all(is.na(.parse_shmi_date(animal$AD_start_date))) &&
+        all(is.na(.parse_shmi_date(animal$AD_end_date)))
+      )) {
+
+    # Return an empty tibble with expected structure
+    animal <- tibble::tibble(
+      MGT_combo     = character(),
+      AD_start_date = as.Date(character()),
+      AD_end_date   = as.Date(character()),
+      AD_type       = character()
     )
 
-  if (!is.null(start_date_override)) {
-    S <- as.Date(start_date_override)
+  } else {
 
+    # Normal processing
     animal <- animal %>%
-      # 1. Drop windows that end before S
-      filter(AD_end_date >= S) %>%
-      # 2. Clip windows that overlap S
       mutate(
-        AD_start_date = if_else(AD_start_date < S, S, AD_start_date)
+        AD_start_date = as.Date(unname(.parse_shmi_date(AD_start_date))),
+        AD_end_date   = as.Date(unname(.parse_shmi_date(AD_end_date)))
       )
-  }
 
-  if (!is.null(end_date_override)) {
-    E <- as.Date(end_date_override)
+    # ---- Apply start-date override (interval clipping) ----
+    if (!is.null(start_date_override)) {
+      S <- as.Date(start_date_override)
 
-    animal <- animal %>%
-      # 1. Drop windows that start after E
-      filter(AD_start_date <= E) %>%
-      # 2. Clip windows that overlap E
-      mutate(
-        AD_end_date = if_else(AD_end_date > E, E, AD_end_date)
-      )
+      animal <- animal %>%
+        # Drop windows ending before S
+        filter(AD_end_date >= S) %>%
+        # Clip windows overlapping S
+        mutate(
+          AD_start_date = if_else(AD_start_date < S, S, AD_start_date)
+        )
+    }
+
+    # ---- Apply end-date override (interval clipping) ----
+    if (!is.null(end_date_override)) {
+      E <- as.Date(end_date_override)
+
+      animal <- animal %>%
+        # Drop windows starting after E
+        filter(AD_start_date <= E) %>%
+        # Clip windows overlapping E
+        mutate(
+          AD_end_date = if_else(AD_end_date > E, E, AD_end_date)
+        )
+    }
   }
 
   # ------------------------------------------------------------

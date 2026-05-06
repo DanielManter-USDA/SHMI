@@ -207,7 +207,7 @@ prepare_shmi_inputs <- function(path,
   dist <- .safe_read(
     path,
     "Soil_Disturbance",
-    required_cols = c("MGT_combo", "SD_date", "SD_mixeff"),
+    required_cols = c("MGT_combo", "SD_date", "SD_mixeff", "SD_depth"),
     skip = 3
   )
 
@@ -318,7 +318,7 @@ prepare_shmi_inputs <- function(path,
   amend <- .safe_read(
     path,
     "Soil_Amendments",
-    required_cols = c("MGT_combo", "SA_date"),
+    required_cols = NULL,
     skip = 3
   )
   amend <- amend %>%
@@ -339,7 +339,7 @@ prepare_shmi_inputs <- function(path,
   animal <- .safe_read(
     path,
     "Animal_Diversity",
-    required_cols = c("MGT_combo", "AD_start_date", "AD_end_date"),
+    required_cols = NULL,
     skip = 3
   )
 

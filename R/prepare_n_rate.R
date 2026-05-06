@@ -1,6 +1,7 @@
 #' @keywords internal
 #' @noRd
 .prepare_n_rate <- function(path,
+                            exclude = NULL,
                             start_date_override = NULL,
                             end_date_override   = NULL) {
 
@@ -10,7 +11,8 @@
     "Mgt_Unit",
     required_cols = c("MGT_combo", "MGT_study", "MGT_farm", "MGT_field", "MGT_trt"),
     skip = 3
-  )
+  ) %>%
+    filter(!(MGT_combo %in% exclude))
 
   # ---- Load Soil Amendments ----
   amend <- .safe_read(
@@ -18,7 +20,8 @@
     "Soil_Amendments",
     required_cols = c("MGT_combo", "SA_date", "SA_N", "SA_units"),
     skip = 3
-  ) %>%
+  )  %>%
+    filter(!(MGT_combo %in% exclude)) %>%
     mutate(SA_date = as.Date(.parse_shmi_date(SA_date)))
 
   # ---- Clip by overrides ----

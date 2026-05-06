@@ -1,6 +1,7 @@
 #' @keywords internal
 #' @noRd
 .prepare_yield <- function(path,
+                           exclude = NULL,
                            start_date_override = NULL,
                            end_date_override   = NULL) {
 
@@ -10,7 +11,8 @@
     "Mgt_Unit",
     required_cols = c("MGT_combo", "MGT_study", "MGT_farm", "MGT_field", "MGT_trt"),
     skip = 3
-  )
+  ) %>%
+    filter(!(MGT_combo %in% exclude))
 
   # ---- Load yield from Crop_Diversity ----
   yield <- .safe_read(
@@ -20,7 +22,8 @@
                       "CD_plant_date", "CD_term_date",
                       "CD_yield", "CD_yield_units"),
     skip = 3
-  )
+  ) %>%
+    filter(!(MGT_combo %in% exclude))
 
   # CD_harv_date is optional
   if (!"CD_harv_date" %in% names(yield)) {

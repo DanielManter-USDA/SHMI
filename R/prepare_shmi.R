@@ -191,7 +191,8 @@ prepare_shmi_inputs <- function(path,
     "Crop_Diversity",
     required_cols = c("MGT_combo", "CD_seq_num", "CD_plant_date", "CD_term_date"),
     skip = 3
-  )
+  ) %>%
+    filter(!(MGT_combo %in% exclude))
 
   if (!"CD_harv_date" %in% names(crop)) crop$CD_harv_date <- NA
   if (!"CD_cat" %in% names(crop))       crop$CD_cat       <- NA_character_
@@ -209,7 +210,8 @@ prepare_shmi_inputs <- function(path,
     "Soil_Disturbance",
     required_cols = c("MGT_combo", "SD_date", "SD_mixeff", "SD_depth"),
     skip = 3
-  )
+  ) %>%
+    filter(!(MGT_combo %in% exclude))
 
   dist <- dist %>%
     mutate(SD_date = as.Date(unname(.parse_shmi_date(SD_date))))
@@ -339,7 +341,8 @@ prepare_shmi_inputs <- function(path,
     amend <- amend %>%
       mutate(
         SA_date = as.Date(unname(.parse_shmi_date(SA_date)))
-      )
+      ) %>%
+      filter(!(MGT_combo %in% exclude))
 
     if (!is.null(start_date_override)) {
       amend <- amend %>% filter(SA_date >= S)
@@ -381,7 +384,8 @@ prepare_shmi_inputs <- function(path,
       mutate(
         AD_start_date = as.Date(unname(.parse_shmi_date(AD_start_date))),
         AD_end_date   = as.Date(unname(.parse_shmi_date(AD_end_date)))
-      )
+      ) %>%
+      filter(!(MGT_combo %in% exclude))
 
     # ---- Apply start-date override (interval clipping) ----
     if (!is.null(start_date_override)) {
@@ -649,6 +653,7 @@ prepare_shmi_inputs <- function(path,
     cli::cli_progress_step("Computing crop yields...")
 
     yield <- .prepare_yield(path,
+                            exclude = exclude,
                             start_date_override = start_date_override,
                             end_date_override = end_date_override
     )
@@ -660,6 +665,7 @@ prepare_shmi_inputs <- function(path,
     cli::cli_progress_step("Computing N rates...")
 
     n_rate <- .prepare_n_rate(path,
+                              exclude = exclude,
                               start_date_override = start_date_override,
                               end_date_override   = end_date_override)
   } else {

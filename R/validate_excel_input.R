@@ -129,10 +129,10 @@ validate_excel_input <- function(path) {
     df <- all_mgt[[nm]]
     if (nrow(df) == 0) next
 
-    if (any(is.na(df$MGT_combo))) {
-      errors <- c(errors, paste0(
-        "Sheet ", nm, " contains NA MGT_combo values"
-      ))
+    if ("MGT_combo" %in% names(df)) {
+      if (any(is.na(df$MGT_combo))) {
+        errors <- c(errors, paste0("Sheet ", nm, " contains NA MGT_combo values"))
+      }
     }
   }
 
@@ -142,6 +142,7 @@ validate_excel_input <- function(path) {
   for (nm in names(all_mgt)[-1]) {
     df <- all_mgt[[nm]]
     if (nrow(df) == 0) next
+    if (!"MGT_combo" %in% names(df)) next   # <-- FIX
 
     combos <- df$MGT_combo
     combos <- combos[!is.na(combos)]
@@ -156,6 +157,7 @@ validate_excel_input <- function(path) {
       ))
     }
   }
+
 
   # ---- Mixture syntax warnings ----
   bad_mix <- cd$CD_mix[grepl("\\+\\+|\\+$|^\\+", cd$CD_mix)]

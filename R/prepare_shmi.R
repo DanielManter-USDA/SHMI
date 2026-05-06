@@ -125,6 +125,7 @@ prepare_shmi_inputs <- function(path,
                                 end_date_override   = NULL,
                                 calc_yield  = FALSE,
                                 calc_n_rate = FALSE) {
+  #options(warn = 2)
 
   # ------------------------------------------------------------
   # 1. Validating inputs
@@ -248,74 +249,14 @@ prepare_shmi_inputs <- function(path,
     left_join(seq_dates, by = c("MGT_combo", "CD_seq_num")) %>%
     mutate(next_plant = next_seq_plant)
 
-  # 2. Next disturbance date
-  dist2 <- dist %>%
-    arrange(MGT_combo, SD_date) %>%
-    group_by(MGT_combo) %>%
-    mutate(next_dist = lead(SD_date)) %>%
-    ungroup()
-
-  # Join disturbance info to crops
-  safe_min_after <- function(x, threshold) {
-    vals <- x[x > threshold]
-    if (length(vals) == 0) return(as.Date(NA))  # NA_Date_
-    as.Date(min(vals))                          # ensure Date class
-  }
-
   crop <- crop %>%
-    left_join(dist2, by = "MGT_combo") %>%
-    group_by(MGT_combo, CD_seq_num, CD_name) %>%
-    summarize(
-      CD_plant_date = {
-        min(CD_plant_date, na.rm = TRUE)
-      },
-
-      CD_harv_date = {
-        if (all(is.na(CD_harv_date))) {
-          NA_Date_
-        } else {
-          min(CD_harv_date, na.rm = TRUE)
-        }
-      },
-
-      CD_term_date = {
-        if (all(is.na(CD_term_date))) {
-          NA_Date_
-        } else {
-          min(CD_term_date, na.rm = TRUE)
-        }
-      },
-
-      next_plant = {
-        if (all(is.na(next_plant))) {
-          NA_Date_
-        } else {
-          min(next_plant, na.rm = TRUE)
-        }
-      },
-
-      next_dist_after = {
-        plant_date_for_group <- min(CD_plant_date, na.rm = TRUE)
-        safe_min_after(SD_date, plant_date_for_group)
-      },
-
-      .groups = "drop"
+    mutate(
+      crop_end = dplyr::coalesce(
+        CD_term_date,      # explicit termination
+        CD_harv_date,      # explicit harvest
+        next_plant         # fallback: next planting
+      )
     )
-
-  # For each crop, find the earliest disturbance AFTER planting
-  crop$inferred_end <- pmin(
-    crop$next_plant - 1,
-    crop$next_dist_after - 1,
-    na.rm = TRUE
-  )
-
-  # 4. Final crop_end hierarchy
-  crop$crop_end <- dplyr::coalesce(
-    crop$CD_term_date,
-    crop$CD_harv_date,
-    crop$inferred_end
-  )
-
   # ---- Load Soil_Amendments ----
   amend <- .safe_read(
     path,
@@ -484,10 +425,10 @@ prepare_shmi_inputs <- function(path,
     clean_df <- function(df, date_cols) {
       if (is.null(df)) return(NULL)
       if (nrow(df) == 0) return(NULL)
+      if (!"MGT_combo" %in% names(df)) return(NULL)  # <- key line
 
       df <- df %>% filter(!is.na(MGT_combo))
 
-      # Keep only rows with at least one non-NA date
       df <- df %>%
         filter(rowSums(!is.na(across(all_of(date_cols)))) > 0)
 

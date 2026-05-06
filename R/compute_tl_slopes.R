@@ -3,7 +3,11 @@
 .compute_tl_slopes <- function(yield_df,
                                crop = NULL,
                                group_var = NULL,
-                               n_boot = 1000) {
+                               n_boot = 1000,
+                               remove_outliers = FALSE,
+                               outlier_method = c("zscore", "MAD")) {
+
+  outlier_method <- match.arg(outlier_method)
 
   # ---- validation ----
   required_cols <- c("MGT_combo", "MGT_study", "MGT_farm", "MGT_field", "MGT_trt",
@@ -27,6 +31,38 @@
     yield_df <- yield_df %>% dplyr::filter(CD_name == crop)
   }
 
+  # ---- optional outlier removal (within each MGT_combo) ----
+  if (remove_outliers) {
+    yield_df <- yield_df %>%
+      dplyr::group_by(MGT_combo) %>%
+      dplyr::mutate(
+        n_years_original = dplyr::n(),
+        is_outlier = dplyr::case_when(
+          outlier_method == "zscore" ~ {
+            z <- (yield_kg_ha - mean(yield_kg_ha, na.rm = TRUE)) /
+              stats::sd(yield_kg_ha, na.rm = TRUE)
+            abs(z) > 3
+          },
+          outlier_method == "MAD" ~ {
+            med <- stats::median(yield_kg_ha, na.rm = TRUE)
+            mad <- stats::mad(yield_kg_ha, na.rm = TRUE)
+            abs(yield_kg_ha - med) > 3 * mad
+          }
+        )
+      ) %>%
+      dplyr::filter(!is_outlier) %>%
+      dplyr::mutate(n_years_used = dplyr::n()) %>%
+      dplyr::ungroup()
+  } else {
+    yield_df <- yield_df %>%
+      dplyr::group_by(MGT_combo) %>%
+      dplyr::mutate(
+        n_years_original = dplyr::n(),
+        n_years_used = dplyr::n()
+      ) %>%
+      dplyr::ungroup()
+  }
+
   # ---- compute mean + variance across years per MGT_combo ----
   per_combo <- yield_df %>%
     dplyr::group_by(MGT_combo, CD_name, dplyr::across(all_of(group_var))) %>%
@@ -38,7 +74,8 @@
       var_yield  = stats::var(.data$yield_kg_ha, na.rm = TRUE),
       log_mean   = log(mean_yield),
       log_var    = log(var_yield),
-      n_years    = dplyr::n(),
+      n_years_original = max(n_years_original),
+      n_years_used     = max(n_years_used),
       .groups    = "drop"
     ) %>%
     dplyr::filter(is.finite(log_mean), is.finite(log_var))
@@ -64,7 +101,9 @@
           slope_sig       = NA,
           intercept = NA_real_,
           r2        = NA_real_,
-          n_combos  = nrow(df)
+          n_combos  = nrow(df),
+          n_years_original = sum(df$n_years_original),
+          n_years_used     = sum(df$n_years_used)
         ))
       }
 
@@ -84,7 +123,6 @@
         boot_ids <- sample(combos, replace = TRUE)
         boot_df  <- df[df$MGT_combo %in% boot_ids, ]
 
-        # refit
         boot_fit <- try(stats::lm(log_var ~ log_mean, data = boot_df), silent = TRUE)
         boot_slopes[b] <- if (inherits(boot_fit, "try-error")) NA_real_ else coef(boot_fit)[["log_mean"]]
       }
@@ -109,13 +147,16 @@
         slope_sig       = slope_sig,
         intercept = coef(fit)[["(Intercept)"]],
         r2        = sm$r.squared,
-        n_combos  = nrow(df)
+        n_combos  = nrow(df),
+        n_years_original = sum(df$n_years_original),
+        n_years_used     = sum(df$n_years_used)
       )
     }) %>%
     dplyr::ungroup()
 
   slopes
 }
+
 
 
 

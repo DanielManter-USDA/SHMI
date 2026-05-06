@@ -229,6 +229,9 @@ build_shmi <- function(shmi_inputs,
                   .data$InvDist, .data$OrgInputs) %>%
     dplyr::arrange(.data$MGT_combo)
 
+  indicator_df <- indicator_df %>%
+    filter(!is.na(SHMI))
+
   cli::cli_progress_done()
   cli::cli_progress_cleanup()
 

@@ -18,7 +18,7 @@
 #' }
 #'
 #' @export
-validate_excel_input <- function(path) {
+validate_excel_input <- function(path, verbose) {
 
   errors   <- character()
   warnings <- character()
@@ -45,29 +45,34 @@ validate_excel_input <- function(path) {
 
   # ---- Load sheets using .safe_read() ----
   mu <- .safe_read(path,
-                   "Mgt_Unit",
+                   sheet = "Mgt_Unit",
                    required_cols = c("MGT_combo", "MGT_study", "MGT_farm", "MGT_field", "MGT_trt"),
-                   skip = 3)
+                   skip = 3,
+                   verbose = verbose)
 
   cd <- .safe_read(path,
-                   "Crop_Diversity",
+                   sheet = "Crop_Diversity",
                    required_cols = c("MGT_combo", "CD_seq_num", "CD_plant_date", "CD_term_date"),
-                   skip = 3)
+                   skip = 3,
+                   verbose = verbose)
 
   sd <- .safe_read(path,
-                   "Soil_Disturbance",
+                   sheet = "Soil_Disturbance",
                    required_cols = c("MGT_combo", "SD_date", "SD_mixeff", "SD_depth"),
-                   skip = 3)
+                   skip = 3,
+                   verbose = verbose)
 
   sa <- .safe_read(path,
-                   "Soil_Amendments",
+                   sheet = "Soil_Amendments",
                    required_cols = NULL,
-                   skip = 3)
+                   skip = 3,
+                   verbose = verbose)
 
   ad <- .safe_read(path,
-                   "Animal_Diversity",
+                   sheet = "Animal_Diversity",
                    required_cols = NULL,
-                   skip = 3)
+                   skip = 3,
+                   verbose = verbose)
 
   sheets <- list(
     Mgt_Unit        = mu,
@@ -156,16 +161,6 @@ validate_excel_input <- function(path) {
         paste(missing, collapse = ", ")
       ))
     }
-  }
-
-
-  # ---- Mixture syntax warnings ----
-  bad_mix <- cd$CD_mix[grepl("\\+\\+|\\+$|^\\+", cd$CD_mix)]
-  if (length(bad_mix) > 0) {
-    warnings <- c(warnings, paste(
-      "Malformed mixture entries:",
-      paste(unique(bad_mix), collapse = ", ")
-    ))
   }
 
   # ---- Stray blank rows ----

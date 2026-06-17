@@ -1,6 +1,6 @@
 #' @keywords internal
 #' @noRd
-.safe_read <- function(path, sheet, required_cols, ...) {
+.safe_read <- function(path, sheet, required_cols, skip = 0, verbose = FALSE, ...) {
 
   # If sheet doesn't exist
   if (!sheet %in% readxl::excel_sheets(path)) {
@@ -11,7 +11,7 @@
   }
 
   # Try reading
-  df <- readxl::read_xlsx(path, sheet = sheet, ...)
+  df <- readxl::read_xlsx(path, sheet = sheet, skip = skip, ...)
   df <- janitor::remove_empty(df, "rows")
   df <- janitor::remove_empty(df, "cols")
 

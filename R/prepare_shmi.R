@@ -133,7 +133,7 @@ prepare_shmi_inputs <- function(path,
   cli::cli_progress_step("Validating inputs...")
 
   # Validate Excel file before ingestion
-  val <- validate_excel_input(path)
+  val <- validate_excel_input(path, verbose)
 
   if (!val$ok) {
     message("❌ Excel input validation failed.\n")
@@ -175,9 +175,10 @@ prepare_shmi_inputs <- function(path,
 
   mgt <- .safe_read(
     path,
+    sheet = "Mgt_Unit",
     required_cols = c("MGT_combo", "MGT_study", "MGT_farm", "MGT_field", "MGT_trt"),
-    "Mgt_Unit",
     skip = 3,
+    verbose = verbose
   ) %>%
     select(user_name, MGT_combo, MGT_study, MGT_farm, MGT_field, MGT_trt) %>%
     janitor::remove_empty("rows") %>%
@@ -189,9 +190,10 @@ prepare_shmi_inputs <- function(path,
   #   ---- Load Crop_Diversity ----
   crop <- .safe_read(
     path,
-    "Crop_Diversity",
+    sheet = "Crop_Diversity",
     required_cols = c("MGT_combo", "CD_seq_num", "CD_plant_date", "CD_term_date"),
-    skip = 3
+    skip = 3,
+    verbose = verbose
   ) %>%
     filter(!(MGT_combo %in% exclude))
 
@@ -208,9 +210,10 @@ prepare_shmi_inputs <- function(path,
   #   ---- Load Soil_Disturbance ----
   dist <- .safe_read(
     path,
-    "Soil_Disturbance",
+    sheet = "Soil_Disturbance",
     required_cols = c("MGT_combo", "SD_date", "SD_mixeff", "SD_depth"),
-    skip = 3
+    skip = 3,
+    verbose = verbose
   ) %>%
     filter(!(MGT_combo %in% exclude))
 
@@ -260,9 +263,10 @@ prepare_shmi_inputs <- function(path,
   # ---- Load Soil_Amendments ----
   amend <- .safe_read(
     path,
-    "Soil_Amendments",
+    sheet = "Soil_Amendments",
     required_cols = NULL,
-    skip = 3
+    skip = 3,
+    verbose = verbose
   )
 
   # If sheet is missing OR contains no valid amendment dates → skip
@@ -297,9 +301,10 @@ prepare_shmi_inputs <- function(path,
   # ---- Load Animal_Diversity ----
   animal <- .safe_read(
     path,
-    "Animal_Diversity",
+    sheet = "Animal_Diversity",
     required_cols = NULL,
-    skip = 3
+    skip = 3,
+    verbose = verbose
   )
 
   # If sheet is missing OR contains no valid amendment dates → skip
@@ -368,19 +373,23 @@ prepare_shmi_inputs <- function(path,
         crop_end      = as.Date(crop_end)
       ) %>%
       group_by(MGT_combo) %>%
-      # rotation-level bounds
       mutate(
-        start_yr = min(lubridate::year(CD_plant_date), na.rm = TRUE),
-        end_yr   = max(lubridate::year(crop_end),      na.rm = TRUE),
+        start_yr = min(year(CD_plant_date), na.rm = TRUE),
+        end_yr = max(
+          year(CD_plant_date),
+          year(CD_harv_date),
+          year(CD_term_date),
+          year(crop_end),
+          na.rm = TRUE
+        ),
         min_seq  = min(CD_seq_num, na.rm = TRUE),
         max_seq  = max(CD_seq_num, na.rm = TRUE)
       ) %>%
       ungroup() %>%
-      group_by(MGT_combo, CD_seq_num, CD_name) %>%
+      group_by(MGT_combo, CD_seq_num) %>%
       summarize(
-        # raw windows for this species × seq
-        start_raw = suppressWarnings(min(CD_plant_date, na.rm = TRUE)),
-        end_raw   = suppressWarnings(max(crop_end,      na.rm = TRUE)),
+        start_raw = min(CD_plant_date, na.rm = TRUE),
+        end_raw = if (all(is.na(crop_end))) NA_Date_ else max(crop_end, na.rm = TRUE),
         start_yr  = first(start_yr),
         end_yr    = first(end_yr),
         min_seq   = first(min_seq),
@@ -388,26 +397,24 @@ prepare_shmi_inputs <- function(path,
         .groups   = "drop"
       ) %>%
       mutate(
-        # handle Inf → NA
-        start_raw = dplyr::if_else(is.infinite(start_raw), as.Date(NA), start_raw),
-        end_raw   = dplyr::if_else(is.infinite(end_raw),   as.Date(NA), end_raw),
+        start_raw = if_else(is.infinite(start_raw), NA_Date_, start_raw),
+        end_raw   = if_else(is.infinite(end_raw),   NA_Date_, end_raw),
 
         is_first = CD_seq_num == min_seq,
         is_last  = CD_seq_num == max_seq,
 
-        crop_start = dplyr::if_else(
+        crop_start = if_else(
           is_first & is.na(start_raw),
           as.Date(paste0(start_yr, "-01-01")),
           start_raw
         ),
 
-        crop_end = dplyr::if_else(
+        crop_end = if_else(
           is_last & is.na(end_raw),
           as.Date(paste0(end_yr, "-12-31")),
           end_raw
         )
-      ) %>%
-      select(MGT_combo, CD_seq_num, CD_name, crop_start, crop_end)
+      )
   }
 
   crop_harmonized <- harmonize_crop_windows(crop)

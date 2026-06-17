@@ -419,6 +419,11 @@ prepare_shmi_inputs <- function(path,
 
   crop_harmonized <- harmonize_crop_windows(crop)
 
+  crop_harmonized <- crop %>%
+    select(MGT_combo, CD_seq_num, CD_name) %>%
+    distinct() %>%
+    left_join(crop_harmonized, by = c("MGT_combo", "CD_seq_num"))
+
   # ------------------------------------------------------------
   # 6. Bounds helper
   # ------------------------------------------------------------

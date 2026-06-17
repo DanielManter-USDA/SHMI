@@ -10,7 +10,7 @@ harmonization occurs.
 ## Usage
 
 ``` r
-validate_excel_input(path)
+validate_excel_input(path, verbose)
 ```
 
 ## Arguments

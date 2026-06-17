@@ -76,5 +76,3 @@ The algorithm proceeds in four steps:
 3.  Normalize seasonal totals by one‑quarter of the rotation length.
 
 4.  Apply seasonal weights and scale the final cover score to 0–100.
-
-Days where `CD_name == "fallow"` are treated as zero cover.

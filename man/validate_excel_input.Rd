@@ -4,7 +4,7 @@
 \alias{validate_excel_input}
 \title{Validate SHMI Excel Input File}
 \usage{
-validate_excel_input(path)
+validate_excel_input(path, verbose)
 }
 \arguments{
 \item{path}{Character string. Path to the Excel file supplied by the user.}

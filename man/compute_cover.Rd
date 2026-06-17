@@ -57,6 +57,4 @@ The algorithm proceeds in four steps:
   \item Normalize seasonal totals by one‑quarter of the rotation length.
   \item Apply seasonal weights and scale the final cover score to 0–100.
 }
-
-Days where \code{CD_name == "fallow"} are treated as zero cover.
 }

@@ -15,7 +15,7 @@ validate_shmi_input(shmi_inputs)
     `MGT_combo`, `CD_name`, `CD_seq_num`, `crop_start`, `crop_end`.}
   \item{rot_bounds}{Tibble defining rotation start and end dates for each
     `MGT_combo`, with `MGT_combo`, `rot_start`, `rot_end`.}
-  \item{daily_dist}{Daily disturbance table with `MGT_combo`, `date`,
+  \item{dist}{Daily disturbance table with `MGT_combo`, `date`,
     and disturbance attributes.}
   \item{amend}{Amendment events with `MGT_combo` and `SA_date`.}
   \item{animal}{Animal events with `MGT_combo`, `AD_start_date`,

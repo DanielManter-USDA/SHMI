@@ -9,10 +9,21 @@ inverse-disturbance score is scaled to 0–100.
 ## Usage
 
 ``` r
-compute_disturbance(daily_dist, rot_bounds)
+compute_disturbance(dist, rot_bounds)
 ```
 
 ## Arguments
+
+- rot_bounds:
+
+  A data frame with rotation bounds for each management unit,
+  containing:
+
+  - `MGT_combo`
+
+  - `rot_start`
+
+  - `rot_end`
 
 - daily_dist:
 
@@ -27,17 +38,6 @@ compute_disturbance(daily_dist, rot_bounds)
   - `SD_mixeff` — mixing efficiency (0–1)
 
   - `SD_depth_cm` — tillage depth in cm (already capped at 30)
-
-- rot_bounds:
-
-  A data frame with rotation bounds for each management unit,
-  containing:
-
-  - `MGT_combo`
-
-  - `rot_start`
-
-  - `rot_end`
 
 ## Value
 

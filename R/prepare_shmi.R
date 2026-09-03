@@ -582,24 +582,6 @@ prepare_shmi_inputs <- function(path,
   }
 
   # ------------------------------------------------------------
-  # 8. Daily disturbance summary
-  # ------------------------------------------------------------
-  cli::cli_progress_step("Computing daily disturbance grid...")
-
-  daily_dist <- dist %>%
-    filter(!is.na(SD_date)) %>%
-    mutate(
-      date = as.Date(SD_date),
-      SD_depth_cm = pmin(SD_depth * 2.54, 30)
-    ) %>%
-    group_by(MGT_combo, date) %>%
-    summarize(
-      SD_mixeff = sum(SD_mixeff, na.rm = TRUE),
-      SD_depth_cm = max(SD_depth_cm, na.rm = TRUE),
-      .groups = "drop"
-    )
-
-  # ------------------------------------------------------------
   # Get yield data
   # ------------------------------------------------------------
   if (calc_yield) {
@@ -633,7 +615,6 @@ prepare_shmi_inputs <- function(path,
   list(
     rot_bounds      = rot_bounds,
     crop_harmonized = crop_harmonized,
-    daily_dist      = daily_dist,
     mgt             = mgt,
     crop            = crop,
     dist            = dist,

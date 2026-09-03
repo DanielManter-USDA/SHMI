@@ -12,7 +12,7 @@ at minimum:
 \itemize{
   \item \code{rot_bounds} — rotation start/end dates
   \item \code{crop_harmonized} — harmonized crop windows
-  \item \code{daily_dist} — daily disturbance table
+  \item \code{dist} — daily disturbance table
   \item \code{amend} — amendment events
   \item \code{animal} — animal events
 }}

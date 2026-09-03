@@ -40,7 +40,7 @@ validate_shmi_input(shmi_inputs)
   :   Tibble defining rotation start and end dates for each
       \`MGT_combo\`, with \`MGT_combo\`, \`rot_start\`, \`rot_end\`.
 
-  daily_dist
+  dist
 
   :   Daily disturbance table with \`MGT_combo\`, \`date\`, and
       disturbance attributes.

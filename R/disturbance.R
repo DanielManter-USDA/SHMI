@@ -63,54 +63,52 @@
 #'   }
 #'
 #' @export
-compute_disturbance <- function(daily_dist,
-                                rot_bounds) {
+compute_disturbance <- function(dist, rot_bounds) {
 
-  # get full list of mgt units
   all_mgts <- rot_bounds %>% select(MGT_combo)
 
-  # Convert depth to cm and cap at 30
-  dist <- daily_dist %>%
+  dist <- dist %>%
     mutate(
+      SD_depth_cm = SD_depth * 2.54,
       SD_depth_cm = pmin(SD_depth_cm, 30),
-      year = lubridate::year(date)
+      year = lubridate::year(SD_date)
     ) %>%
     filter(!is.na(SD_mixeff), !is.na(SD_depth_cm))
 
-  # Mechanistic T_t calculation per year
-  annual <- dist %>%
-    arrange(MGT_combo, year, SD_depth_cm, SD_mixeff) %>%
-    group_by(MGT_combo, year) %>%
+  # Correct EPA-style daily disturbance
+  daily <- dist %>%
+    arrange(MGT_combo, year, SD_date, SD_depth_cm, SD_mixeff) %>%
+    group_by(MGT_combo, year, SD_date) %>%
     mutate(
       ME_times_depth = SD_mixeff * SD_depth_cm,
-      cum_ME         = cumsum(dplyr::lag(ME_times_depth, default = 0)),
+      cum_ME         = cumsum(lag(ME_times_depth, default = 0)),
       T_t            = SD_mixeff * pmax(SD_depth_cm - cum_ME, 0),
       T_t_norm       = T_t / 30
     ) %>%
     summarize(
-      T_t_annual = sum(T_t_norm, na.rm = TRUE),
+      T_t_daily = sum(T_t_norm, na.rm = TRUE),
       .groups = "drop"
-    ) %>%
-    mutate(
-      T_t_inv = 1 - T_t_annual
     )
 
-  # Rotation-average
+  annual <- daily %>%
+    group_by(MGT_combo, year) %>%
+    summarize(
+      T_t_annual = sum(T_t_daily, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    mutate(T_t_inv = 1 - T_t_annual)
+
   rot <- annual %>%
     group_by(MGT_combo) %>%
     summarize(
       InvDist = 100 * mean(T_t_inv, na.rm = TRUE),
       .groups = "drop"
     ) %>%
-    mutate(
-      InvDist = ifelse(is.na(InvDist), 100, InvDist)
-    )
+    mutate(InvDist = ifelse(is.na(InvDist), 100, InvDist))
 
-  dist_full <- all_mgts %>%
+  all_mgts %>%
     left_join(rot, by = "MGT_combo") %>%
-    mutate(
-      InvDist = tidyr::replace_na(InvDist, 100)
-    )
-
-  dist_full
+    mutate(InvDist = tidyr::replace_na(InvDist, 100))
 }
+
+

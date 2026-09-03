@@ -4,9 +4,17 @@
 \alias{compute_disturbance}
 \title{Compute Mechanistic Inverse Disturbance (Mixing-Efficiency × Depth Metric)}
 \usage{
-compute_disturbance(daily_dist, rot_bounds)
+compute_disturbance(dist, rot_bounds)
 }
 \arguments{
+\item{rot_bounds}{A data frame with rotation bounds for each management
+unit, containing:
+\itemize{
+  \item \code{MGT_combo}
+  \item \code{rot_start}
+  \item \code{rot_end}
+}}
+
 \item{daily_dist}{A daily disturbance table produced by
 \code{prepare_shmi_inputs()}, containing:
 \itemize{
@@ -14,14 +22,6 @@ compute_disturbance(daily_dist, rot_bounds)
   \item \code{date} — calendar date
   \item \code{SD_mixeff} — mixing efficiency (0–1)
   \item \code{SD_depth_cm} — tillage depth in cm (already capped at 30)
-}}
-
-\item{rot_bounds}{A data frame with rotation bounds for each management
-unit, containing:
-\itemize{
-  \item \code{MGT_combo}
-  \item \code{rot_start}
-  \item \code{rot_end}
 }}
 }
 \value{

@@ -13,7 +13,7 @@
 #'   \itemize{
 #'     \item \code{rot_bounds} — rotation start/end dates
 #'     \item \code{crop_harmonized} — harmonized crop windows
-#'     \item \code{daily_dist} — daily disturbance table
+#'     \item \code{dist} — daily disturbance table
 #'     \item \code{amend} — amendment events
 #'     \item \code{animal} — animal events
 #'   }
@@ -137,7 +137,7 @@ build_shmi <- function(shmi_inputs,
   # --------------------------------------------------------------------------
   # 3. Check and extract inputs
   # --------------------------------------------------------------------------
-  required <- c("rot_bounds", "crop_harmonized", "daily_dist",
+  required <- c("rot_bounds", "crop_harmonized", "dist",
                 "amend", "animal")
 
   missing <- setdiff(required, names(shmi_inputs))
@@ -152,7 +152,7 @@ build_shmi <- function(shmi_inputs,
   mgt             <- shmi_inputs$mgt
   rot_bounds      <- shmi_inputs$rot_bounds
   crop_harmonized <- shmi_inputs$crop_harmonized
-  daily_dist      <- shmi_inputs$daily_dist
+  dist            <- shmi_inputs$dist
   amend           <- shmi_inputs$amend
   animal          <- shmi_inputs$animal
 
@@ -182,7 +182,7 @@ build_shmi <- function(shmi_inputs,
   # Disturbance (inverse disturbance pillar)
   cli::cli_progress_step("Computing disturbance...")
   invdist <- compute_disturbance(
-    daily_dist    = daily_dist,
+    dist          = dist,
     rot_bounds    = rot_bounds
   )
 

@@ -22,7 +22,7 @@
 #'       `MGT_combo`, `CD_name`, `CD_seq_num`, `crop_start`, `crop_end`.}
 #'     \item{rot_bounds}{Tibble defining rotation start and end dates for each
 #'       `MGT_combo`, with `MGT_combo`, `rot_start`, `rot_end`.}
-#'     \item{daily_dist}{Daily disturbance table with `MGT_combo`, `date`,
+#'     \item{dist}{Daily disturbance table with `MGT_combo`, `date`,
 #'       and disturbance attributes.}
 #'     \item{amend}{Amendment events with `MGT_combo` and `SA_date`.}
 #'     \item{animal}{Animal events with `MGT_combo`, `AD_start_date`,
@@ -52,7 +52,7 @@ validate_shmi_input <- function(shmi_inputs) {
     "mgt",
     "crop_harmonized",
     "rot_bounds",
-    "daily_dist",
+    "dist",
     "amend",
     "animal"
   )
@@ -112,12 +112,12 @@ validate_shmi_input <- function(shmi_inputs) {
     }
   }
 
-  # ---- 5. Check daily_dist date column ----
-  dd <- shmi_inputs$daily_dist
-  if (!"date" %in% names(dd)) {
-    errors <- c(errors, "daily_dist is missing 'date' column")
-  } else if (!inherits(dd$date, "Date")) {
-    errors <- c(errors, "daily_dist$date must be Date")
+  # ---- 5. Check dist date column ----
+  dd <- shmi_inputs$dist
+  if (!"SD_date" %in% names(dd)) {
+    errors <- c(errors, "dist is missing 'date' column")
+  } else if (!inherits(dd$SD_date, "Date")) {
+    errors <- c(errors, "dist$SD_date must be Date")
   }
 
   # ---- 6. Check amend / animal date columns ----

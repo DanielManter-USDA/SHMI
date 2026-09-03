@@ -49,7 +49,7 @@ head(result$indicator_df)
 [download_shmi_template()], [get_shmi_example()],
   [prepare_shmi_inputs()], [build_shmi()]
 
-Other SHMI helper functions: 
-\code{\link{download_shmi_template}()}
+Other SHMI helper functions:
+\code{\link[=download_shmi_template]{download_shmi_template()}}
 }
 \concept{SHMI helper functions}

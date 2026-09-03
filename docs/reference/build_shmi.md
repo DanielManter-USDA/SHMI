@@ -27,7 +27,7 @@ build_shmi(shmi_inputs, settings = NULL, expert_mode = FALSE)
 
   - `crop_harmonized` — harmonized crop windows
 
-  - `daily_dist` — daily disturbance table
+  - `dist` — daily disturbance table
 
   - `amend` — amendment events
 

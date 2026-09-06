@@ -49,38 +49,13 @@ compute_cover <- function(crop_harmonized,
 
   # ---- 1. Build interval union per MGT_combo ----
   interval_union <- crop_harmonized %>%
-    arrange(MGT_combo, crop_start, crop_end) %>%
-    group_by(MGT_combo) %>%
-    reframe({
-
-      starts <- as.numeric(crop_start)   # force numeric for safe comparisons
-      ends   <- as.numeric(crop_end)
-
-      out_start <- c()
-      out_end   <- c()
-
-      cur_start <- starts[1]
-      cur_end   <- ends[1]
-
-      for (i in seq_along(starts)[-1]) {
-        if (starts[i] <= cur_end + 1) {
-          cur_end <- max(cur_end, ends[i])
-        } else {
-          out_start <- c(out_start, cur_start)
-          out_end   <- c(out_end,   cur_end)
-          cur_start <- starts[i]
-          cur_end   <- ends[i]
-        }
-      }
-
-      out_start <- c(out_start, cur_start)
-      out_end   <- c(out_end,   cur_end)
-
-      tibble::tibble(
-        crop_start = as.Date(out_start, origin = "1970-01-01"),
-        crop_end   = as.Date(out_end,   origin = "1970-01-01")
-      )
-    })
+    arrange(MGT_combo, CD_seq_num, crop_start) %>%
+    group_by(MGT_combo, CD_seq_num) %>%
+    summarize(
+      crop_start = min(crop_start),
+      crop_end   = max(crop_end),
+      .groups = "drop"
+    )
 
   # ---- 2. Assign each day in each merged interval to a season ----
   cover_days <- interval_union %>%

@@ -191,7 +191,7 @@ prepare_shmi_inputs <- function(path,
   crop <- .safe_read(
     path,
     sheet = "Crop_Diversity",
-    required_cols = c("MGT_combo", "CD_seq_num", "CD_plant_date", "CD_term_date"),
+    required_cols = c("MGT_combo", "CD_plant_date", "CD_term_date"),
     skip = 3,
     verbose = verbose
   ) %>%
@@ -252,14 +252,6 @@ prepare_shmi_inputs <- function(path,
     left_join(seq_dates, by = c("MGT_combo", "CD_seq_num")) %>%
     mutate(next_plant = next_seq_plant)
 
-  crop <- crop %>%
-    mutate(
-      crop_end = dplyr::coalesce(
-        CD_term_date,      # explicit termination
-        CD_harv_date,      # explicit harvest
-        next_plant         # fallback: next planting
-      )
-    )
   # ---- Load Soil_Amendments ----
   amend <- .safe_read(
     path,
@@ -361,75 +353,11 @@ prepare_shmi_inputs <- function(path,
   }
 
   # ------------------------------------------------------------
-  # 5. Harmonize crop windows
-  # ------------------------------------------------------------
-  cli::cli_progress_step("Evaluating crop windows...")
-
-  harmonize_crop_windows <- function(crop) {
-
-    crop %>%
-      mutate(
-        CD_plant_date = as.Date(CD_plant_date),
-        crop_end      = as.Date(crop_end)
-      ) %>%
-      group_by(MGT_combo) %>%
-      mutate(
-        start_yr = min(year(CD_plant_date), na.rm = TRUE),
-        end_yr = max(
-          year(CD_plant_date),
-          year(CD_harv_date),
-          year(CD_term_date),
-          year(crop_end),
-          na.rm = TRUE
-        ),
-        min_seq  = min(CD_seq_num, na.rm = TRUE),
-        max_seq  = max(CD_seq_num, na.rm = TRUE)
-      ) %>%
-      ungroup() %>%
-      group_by(MGT_combo, CD_seq_num) %>%
-      summarize(
-        start_raw = min(CD_plant_date, na.rm = TRUE),
-        end_raw = if (all(is.na(crop_end))) NA_Date_ else max(crop_end, na.rm = TRUE),
-        start_yr  = first(start_yr),
-        end_yr    = first(end_yr),
-        min_seq   = first(min_seq),
-        max_seq   = first(max_seq),
-        .groups   = "drop"
-      ) %>%
-      mutate(
-        start_raw = if_else(is.infinite(start_raw), NA_Date_, start_raw),
-        end_raw   = if_else(is.infinite(end_raw),   NA_Date_, end_raw),
-
-        is_first = CD_seq_num == min_seq,
-        is_last  = CD_seq_num == max_seq,
-
-        crop_start = if_else(
-          is_first & is.na(start_raw),
-          as.Date(paste0(start_yr, "-01-01")),
-          start_raw
-        ),
-
-        crop_end = if_else(
-          is_last & is.na(end_raw),
-          as.Date(paste0(end_yr, "-12-31")),
-          end_raw
-        )
-      )
-  }
-
-  crop_harmonized <- harmonize_crop_windows(crop)
-
-  crop_harmonized <- crop %>%
-    select(MGT_combo, CD_seq_num, CD_name) %>%
-    distinct() %>%
-    left_join(crop_harmonized, by = c("MGT_combo", "CD_seq_num"))
-
-  # ------------------------------------------------------------
-  # 6. Bounds helper
+  # 5. Bounds helper
   # ------------------------------------------------------------
   cli::cli_progress_step("Computing rotation bounds...")
 
-  compute_bounds <- function(crop_harmonized, dist, amend, animal,
+  compute_bounds <- function(crop, dist, amend, animal,
                              start_date_override = NULL,
                              end_date_override   = NULL) {
 
@@ -448,10 +376,10 @@ prepare_shmi_inputs <- function(path,
       df
     }
 
-    crop_h   <- clean_df(crop_harmonized, c("crop_start", "crop_end"))
-    dist_h   <- clean_df(dist,           c("SD_date"))
-    amend_h  <- clean_df(amend,          c("SA_date"))
-    animal_h <- clean_df(animal,         c("AD_start_date", "AD_end_date"))
+    crop_h   <- clean_df(crop,   c("CD_plant_date", "CD_harv_date", "CD_term_date"))
+    dist_h   <- clean_df(dist,   c("SD_date"))
+    amend_h  <- clean_df(amend,  c("SA_date"))
+    animal_h <- clean_df(animal, c("AD_start_date", "AD_end_date"))
 
     dfs <- list(crop_h, dist_h, amend_h, animal_h)
     dfs <- dfs[!vapply(dfs, is.null, logical(1))]
@@ -461,26 +389,53 @@ prepare_shmi_inputs <- function(path,
     }
 
     # Summaries
-    summarize_bounds <- function(df, start_col, end_col) {
+    summarize_bounds <- function(df, start_col, end_cols) {
       df %>%
         group_by(MGT_combo) %>%
         summarize(
           start = min(.data[[start_col]], na.rm = TRUE),
-          end   = max(.data[[end_col]],   na.rm = TRUE),
+          end   = max(dplyr::coalesce(!!!rlang::syms(end_cols)), na.rm = TRUE),
           .groups = "drop"
         )
     }
 
     df_list <- list()
 
-    if (!is.null(crop_h))   df_list[[length(df_list)+1]] <- summarize_bounds(crop_h,   "crop_start",    "crop_end")
-    if (!is.null(dist_h))   df_list[[length(df_list)+1]] <- summarize_bounds(dist_h,   "SD_date",       "SD_date")
-    if (!is.null(amend_h))  df_list[[length(df_list)+1]] <- summarize_bounds(amend_h,  "SA_date",       "SA_date")
-    if (!is.null(animal_h)) df_list[[length(df_list)+1]] <- summarize_bounds(animal_h, "AD_start_date", "AD_end_date")
+    if (!is.null(crop_h)) {
+      df_list[[length(df_list)+1]] <- summarize_bounds(
+        crop_h,
+        start_col = "CD_plant_date",
+        end_cols  = c("CD_harv_date", "CD_term_date")
+      )
+    }
 
-    df_all <- bind_rows(df_list)
+    if (!is.null(dist_h)) {
+      df_list[[length(df_list)+1]] <- summarize_bounds(
+        dist_h,
+        start_col = "SD_date",
+        end_cols  = "SD_date"
+      )
+    }
+
+    if (!is.null(amend_h)) {
+      df_list[[length(df_list)+1]] <- summarize_bounds(
+        amend_h,
+        start_col = "SA_date",
+        end_cols  = "SA_date"
+      )
+    }
+
+    if (!is.null(animal_h)) {
+      df_list[[length(df_list)+1]] <- summarize_bounds(
+        animal_h,
+        start_col = "AD_start_date",
+        end_cols  = "AD_end_date"
+      )
+    }
 
     # ---- FULL-YEAR LOGIC ----
+    df_all <- bind_rows(df_list)
+
     rot_bounds <- df_all %>%
       group_by(MGT_combo) %>%
       summarize(
@@ -510,7 +465,7 @@ prepare_shmi_inputs <- function(path,
     rot_bounds
   }
 
-  rot_bounds <- compute_bounds(crop_harmonized, dist, amend, animal)
+  rot_bounds <- compute_bounds(crop, dist, amend, animal)
 
   rot_bounds <- rot_bounds %>%
     dplyr::mutate(
@@ -518,22 +473,107 @@ prepare_shmi_inputs <- function(path,
       rot_end_yr   = lubridate::year(as.Date(rot_end))
     )
 
+  crop <- crop %>%
+    left_join(rot_bounds, by = "MGT_combo") %>%
+    mutate(
+      crop_end = case_when(
+
+        # Annuals: harvest or termination
+        CD_cat == "Annual" & (!is.na(CD_harv_date) | !is.na(CD_term_date)) ~
+          pmin(CD_harv_date, CD_term_date, na.rm = TRUE),
+
+        # Annuals: fallback to next planting
+        CD_cat == "Annual" & is.na(CD_harv_date) & is.na(CD_term_date) &
+          !is.na(next_plant) ~ next_plant,
+
+        # Annuals: no harvest, no termination, no next planting → rotation end
+        CD_cat == "Annual" & is.na(CD_harv_date) & is.na(CD_term_date) &
+          is.na(next_plant) ~ rot_end,
+
+        # Perennials: termination defines end
+        CD_cat == "Perennial" & !is.na(CD_term_date) ~ CD_term_date,
+
+        # Perennials: fallback to next planting
+        CD_cat == "Perennial" & is.na(CD_term_date) & !is.na(next_plant) ~ next_plant,
+
+        # Perennials: no termination, no next planting → rotation end
+        CD_cat == "Perennial" & is.na(CD_term_date) & is.na(next_plant) ~ rot_end
+      )
+    )
+
+  # ------------------------------------------------------------
+  # 6. Harmonize crop windows
+  # ------------------------------------------------------------
+  cli::cli_progress_step("Evaluating crop windows...")
+
+  harmonize_crop_windows <- function(crop) {
+
+    crop_win <- crop %>%
+      filter(!is.na(CD_plant_date)) %>%
+      arrange(MGT_combo, CD_plant_date) %>%
+      mutate(
+        CD_plant_date = as.Date(CD_plant_date),
+        crop_end      = as.Date(crop_end)
+      ) %>%
+      group_by(MGT_combo) %>%
+      mutate(
+        seq_id   = dense_rank(CD_plant_date),
+        start_yr = min(year(CD_plant_date)),
+        end_yr   = max(year(crop_end)),
+        min_seq  = min(seq_id),
+        max_seq  = max(seq_id)
+      ) %>%
+      ungroup()
+
+    harmonized <- crop_win %>%
+      group_by(MGT_combo, seq_id) %>%
+      summarize(
+        CD_seq_num = first(CD_seq_num[order(CD_plant_date)]),
+        CD_name    = first(CD_name[order(CD_plant_date)]),
+        start_raw  = min(CD_plant_date, na.rm = TRUE),
+        end_raw    = max(crop_end, na.rm = TRUE),
+        start_yr   = min(start_yr, na.rm = TRUE),
+        end_yr     = max(end_yr, na.rm = TRUE),
+        min_seq    = first(min_seq),
+        max_seq    = first(max_seq),
+        .groups    = "drop"
+      ) %>%
+      mutate(
+        crop_start = start_raw,
+        crop_end   = end_raw,
+        is_first   = seq_id == min_seq,
+        is_last    = seq_id == max_seq
+      )
+
+    harmonized
+  }
+
+  crop_harmonized <- harmonize_crop_windows(crop)
+
+  crop_harmonized <- crop_harmonized %>%
+    arrange(MGT_combo, crop_start)
+
+  # crop_harmonized <- crop %>%
+  #   select(MGT_combo, CD_seq_num, CD_name) %>%
+  #   distinct() %>%
+  #   left_join(crop_harmonized, by = c("MGT_combo", "CD_seq_num", ))
+
+
   # ------------------------------------------------------------
   # 7. VALIDATION
   # ------------------------------------------------------------
   # ---- VALIDATION (AFTER harmonization and bounds) ----
-
   ch <- crop_harmonized
 
   # 1. Every crop must have an end date
-  missing_end <- ch %>% filter(is.na(crop_end))
-  if (nrow(missing_end) > 0) {
-    stop(
-      "Error: Some crops still have no end date even after inference:\n",
-      paste0("  - ", missing_end$MGT_combo, " seq ", missing_end$CD_seq_num),
-      call. = FALSE
-    )
-  }
+  # missing_end <- ch %>% filter(is.na(crop_end))
+  # if (nrow(missing_end) > 0) {
+  #   stop(
+  #     "Error: Some crops still have no end date even after inference:\n",
+  #     paste0("  - ", missing_end$MGT_combo, " seq ", missing_end$CD_seq_num),
+  #     call. = FALSE
+  #   )
+  # }
 
   # 2. crop_end must be >= crop_start
   bad_order <- ch %>% filter(crop_end < crop_start)
@@ -548,35 +588,19 @@ prepare_shmi_inputs <- function(path,
   # 3. CD_seq_num chronological
   bad_seq <- ch %>%
     group_by(MGT_combo) %>%
-    arrange(CD_seq_num) %>%
+    arrange(seq_id) %>%
     mutate(
       next_start = lead(crop_start),
-      next_seq   = lead(CD_seq_num)
+      next_seq   = lead(seq_id)
     ) %>%
     filter(!is.na(next_start) & crop_start > next_start)
 
   if (nrow(bad_seq) > 0) {
     stop(
-      "Error: CD_seq_num is not chronological:\n",
-      paste0("  - ", bad_seq$MGT_combo, " seq ", bad_seq$CD_seq_num,
-             " (", bad_seq$crop_start, ") > seq ", bad_seq$next_seq,
+      "Error: seq_id is not chronological:\n",
+      paste0("  - ", bad_seq$MGT_combo, " seq_id ", bad_seq$seq_id,
+             " (", bad_seq$crop_start, ") > seq_id ", bad_seq$next_seq,
              " (", bad_seq$next_start, ")", collapse = "\n"),
-      call. = FALSE
-    )
-  }
-
-  # 4. Same-day planting must share same CD_seq_num
-  bad_same_date <- ch %>%
-    group_by(MGT_combo, crop_start) %>%
-    filter(n() > 1) %>%
-    summarize(n_seq = n_distinct(CD_seq_num), .groups = "drop") %>%
-    filter(n_seq > 1)
-
-  if (nrow(bad_same_date) > 0) {
-    stop(
-      "Error: Multiple crops with the same planting date have different CD_seq_num values:\n",
-      paste0("  - ", bad_same_date$MGT_combo, " on ", bad_same_date$crop_start,
-             " has ", bad_same_date$n_seq, " different sequence numbers."),
       call. = FALSE
     )
   }

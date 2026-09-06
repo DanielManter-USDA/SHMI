@@ -14,8 +14,8 @@
 - [`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md)
   : Compute Rotation-Scale Crop Diversity (Entropy-Based Hill Numbers)
 - [`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md)
-  : Compute Mechanistic Inverse Disturbance (Mixing-Efficiency × Depth
-  Metric)
+  : Compute Mechanistic Inverse Disturbance (EPA Soil-Mixing Model +
+  Modified Tier 3 TI)
 - [`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)
   : Compute the Organic Inputs Sub-index (Amendments + Animals)
 

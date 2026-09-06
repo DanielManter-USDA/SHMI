@@ -126,7 +126,8 @@ compute_orginput <- function(rot_bounds,
 
   # 6. Final 0–100 score
   org_final <- org_freq %>%
-    mutate(OrgInput = 100 * freq)
+    mutate(OrgInput = 100 * freq) %>%
+    select(-freq)
 
   return(org_final)
 }

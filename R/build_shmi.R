@@ -95,24 +95,27 @@ build_shmi <- function(shmi_inputs,
   # --------------------------------------------------------------------------
   official <- list(
     # cover
-    w_winter = 0.130,
-    w_spring = 0.129,
-    w_summer = 0.513,
-    w_fall   = 0.227,
+    w_winter = 0.155,
+    w_spring = 0.141,
+    w_summer = 0.417,
+    w_fall   = 0.287,
 
     # diversity
-    hill      = 2,
+    hill      = 1,
     max_div   = 8,
 
-    # animals / amendments
-    w_amend   = 1,
-    w_animals = 1,
+    # disturbance
+    max_stir    = 283,
 
-    # SHMI pillar weights
-    w_cover    = 0.492,
-    w_div      = 0.052,
-    w_dist     = 0.131,
-    w_orginput = 0.324
+    # organic amendments
+    w_amend   = 0.555,
+    w_animals = 0.445,
+
+    # shmi weights
+    w_cover    = 0.638,
+    w_div      = 0.072,
+    w_dist     = 0.123,
+    w_ani      = 0.167
   )
 
   # --------------------------------------------------------------------------
@@ -206,27 +209,27 @@ build_shmi <- function(shmi_inputs,
     by = "MGT_combo"
   )
 
-  w_sum   <- settings$w_cover + settings$w_div + settings$w_dist + settings$w_orginput
+  w_sum   <- settings$w_cover + settings$w_div + settings$w_dist + settings$w_ani
 
-  w_cover    <- settings$w_cover    / w_sum
-  w_div      <- settings$w_div      / w_sum
-  w_dist     <- settings$w_dist     / w_sum
-  w_orginput <- settings$w_orginput / w_sum
+  w_cover    <- settings$w_cover / w_sum
+  w_div      <- settings$w_div   / w_sum
+  w_dist     <- settings$w_dist  / w_sum
+  w_ani      <- settings$w_ani   / w_sum
 
   indicator_df <- indicator_df %>%
     dplyr::mutate(
       SHMI = (
-          w_cover    * .data$Cover +
-          w_div      * .data$Diversity +
-          w_dist     * .data$InvDist +
-          w_orginput * .data$OrgInputs
+          w_cover * .data$Cover +
+          w_div   * .data$Diversity +
+          w_dist  * .data$InvDist +
+          w_ani   * .data$OrgInput
       )
     ) %>%
     dplyr::select(.data$MGT_combo, .data$MGT_study, .data$MGT_farm,
                   .data$MGT_field, .data$MGT_trt,
                   .data$SHMI,
                   .data$Cover, .data$Diversity,
-                  .data$InvDist, .data$OrgInputs) %>%
+                  .data$InvDist, .data$OrgInput) %>%
     dplyr::arrange(.data$MGT_combo)
 
   indicator_df <- indicator_df %>%

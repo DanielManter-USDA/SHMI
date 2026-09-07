@@ -205,8 +205,6 @@ compute_disturbance <- function(dist,
         T_t_inv = 100 * (1 - (T_t_mid / max_mid))
       )
 
-    print(annual_full)
-
     rot <- annual_full %>%
       dplyr::group_by(MGT_combo) %>%
       dplyr::summarize(
@@ -214,8 +212,6 @@ compute_disturbance <- function(dist,
         .groups = "drop"
       ) %>%
       dplyr::mutate(InvDist = dplyr::if_else(is.na(InvDist), 100, InvDist))
-
-    print(rot)
 
     return(
       all_mgts %>%

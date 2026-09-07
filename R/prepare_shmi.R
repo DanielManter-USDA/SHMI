@@ -268,10 +268,12 @@ prepare_shmi_inputs <- function(path,
   if (end_sample_date) {
     crop <- crop %>%
       left_join(mgt %>% select(MGT_combo, MGT_sample_date), by = "MGT_combo") %>%
+      mutate(MGT_sample_date = as.Date(MGT_sample_date)) %>%
       filter(CD_plant_date <= MGT_sample_date) %>%
       mutate(CD_term_date = if_else(!is.na(CD_term_date) & CD_term_date > MGT_sample_date, MGT_sample_date, CD_term_date))
     dist <- dist %>%
       left_join(mgt %>% select(MGT_combo, MGT_sample_date), by = "MGT_combo") %>%
+      mutate(MGT_sample_date = as.Date(MGT_sample_date)) %>%
       filter(SD_date <= MGT_sample_date)
   }
 
@@ -406,6 +408,7 @@ prepare_shmi_inputs <- function(path,
     if (end_sample_date) {
       animal <- animal %>%
         left_join(mgt %>% select(MGT_combo, MGT_sample_date), by = "MGT_combo") %>%
+        mutate(MGT_sample_date = as.Date(MGT_sample_date)) %>%
         filter(AD_start_date <= MGT_sample_date) %>%
         mutate(
           AD_end_date = if_else(AD_end_date > MGT_sample_date, as.Date(MGT_sample_date), AD_end_date)
@@ -513,6 +516,8 @@ prepare_shmi_inputs <- function(path,
           mgt %>%
             select(MGT_combo, MGT_sample_date) %>%
             group_by(MGT_combo) %>%
+            mutate(MGT_sample_date = as.Date(MGT_sample_date)) %>%
+
             summarize(MGT_sample_date = max(MGT_sample_date), .groups = "drop"),
           by = "MGT_combo"
         )
@@ -639,7 +644,11 @@ prepare_shmi_inputs <- function(path,
     ) %>%
     select(MGT_combo, CD_seq_num, CD_mix, CD_cat, CD_group, CD_name, crop_start, crop_end, rot_start, rot_end, rot_start_yr, rot_end_yr)
 
-
+  crop <- crop %>%
+    mutate(
+      crop_start = as.Date(crop_start),
+      crop_end   = as.Date(crop_end)
+    )
 
   # ------------------------------------------------------------
   # 7. VALIDATION

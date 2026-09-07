@@ -78,7 +78,7 @@ validate_shmi_input <- function(shmi_inputs) {
     }
   }
 
-  # ---- 3. Check crop_harmonized structure ----
+  # ---- 3. Check crop structure ----
   ch <- shmi_inputs$crop
   required_crop_cols <- c("CD_name", "CD_seq_num", "crop_start", "crop_end")
   missing_crop_cols  <- setdiff(required_crop_cols, names(ch))

@@ -115,6 +115,11 @@ compute_disturbance <- function(dist,
   dist_meth <- match.arg(dist_meth)
   all_mgts  <- rot_bounds %>% dplyr::select(MGT_combo)
 
+  full_years <- rot_bounds %>%
+    mutate(year = map2(rot_start_yr, rot_end_yr, seq)) %>%
+    unnest(year) %>%
+    select(MGT_combo, year)
+
   # ---- Tier-3 classes (shared by both methods) ----
   ti_classes <- tibble::tribble(
     ~class, ~ti_min, ~ti_max,
@@ -192,13 +197,25 @@ compute_disturbance <- function(dist,
         T_t_inv = 100 * (1 - (T_t_mid / max_mid))
       )
 
-    rot <- annual %>%
+    annual_full <- full_years %>%
+      left_join(annual, by = c("MGT_combo", "year")) %>%
+      mutate(
+        # missing years → TI_mid = 0 (class Z)
+        T_t_mid = replace_na(T_t_mid, 0),
+        T_t_inv = 100 * (1 - (T_t_mid / max_mid))
+      )
+
+    print(annual_full)
+
+    rot <- annual_full %>%
       dplyr::group_by(MGT_combo) %>%
       dplyr::summarize(
         InvDist = mean(T_t_inv, na.rm = TRUE),
         .groups = "drop"
       ) %>%
       dplyr::mutate(InvDist = dplyr::if_else(is.na(InvDist), 100, InvDist))
+
+    print(rot)
 
     return(
       all_mgts %>%
@@ -261,7 +278,15 @@ compute_disturbance <- function(dist,
     max_mid <- max(ti_classes$ti_mid)
     annual$T_t_inv <- 100 * (1 - (annual$TI_mid / max_mid))
 
-    rot <- annual %>%
+    annual_full <- full_years %>%
+      left_join(annual, by = c("MGT_combo", "year")) %>%
+      mutate(
+        # missing years → TI_mid = 0 (class Z)
+        TI_mid = replace_na(TI_mid, 0),
+        T_t_inv = 100 * (1 - (TI_mid / max_mid))
+      )
+
+    rot <- annual_full %>%
       dplyr::group_by(MGT_combo) %>%
       dplyr::summarise(
         InvDist = mean(T_t_inv, na.rm = TRUE),

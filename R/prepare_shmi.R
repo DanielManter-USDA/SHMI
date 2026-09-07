@@ -460,20 +460,23 @@ prepare_shmi_inputs <- function(path,
         group_by(MGT_combo) %>%
         summarize(
           # earliest activity across all start columns
-          start = min(
-            pmin(!!!rlang::syms(start_cols), na.rm = TRUE),
-            na.rm = TRUE
-          ),
+          start = {
+            s <- pmin(!!!rlang::syms(start_cols), na.rm = TRUE)
+            s[is.infinite(s)] <- NA
+            min(s, na.rm = TRUE)
+          },
 
           # latest activity across all end columns
-          end = max(
-            dplyr::coalesce(!!!rlang::syms(end_cols)),
-            na.rm = TRUE
-          ),
+          end = {
+            e <- pmax(!!!rlang::syms(end_cols), na.rm = TRUE)
+            e[is.infinite(e)] <- NA
+            max(e, na.rm = TRUE)
+          },
 
           .groups = "drop"
         )
     }
+
     df_list <- list()
 
     if (!is.null(crop_h)) {
@@ -598,7 +601,7 @@ prepare_shmi_inputs <- function(path,
   crop <- crop %>%
     mutate(
       CD_cat = case_when(
-        CD_cat %in% c("cash", "cover", "fallow") ~ "Annual",
+        CD_cat %in% c("cash", "cover", "fallow", "Cover") ~ "Annual",
         CD_cat %in% c("perennial", "woody perennial") ~ "Perennial",
         TRUE ~ CD_cat
       )
@@ -606,43 +609,61 @@ prepare_shmi_inputs <- function(path,
 
   crop <- crop %>%
     left_join(rot_bounds, by = "MGT_combo") %>%
+    group_by(MGT_combo, CD_seq_num) %>%
     mutate(
+      # mixture-aware planting date
+      plant_min_raw = suppressWarnings(min(CD_plant_date, na.rm = TRUE)),
+      plant_min_raw = ifelse(is.infinite(plant_min_raw), NA, plant_min_raw),
+
+      # convert to Date BEFORE case_when
+      plant_min = as.Date(plant_min_raw),
+
       crop_start = case_when(
-        # Normal case: planting date exists
-        !is.na(CD_plant_date) ~ CD_plant_date,
-
-        # NAPESHM winter cover mixtures (CD_seq_num = 1) missing planting date
-        CD_seq_num == 1 ~ rot_start,
-
-        # Fallback: if planting date missing for any crop
-        TRUE ~ rot_start
+        !is.na(plant_min) ~ plant_min,     # earliest planting date
+        CD_seq_num == 1   ~ rot_start,     # special winter cover rule
+        TRUE              ~ rot_start      # fallback
       ),
+
+      # collect mixture-wide dates
+      harv_min_raw = suppressWarnings(min(CD_harv_date, na.rm = TRUE)),
+      term_min_raw = suppressWarnings(min(CD_term_date, na.rm = TRUE)),
+      next_min_raw = suppressWarnings(min(next_plant,   na.rm = TRUE)),
+
+      harv_min_raw = ifelse(is.infinite(harv_min_raw), NA, harv_min_raw),
+      term_min_raw = ifelse(is.infinite(term_min_raw), NA, term_min_raw),
+      next_min_raw = ifelse(is.infinite(next_min_raw), NA, next_min_raw),
+
+      harv_min = as.Date(harv_min_raw),
+      term_min = as.Date(term_min_raw),
+      next_min = as.Date(next_min_raw),
 
       crop_end = case_when(
 
         # Annuals: harvest or termination
-        CD_cat == "Annual" & (!is.na(CD_harv_date) | !is.na(CD_term_date)) ~
-          pmin(CD_harv_date, CD_term_date, na.rm = TRUE),
+        CD_cat == "Annual" & (!is.na(harv_min) | !is.na(term_min)) ~
+          pmin(harv_min, term_min, na.rm = TRUE),
 
         # Annuals: fallback to next planting
-        CD_cat == "Annual" & is.na(CD_harv_date) & is.na(CD_term_date) &
-          !is.na(next_plant) ~ next_plant,
+        CD_cat == "Annual" & is.na(harv_min) & is.na(term_min) &
+          !is.na(next_min) ~ next_min,
 
         # Annuals: no harvest, no termination, no next planting → rotation end
-        CD_cat == "Annual" & is.na(CD_harv_date) & is.na(CD_term_date) &
-          is.na(next_plant) ~ rot_end,
+        CD_cat == "Annual" & is.na(harv_min) & is.na(term_min) &
+          is.na(next_min) ~ rot_end,
 
         # Perennials: termination defines end
-        CD_cat == "Perennial" & !is.na(CD_term_date) ~ CD_term_date,
+        CD_cat == "Perennial" & !is.na(term_min) ~ term_min,
 
         # Perennials: fallback to next planting
-        CD_cat == "Perennial" & is.na(CD_term_date) & !is.na(next_plant) ~ next_plant,
+        CD_cat == "Perennial" & is.na(term_min) & !is.na(next_min) ~ next_min,
 
         # Perennials: no termination, no next planting → rotation end
-        CD_cat == "Perennial" & is.na(CD_term_date) & is.na(next_plant) ~ rot_end
+        CD_cat == "Perennial" & is.na(term_min) & is.na(next_min) ~ rot_end
       )
     ) %>%
-    select(MGT_combo, CD_seq_num, CD_mix, CD_cat, CD_group, CD_name, crop_start, crop_end, rot_start, rot_end, rot_start_yr, rot_end_yr)
+    ungroup() %>%
+    select(MGT_combo, CD_seq_num, CD_mix, CD_cat, CD_group, CD_name,
+           crop_start, crop_end, rot_start, rot_end, rot_start_yr, rot_end_yr)
 
   crop <- crop %>%
     mutate(

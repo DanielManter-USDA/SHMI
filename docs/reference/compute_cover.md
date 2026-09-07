@@ -1,18 +1,16 @@
-# Compute the SHMI Cover Sub-index (Season‑Weighted Plant Presence)
+# Compute the SHMI Cover Sub‑index (Season‑Weighted Plant Presence)
 
-Calculates the SHMI cover indicator for each management unit
-(\`MGT_combo\`) using daily crop presence data and rotation bounds.
-Cover is computed as a weighted average of seasonal plant‑days, where
-each season (winter, spring, summer, fall) contributes a user‑specified
-weight. Seasonal plant‑days are normalized by the expected number of
-days per season (one‑quarter of the rotation length), and the final
-cover score is scaled to 0–100.
+Computes the SHMI cover indicator for each management unit
+(\`MGT_combo\`) using crop start/end dates and rotation bounds. Cover
+represents the proportion of the rotation during which living plant
+cover is present, weighted by season to reflect differential ecological
+importance.
 
 ## Usage
 
 ``` r
 compute_cover(
-  crop_harmonized,
+  crop,
   rot_bounds,
   w_winter = 0.13,
   w_spring = 0.129,
@@ -23,17 +21,21 @@ compute_cover(
 
 ## Arguments
 
-- crop_harmonized:
+- crop:
 
-  A data frame produced by
-  [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md),
-  containing one row per crop event with harmonized start/end dates and
-  mixture names.
+  A data frame containing one row per crop species with harmonized
+  start/end dates, including:
+
+  - `MGT_combo` — management unit identifier
+
+  - `CD_seq_num` — planting event identifier
+
+  - `crop_start`, `crop_end` — daily cover interval
 
 - rot_bounds:
 
-  A data frame with rotation start and end dates for each `MGT_combo`,
-  containing:
+  A data frame containing rotation bounds for each management unit,
+  with:
 
   - `MGT_combo`
 
@@ -43,19 +45,19 @@ compute_cover(
 
 - w_winter:
 
-  Numeric weight for winter cover (default 0.130).
+  Weight for winter cover (default 0.130).
 
 - w_spring:
 
-  Numeric weight for spring cover (default 0.129).
+  Weight for spring cover (default 0.129).
 
 - w_summer:
 
-  Numeric weight for summer cover (default 0.513).
+  Weight for summer cover (default 0.513).
 
 - w_fall:
 
-  Numeric weight for fall cover (default 0.227).
+  Weight for fall cover (default 0.227).
 
 ## Value
 
@@ -67,12 +69,66 @@ A data frame with:
 
 ## Details
 
-The algorithm proceeds in four steps:
+\## Mixture‑aware cover windows
 
-1.  Assign each daily record to a season based on calendar month.
+The input \`crop\` table contains one row per crop species. Mixtures
+therefore appear as multiple rows with identical \`CD_seq_num\` values.
+For cover scoring, mixtures must be treated as a \*single\* planting
+event. The function collapses mixtures by grouping on:
 
-2.  Sum plant‑days within each season for each `MGT_combo`.
+- `MGT_combo`
 
-3.  Normalize seasonal totals by one‑quarter of the rotation length.
+- `CD_seq_num`
 
-4.  Apply seasonal weights and scale the final cover score to 0–100.
+and computing:
+
+- earliest `crop_start`
+
+- latest `crop_end`
+
+This produces one cover window per planting event, regardless of mixture
+complexity.
+
+\## Daily plant‑presence expansion
+
+Each cover window is expanded into daily records. Each day is assigned
+to a season based on calendar month:
+
+- Winter: December–February
+
+- Spring: March–May
+
+- Summer: June–August
+
+- Fall: September–November
+
+Seasonal plant‑days are counted for each management unit.
+
+\## Rotation‑based normalization
+
+Rotation bounds (\`rot_start\`, \`rot_end\`) are expanded into daily
+records to compute the number of \*possible\* days in each season.
+Seasonal cover proportion is:
+
+\$\$ p\_{season} = \frac{\text{plant-days}}{\text{possible-days}} \$\$
+
+Seasons with zero possible days contribute zero.
+
+\## Seasonal weighting and scaling
+
+Seasonal proportions are combined using user‑specified weights:
+
+- `w_winter`
+
+- `w_spring`
+
+- `w_summer`
+
+- `w_fall`
+
+Weights are normalized to sum to 1. The final cover score is:
+
+\$\$ \text{Cover} = 100 \times \sum\_{season} w\_{season} \\ p\_{season}
+\$\$
+
+yielding a value in `[0, 100]`.

@@ -1,31 +1,33 @@
-# Compute Rotation-Scale Crop Diversity (Entropy-Based Hill Numbers)
+# Compute Rotation‑Scale Crop Diversity (Entropy‑Based Hill Numbers)
 
-Calculates the SHMI diversity sub-index for each management unit
-(\`MGT_combo\`) using daily crop presence data and harmonized crop
-windows. Diversity is computed at the \*rotation scale\* by expanding
-species mixtures, summing plant-days across years, and applying
-Hill-number diversity metrics in entropy form (Shannon or Simpson). The
-final diversity score is scaled to 0–100 using a user-specified
-theoretical maximum.
+Computes the SHMI diversity sub‑index for each management unit
+(\`MGT_combo\`) using rotation‑scale plant‑day totals for each species.
+Diversity reflects the distribution of crop species across the entire
+rotation and is calculated using Hill‑number metrics (richness, Shannon,
+or Simpson). The final diversity score is scaled to 0–100.
 
 ## Usage
 
 ``` r
-compute_diversity(crop_harmonized, hill = 2, max_div = 8)
+compute_diversity(crop, hill = 2, max_div = 8)
 ```
 
 ## Arguments
 
-- crop_harmonized:
+- crop:
 
-  A data frame produced by
-  [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md),
-  containing one row per crop event with harmonized start/end dates and
-  mixture names.
+  A data frame containing one row per crop species with harmonized
+  start/end dates, including:
+
+  - `MGT_combo` — management unit identifier
+
+  - `CD_name` — crop or mixture name
+
+  - `crop_start`, `crop_end` — daily cover interval
 
 - hill:
 
-  Hill-number order. Supported values:
+  Hill‑number order. Supported values:
 
   - `0`: species richness
 
@@ -38,8 +40,8 @@ compute_diversity(crop_harmonized, hill = 2, max_div = 8)
 - max_div:
 
   The theoretical maximum diversity used for scaling the final index to
-  0–100. For richness (`hill = 0`), this is the maximum number of
-  species. For entropy-based metrics, scaling uses `log(max_div)`.
+  0–100. For richness, this is the maximum number of species. For
+  entropy‑based metrics, scaling uses `log(max_div)`.
 
 ## Value
 
@@ -47,29 +49,51 @@ A data frame with:
 
 - `MGT_combo`
 
-- `Diversity` — rotation-scale diversity score (0–100)
+- `Diversity` — rotation‑scale diversity score (0–100)
 
 ## Details
 
-The algorithm proceeds in four stages:
+\## Mixture expansion
 
-1.  **Daily plant-days**: Sum daily crop presence by
-    `MGT_combo × CD_seq_num × CD_name × year`.
+The input \`crop\` table contains one row per crop species. Mixtures
+therefore appear as single rows whose \`CD_name\` contains multiple
+species (e.g., \`"A + B + C"\`) or placeholder mixture names (e.g.,
+\`"8-species"\`).
 
-2.  **Mixture expansion**: Mixtures such as `"A + B"` are split into
-    individual species. Placeholder mixtures like `"3-species"` are
-    expanded into `species_1`, `species_2`, `species_3`.
+Mixtures are expanded into individual species using:
 
-3.  **Rotation-scale plant-days**: Plant-days are summed across all
-    years of the rotation for each species.
+- splitting real mixtures on \`"+"\`, and
 
-4.  **Entropy-based diversity**: Species proportions \\p_i\\ are
-    computed and diversity is calculated as:
+- expanding placeholder mixtures into synthetic species (\`species_1\`,
+  \`species_2\`, …).
 
-    - Richness: \\D = \sum I(p_i \> 0)\\
+Each species inherits the same \`crop_start\` and \`crop_end\` interval.
 
-    - Shannon entropy: \\D = -\sum p_i \log p_i\\
+\## Rotation‑scale plant‑days
 
-    - Simpson entropy: \\D = -\log \sum p_i^2\\
+For each species, plant‑days are computed as:
 
-    The result is capped at `max_div` and scaled to 0–100.
+\$\$ \text{days} = (\text{crop\\end} - \text{crop\\start}) + 1 \$\$
+
+Plant‑days are summed across all years of the rotation. Fallow
+contributes zero plant‑days.
+
+\## Hill‑number diversity
+
+Species proportions are:
+
+\$\$ p_i = \frac{\text{days}\_i}{\sum_j \text{days}\_j} \$\$
+
+Diversity is computed using Hill‑number entropy metrics:
+
+- Richness: \\D = \sum I(p_i \> 0)\\
+
+- Shannon entropy: \\D = -\sum p_i \log p_i\\
+
+- Simpson entropy (entropy form): \\D = -\log \sum p_i^2\\
+
+The diversity value is capped at `max_div` and scaled to 0–100:
+
+- Richness: \\D / max\\div\\
+
+- Entropy metrics: \\D / \log(max\\div)\\

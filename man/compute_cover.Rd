@@ -2,10 +2,10 @@
 % Please edit documentation in R/cover.R
 \name{compute_cover}
 \alias{compute_cover}
-\title{Compute the SHMI Cover Sub-index (Season‑Weighted Plant Presence)}
+\title{Compute the SHMI Cover Sub‑index (Season‑Weighted Plant Presence)}
 \usage{
 compute_cover(
-  crop_harmonized,
+  crop,
   rot_bounds,
   w_winter = 0.13,
   w_spring = 0.129,
@@ -14,25 +14,29 @@ compute_cover(
 )
 }
 \arguments{
-\item{crop_harmonized}{A data frame produced by
-\code{prepare_shmi_inputs()}, containing one row per crop event with
-harmonized start/end dates and mixture names.}
+\item{crop}{A data frame containing one row per crop species with harmonized
+start/end dates, including:
+\itemize{
+  \item \code{MGT_combo} — management unit identifier
+  \item \code{CD_seq_num} — planting event identifier
+  \item \code{crop_start}, \code{crop_end} — daily cover interval
+}}
 
-\item{rot_bounds}{A data frame with rotation start and end dates for each
-\code{MGT_combo}, containing:
+\item{rot_bounds}{A data frame containing rotation bounds for each
+management unit, with:
 \itemize{
   \item \code{MGT_combo}
   \item \code{rot_start}
   \item \code{rot_end}
 }}
 
-\item{w_winter}{Numeric weight for winter cover (default 0.130).}
+\item{w_winter}{Weight for winter cover (default 0.130).}
 
-\item{w_spring}{Numeric weight for spring cover (default 0.129).}
+\item{w_spring}{Weight for spring cover (default 0.129).}
 
-\item{w_summer}{Numeric weight for summer cover (default 0.513).}
+\item{w_summer}{Weight for summer cover (default 0.513).}
 
-\item{w_fall}{Numeric weight for fall cover (default 0.227).}
+\item{w_fall}{Weight for fall cover   (default 0.227).}
 }
 \value{
 A data frame with:
@@ -42,19 +46,79 @@ A data frame with:
   }
 }
 \description{
-Calculates the SHMI cover indicator for each management unit (`MGT_combo`)
-using daily crop presence data and rotation bounds. Cover is computed as a
-weighted average of seasonal plant‑days, where each season (winter, spring,
-summer, fall) contributes a user‑specified weight. Seasonal plant‑days are
-normalized by the expected number of days per season (one‑quarter of the
-rotation length), and the final cover score is scaled to 0–100.
+Computes the SHMI cover indicator for each management unit (`MGT_combo`)
+using crop start/end dates and rotation bounds. Cover represents the
+proportion of the rotation during which living plant cover is present,
+weighted by season to reflect differential ecological importance.
 }
 \details{
-The algorithm proceeds in four steps:
-\enumerate{
-  \item Assign each daily record to a season based on calendar month.
-  \item Sum plant‑days within each season for each \code{MGT_combo}.
-  \item Normalize seasonal totals by one‑quarter of the rotation length.
-  \item Apply seasonal weights and scale the final cover score to 0–100.
+## Mixture‑aware cover windows
+
+The input `crop` table contains one row per crop species. Mixtures therefore
+appear as multiple rows with identical `CD_seq_num` values. For cover
+scoring, mixtures must be treated as a *single* planting event. The function
+collapses mixtures by grouping on:
+
+\itemize{
+  \item \code{MGT_combo}
+  \item \code{CD_seq_num}
 }
+
+and computing:
+
+\itemize{
+  \item earliest \code{crop_start}
+  \item latest   \code{crop_end}
+}
+
+This produces one cover window per planting event, regardless of mixture
+complexity.
+
+
+## Daily plant‑presence expansion
+
+Each cover window is expanded into daily records. Each day is assigned to a
+season based on calendar month:
+
+\itemize{
+  \item Winter: December–February
+  \item Spring: March–May
+  \item Summer: June–August
+  \item Fall:   September–November
+}
+
+Seasonal plant‑days are counted for each management unit.
+
+
+## Rotation‑based normalization
+
+Rotation bounds (`rot_start`, `rot_end`) are expanded into daily records to
+compute the number of *possible* days in each season. Seasonal cover
+proportion is:
+
+\deqn{
+  p_{season} = \frac{\text{plant-days}}{\text{possible-days}}
+}
+
+Seasons with zero possible days contribute zero.
+
+
+## Seasonal weighting and scaling
+
+Seasonal proportions are combined using user‑specified weights:
+
+\itemize{
+  \item \code{w_winter}
+  \item \code{w_spring}
+  \item \code{w_summer}
+  \item \code{w_fall}
+}
+
+Weights are normalized to sum to 1. The final cover score is:
+
+\deqn{
+  \text{Cover} = 100 \times \sum_{season} w_{season} \, p_{season}
+}
+
+yielding a value in \code{[0, 100]}.
 }

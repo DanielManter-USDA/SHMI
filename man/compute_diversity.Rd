@@ -2,16 +2,20 @@
 % Please edit documentation in R/diversity.R
 \name{compute_diversity}
 \alias{compute_diversity}
-\title{Compute Rotation-Scale Crop Diversity (Entropy-Based Hill Numbers)}
+\title{Compute Rotation‑Scale Crop Diversity (Entropy‑Based Hill Numbers)}
 \usage{
-compute_diversity(crop_harmonized, hill = 2, max_div = 8)
+compute_diversity(crop, hill = 2, max_div = 8)
 }
 \arguments{
-\item{crop_harmonized}{A data frame produced by
-\code{prepare_shmi_inputs()}, containing one row per crop event with
-harmonized start/end dates and mixture names.}
+\item{crop}{A data frame containing one row per crop species with harmonized
+start/end dates, including:
+\itemize{
+  \item \code{MGT_combo} — management unit identifier
+  \item \code{CD_name} — crop or mixture name
+  \item \code{crop_start}, \code{crop_end} — daily cover interval
+}}
 
-\item{hill}{Hill-number order. Supported values:
+\item{hill}{Hill‑number order. Supported values:
 \itemize{
   \item \code{0}: species richness
   \item \code{1}: Shannon entropy
@@ -20,47 +24,73 @@ harmonized start/end dates and mixture names.}
 Default is \code{2}.}
 
 \item{max_div}{The theoretical maximum diversity used for scaling the
-final index to 0–100. For richness (\code{hill = 0}), this is the maximum
-number of species. For entropy-based metrics, scaling uses
-\code{log(max_div)}.}
+final index to 0–100. For richness, this is the maximum number of species.
+For entropy‑based metrics, scaling uses \code{log(max_div)}.}
 }
 \value{
 A data frame with:
   \itemize{
     \item \code{MGT_combo}
-    \item \code{Diversity} — rotation-scale diversity score (0–100)
+    \item \code{Diversity} — rotation‑scale diversity score (0–100)
   }
 }
 \description{
-Calculates the SHMI diversity sub-index for each management unit (`MGT_combo`)
-using daily crop presence data and harmonized crop windows. Diversity is
-computed at the *rotation scale* by expanding species mixtures, summing
-plant-days across years, and applying Hill-number diversity metrics in
-entropy form (Shannon or Simpson). The final diversity score is scaled to
-0–100 using a user-specified theoretical maximum.
+Computes the SHMI diversity sub‑index for each management unit
+(`MGT_combo`) using rotation‑scale plant‑day totals for each species.
+Diversity reflects the distribution of crop species across the entire
+rotation and is calculated using Hill‑number metrics (richness, Shannon,
+or Simpson). The final diversity score is scaled to 0–100.
 }
 \details{
-The algorithm proceeds in four stages:
+## Mixture expansion
 
-\enumerate{
-  \item \strong{Daily plant-days}: Sum daily crop presence by
-    \code{MGT_combo × CD_seq_num × CD_name × year}.
+The input `crop` table contains one row per crop species. Mixtures therefore
+appear as single rows whose `CD_name` contains multiple species (e.g.,
+`"A + B + C"`) or placeholder mixture names (e.g., `"8-species"`).
 
-  \item \strong{Mixture expansion}:
-    Mixtures such as \code{"A + B"} are split into individual species.
-    Placeholder mixtures like \code{"3-species"} are expanded into
-    \code{species_1}, \code{species_2}, \code{species_3}.
+Mixtures are expanded into individual species using:
 
-  \item \strong{Rotation-scale plant-days}:
-    Plant-days are summed across all years of the rotation for each species.
+\itemize{
+  \item splitting real mixtures on `"+"`, and
+  \item expanding placeholder mixtures into synthetic species
+        (`species_1`, `species_2`, …).
+}
 
-  \item \strong{Entropy-based diversity}:
-    Species proportions \eqn{p_i} are computed and diversity is calculated as:
-    \itemize{
-      \item Richness: \eqn{D = \sum I(p_i > 0)}
-      \item Shannon entropy: \eqn{D = -\sum p_i \log p_i}
-      \item Simpson entropy: \eqn{D = -\log \sum p_i^2}
-    }
-    The result is capped at \code{max_div} and scaled to 0–100.
+Each species inherits the same `crop_start` and `crop_end` interval.
+
+
+## Rotation‑scale plant‑days
+
+For each species, plant‑days are computed as:
+
+\deqn{
+  \text{days} = (\text{crop\_end} - \text{crop\_start}) + 1
+}
+
+Plant‑days are summed across all years of the rotation. Fallow contributes
+zero plant‑days.
+
+
+## Hill‑number diversity
+
+Species proportions are:
+
+\deqn{
+  p_i = \frac{\text{days}_i}{\sum_j \text{days}_j}
+}
+
+Diversity is computed using Hill‑number entropy metrics:
+
+\itemize{
+  \item Richness: \eqn{D = \sum I(p_i > 0)}
+  \item Shannon entropy: \eqn{D = -\sum p_i \log p_i}
+  \item Simpson entropy (entropy form): \eqn{D = -\log \sum p_i^2}
+}
+
+The diversity value is capped at \code{max_div} and scaled to 0–100:
+
+\itemize{
+  \item Richness: \eqn{D / max\_div}
+  \item Entropy metrics: \eqn{D / \log(max\_div)}
 }
 }

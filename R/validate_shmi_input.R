@@ -50,7 +50,7 @@ validate_shmi_input <- function(shmi_inputs) {
   # ---- 1. Required tables ----
   required_tables <- c(
     "mgt",
-    "crop_harmonized",
+    "crop",
     "rot_bounds",
     "dist",
     "amend",
@@ -79,23 +79,23 @@ validate_shmi_input <- function(shmi_inputs) {
   }
 
   # ---- 3. Check crop_harmonized structure ----
-  ch <- shmi_inputs$crop_harmonized
+  ch <- shmi_inputs$crop
   required_crop_cols <- c("CD_name", "CD_seq_num", "crop_start", "crop_end")
   missing_crop_cols  <- setdiff(required_crop_cols, names(ch))
   if (length(missing_crop_cols) > 0) {
     errors <- c(
       errors,
-      paste("crop_harmonized missing columns:",
+      paste("crop missing columns:",
             paste(missing_crop_cols, collapse = ", "))
     )
   } else {
     # date classes
     if (!inherits(ch$crop_start, "Date") || !inherits(ch$crop_end, "Date")) {
-      errors <- c(errors, "crop_harmonized$crop_start and crop_end must be Date")
+      errors <- c(errors, "crop$crop_start and crop_end must be Date")
     }
     # start <= end
     if (any(ch$crop_start > ch$crop_end, na.rm = TRUE)) {
-      errors <- c(errors, "Some crop_harmonized rows have crop_start > crop_end")
+      errors <- c(errors, "Some crop rows have crop_start > crop_end")
     }
   }
 

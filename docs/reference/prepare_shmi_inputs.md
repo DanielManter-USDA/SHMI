@@ -3,7 +3,7 @@
 Reads, validates, harmonizes, and expands all input sheets required to
 compute the Soil Health Management Index (SHMI). This function is the
 official entry point for SHMI data preparation and produces a
-standardized list of objects used directly by
+standardized list of rotation‑scale objects used directly by
 [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md).
 
 ## Usage
@@ -13,8 +13,10 @@ prepare_shmi_inputs(
   path,
   exclude = NULL,
   verbose = TRUE,
+  rot_calc = c("napeshm", "farmer"),
   start_date_override = NULL,
   end_date_override = NULL,
+  end_sample_date = FALSE,
   calc_yield = FALSE,
   calc_n_rate = FALSE
 )
@@ -24,48 +26,32 @@ prepare_shmi_inputs(
 
 - path:
 
-  Path to the SHMI Excel workbook. Must contain the standard SHMI
-  sheets: `Mgt_Unit`, `Crop_Diversity`, `Soil_Disturbance`,
-  `Amendment_Diversity`, and `Animal_Diversity`. Sheets may be empty;
-  empty sheets are safely ignored.
+  Path to the SHMI Excel workbook.
 
 - exclude:
 
   Optional character vector of `MGT_combo` identifiers to exclude from
-  processing. Default is `NULL`.
+  processing.
 
 - verbose:
 
-  Logical; if `TRUE` (default), prints progress messages describing
-  sheet ingestion, validation steps, and grid construction.
+  Logical; if `TRUE`, prints progress messages.
 
 - start_date_override:
 
-  Optional `Date` or date‑coercible value. If supplied, all crop,
-  disturbance, amendment, animal, yield, and N‑rate events occurring
-  before this date are removed, and rotation bounds are clipped
-  accordingly.
+  Optional `Date` or date‑coercible value.
 
 - end_date_override:
 
-  Optional `Date` or date‑coercible value. If supplied, all events
-  occurring after this date are removed, and rotation bounds are clipped
-  accordingly.
+  Optional `Date` or date‑coercible value.
 
 - calc_yield:
 
-  Logical, default = FALSE. If `TRUE`, yield (kg/ha) is extracted from
-  `Crop_Diversity`, clipped by date overrides, unit‑standardized, and
-  returned for each `MGT_combo × crop event`. If `FALSE`, yield is not
-  processed and the returned list contains `yield = NULL`.
+  Logical; if `TRUE`, extract and standardize yield.
 
 - calc_n_rate:
 
-  Logical, default = FALSE. If `TRUE`, nitrogen rate (kg N/ha) is
-  extracted from `Amendment_Diversity`, clipped by date overrides,
-  unit‑standardized, and summarized for each `MGT_combo × year`. If
-  `FALSE`, N‑rate is not processed and the returned list contains
-  `n_rate = NULL`.
+  Logical; if `TRUE`, extract and standardize N‑rate.
 
 ## Value
 
@@ -73,31 +59,15 @@ A named list containing:
 
 - `rot_bounds`:
 
-  Rotation start/end dates for each `MGT_combo`.
-
-- `crop_harmonized`:
-
-  One row per crop event with harmonized start/end dates.
-
-- `daily`:
-
-  Daily crop‑presence grid (one row per day).
-
-- `daily_dist`:
-
-  Daily disturbance table with mixing efficiency and depth (cm).
-
-- `mgt`:
-
-  Management‑unit metadata.
+  Rotation start/end dates and rotation years.
 
 - `crop`:
 
-  Validated crop event table.
+  Mixture‑aware crop windows (one row per species).
 
 - `dist`:
 
-  Disturbance event table.
+  Disturbance event table (EPA/STIR‑ready).
 
 - `amend`:
 
@@ -107,17 +77,21 @@ A named list containing:
 
   Animal event table.
 
+- `mgt`:
+
+  Management‑unit metadata.
+
 - `yield`:
 
-  (Optional) Crop‑event‑level yield table (kg/ha), or `NULL` if
-  `calc_yield = FALSE`.
+  Optional crop‑event‑level yield table (kg/ha).
 
 - `n_rate`:
 
-  (Optional) Year‑level nitrogen‑rate table (kg N/ha), or `NULL` if
-  `calc_n_rate = FALSE`.
+  Optional year‑level nitrogen‑rate table (kg N/ha).
 
 ## Details
+
+\## Overview
 
 The function performs:
 
@@ -125,63 +99,105 @@ The function performs:
 
 - management‑unit filtering
 
-- crop‑level biological validation (chronology, annual/perennial rules)
+- biological validation of crop chronology (annual/perennial rules)
 
-- harmonization of crop windows across mixtures
+- mixture‑aware harmonization of crop windows
 
-- construction of rotation bounds (full‑year expansion)
+- construction of rotation bounds (start/end dates and rotation years)
 
-- daily grid expansion (fast vectorized implementation)
-
-- mechanistic daily disturbance processing (mixing efficiency × depth)
-
-- assembly of amendment and animal event tables
+- assembly of disturbance, amendment, and animal event tables
 
 - optional extraction of yield and nitrogen‑rate data
 
-The function enforces biologically realistic crop windows, including:
+- override‑aware clipping of all event types
+
+The result is a clean, rotation‑scale dataset suitable for SHMI pillar
+computation: cover, diversity, inverse disturbance, and organic inputs.
+
+\## Required workbook structure
+
+The Excel file must contain the standard SHMI sheets:
+
+- `Mgt_Unit`
+
+- `Crop_Diversity`
+
+- `Soil_Disturbance`
+
+- `Amendment_Diversity`
+
+- `Animal_Diversity`
+
+Sheets may be empty; empty sheets are safely ignored.
+
+\## Date overrides
+
+If `start_date_override` or `end_date_override` are supplied, all event
+types (crop, disturbance, amendment, animal, yield, N‑rate) occurring
+outside the override window are removed, and rotation bounds are clipped
+accordingly.
+
+\## Crop harmonization
+
+Crop windows are validated for biological realism:
 
 - annual crops must terminate within the same year
 
 - perennials may span years but must follow valid chronology
 
-- mixtures are collapsed to event‑level windows
+- mixtures are collapsed to event‑level windows (min start, max end)
 
-Rotation bounds are computed from all available event types (crop,
-disturbance, amendment, animal) and expanded to full calendar years to
-ensure consistent SHMI computation. Date overrides further restrict all
-event types, including optional yield and N‑rate extraction.
+The returned `crop` table contains one row per species with harmonized
+start/end dates suitable for cover and diversity scoring.
 
-Daily grids are generated using a fully vectorized expansion, ensuring
-extremely fast performance even for large datasets.
+\## Disturbance, amendments, and animals
 
-Yield extraction (if enabled) preserves one row per crop event, applies
-override‑aware clipping, and converts all supported units to kg/ha.
-Missing yield or missing units are retained as `NA`.
+Disturbance events are returned in EPA/STIR‑ready format:
 
-Nitrogen‑rate extraction (if enabled) uses the `SA_N` field as the
-authoritative N applied, converts units to kg N/ha, clips by overrides,
-and returns one row per `MGT_combo × year`. Missing `SA_N` values are
-retained as `NA`.
+- `SD_date`
 
-Additionally, this function automatically performs front‑end validation
-of the Excel input file using
-[`validate_excel_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_excel_input.md).
-The validator checks for required sheets, required columns, valid date
-formats, consistent `MGT_combo` values, and malformed entries before any
-ingestion or harmonization occurs.
+- `SD_mixeff`
 
-If validation fails, execution stops immediately with clear, actionable
-error messages. Users must correct the Excel file before re‑running
-`prepare_shmi_inputs()`.
+- `SD_depth`
+
+Amendment and animal events are clipped by overrides and returned in
+rotation‑scale format for
+[`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md).
+
+\## Optional yield and nitrogen‑rate extraction
+
+If enabled:
+
+- Yield is extracted per crop event, unit‑standardized to kg/ha, and
+  clipped by overrides.
+
+- Nitrogen rate is extracted from amendment events, converted to kg
+  N/ha, summarized per `MGT_combo × year`, and clipped by overrides.
+
+Missing values are retained as `NA`.
+
+\## Front‑end validation
+
+The function automatically runs
+[`validate_excel_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_excel_input.md)
+to check:
+
+- required sheets and columns
+
+- valid date formats
+
+- consistent `MGT_combo` values
+
+- malformed entries
+
+If validation fails, execution stops with clear, actionable error
+messages.
 
 ## Error Handling
 
 The function stops with informative errors if:
 
-- required sheets are missing
-
-- required columns are missing
+- required sheets or columns are missing
 
 - crop chronology is biologically impossible
 
@@ -190,5 +206,4 @@ The function stops with informative errors if:
 ## See also
 
 [`build_shmi`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
-for computing SHMI scores and optional rotation‑level summaries of yield
-and nitrogen rate.
+for computing SHMI scores from prepared inputs.

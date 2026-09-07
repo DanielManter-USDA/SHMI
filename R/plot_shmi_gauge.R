@@ -1,4 +1,4 @@
-#' Plot SHMI gauge panels (Cover, Diversity, Inverse Disturbance, OrgInputs, Overall SHMI)
+#' Plot SHMI gauge panels (Cover, Diversity, Inverse Disturbance, OrgInput, Overall SHMI)
 #'
 #' @description
 #' Creates a five horizontal gauge-style plot for SHMI and each sub-index.
@@ -12,7 +12,7 @@
 #'   - `Cover`
 #'   - `Diversity`
 #'   - `InvDist`
-#'   - `OrgInputs`
+#'   - `OrgInput`
 #'
 #' @param MGT_combo Optional. Character value specifying which management
 #'   unit to plot. If supplied, this overrides `row`.
@@ -53,7 +53,7 @@ plot_shmi_gauge <- function(shmi,
   x <- shmi[idx, , drop = FALSE]
 
   # ---- Validate required columns ----
-  req <- c("SHMI", "Cover", "Diversity", "InvDist", "OrgInputs")
+  req <- c("SHMI", "Cover", "Diversity", "InvDist", "OrgInput")
   missing <- setdiff(req, names(x))
   if (length(missing) > 0) {
     stop("Missing required columns: ", paste(missing, collapse = ", "),
@@ -67,7 +67,7 @@ plot_shmi_gauge <- function(shmi,
       Cover     = round(Cover, 1),
       Diversity = round(Diversity, 1),
       InvDist   = round(InvDist, 1),
-      OrgInputs = round(OrgInputs, 1)
+      OrgInput = round(OrgInput, 1)
     )
 
   # ---- Score bins ----
@@ -124,7 +124,7 @@ plot_shmi_gauge <- function(shmi,
   p1 <- panel(x$Cover,     "\nCover")
   p2 <- panel(x$Diversity, "\nDiversity")
   p3 <- panel(x$InvDist,   "Inverse\nDisturbance")
-  p4 <- panel(x$OrgInputs,   "\nOrgInputs")
+  p4 <- panel(x$OrgInput,   "\nOrgInput")
 
   # ---- Overall SHMI panel ----
   p5 <- base_plot() +

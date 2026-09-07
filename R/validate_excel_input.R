@@ -46,7 +46,7 @@ validate_excel_input <- function(path, verbose) {
   # ---- Load sheets using .safe_read() ----
   mu <- .safe_read(path,
                    sheet = "Mgt_Unit",
-                   required_cols = c("MGT_combo", "MGT_study", "MGT_farm", "MGT_field", "MGT_trt"),
+                   required_cols = c("MGT_combo", "MGT_study", "MGT_field", "MGT_trt"),
                    skip = 3,
                    verbose = verbose)
 
@@ -58,7 +58,7 @@ validate_excel_input <- function(path, verbose) {
 
   sd <- .safe_read(path,
                    sheet = "Soil_Disturbance",
-                   required_cols = c("MGT_combo", "SD_date", "SD_mixeff", "SD_depth"),
+                   required_cols = c("MGT_combo", "SD_date", "SD_mixeff"),
                    skip = 3,
                    verbose = verbose)
 
@@ -85,7 +85,7 @@ validate_excel_input <- function(path, verbose) {
   # ---- Required columns per sheet ----
   req_cols <- list(
     Mgt_Unit = c(
-      "MGT_combo", "MGT_study", "MGT_farm", "MGT_field", "MGT_trt"
+      "MGT_combo", "MGT_study", "MGT_field", "MGT_trt"
     ),
 
     Crop_Diversity = c(
@@ -94,7 +94,7 @@ validate_excel_input <- function(path, verbose) {
     ),
 
     Soil_Disturbance = c(
-      "MGT_combo", "SD_date", "SD_mixeff", "SD_depth"
+      "MGT_combo", "SD_date", "SD_mixeff"
     )
 
     # Soil_Amendments = c(

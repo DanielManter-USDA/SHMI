@@ -1,18 +1,19 @@
 # Build SHMI Scores from Prepared Inputs
 
 Computes the Soil Health Management Index (SHMI) for each management
-unit (\`MGT_combo\`) using the harmonized inputs produced by
+unit (\`MGT_combo\`) using harmonized rotation‑scale inputs produced by
 [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md).
-SHMI is a weighted composite of four sub-indices: cover, diversity,
-inverse disturbance, and organic inputs (amendments + animals). By
-default, the function uses the official national SHMI settings (locked
-mode). In expert mode, users may override settings, but resulting scores
-are no longer comparable to the national SHMI scale.
+SHMI is a weighted composite of four sub‑indices:
 
 ## Usage
 
 ``` r
-build_shmi(shmi_inputs, settings = NULL, expert_mode = FALSE)
+build_shmi(
+  shmi_inputs,
+  dist_meth = c("EPA", "STIR"),
+  settings = NULL,
+  expert_mode = FALSE
+)
 ```
 
 ## Arguments
@@ -20,80 +21,125 @@ build_shmi(shmi_inputs, settings = NULL, expert_mode = FALSE)
 - shmi_inputs:
 
   A list returned by
-  [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md),
-  containing at minimum:
+  [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
+  containing harmonized rotation‑scale inputs (see Details).
 
-  - `rot_bounds` — rotation start/end dates
+- dist_meth:
 
-  - `crop_harmonized` — harmonized crop windows
-
-  - `dist` — daily disturbance table
-
-  - `amend` — amendment events
-
-  - `animal` — animal events
+  Disturbance method: `"EPA"` or `"STIR"`.
 
 - settings:
 
-  Optional named list of SHMI settings (seasonal cover weights, Hill
-  number, max diversity, pillar weights, etc.). Ignored unless
-  `expert_mode = TRUE`. Missing elements are filled with official
-  defaults.
+  Optional named list of SHMI settings. Ignored unless
+  `expert_mode = TRUE`.
 
 - expert_mode:
 
-  Logical; if `FALSE` (default), SHMI is computed using official
-  national settings and any custom `settings` are ignored. If `TRUE`,
-  custom settings are allowed but the resulting SHMI values are not
-  comparable to the national SHMI scale.
+  Logical; if `TRUE`, user‑supplied settings override official defaults.
 
 ## Value
 
 A list with:
 
-- `indicator_df` — data frame with columns: `MGT_combo`, `SHMI`,
-  `Cover`, `Diversity`, `InvDist`, `OrgInputs`, and (if available) yield
-  and N-rate summaries.
+- `indicator_df` — data frame with: `MGT_combo`, `SHMI`, `Cover`,
+  `Diversity`, `InvDist`, `OrgInput`, and available metadata.
 
-- `settings_used` — the settings actually applied
+- `settings_used` — settings actually applied
 
 - `expert_mode` — logical flag
 
-- `shmi_version` — version string for reproducibility
+- `shmi_version` — version string
 
 - `timestamp` — computation time
 
 ## Details
 
-The SHMI computation proceeds in five stages:
+- **Cover** — season‑weighted plant presence
 
-1.  **Settings**: In locked mode, the official national SHMI settings
-    are always used. In expert mode, user-supplied settings override
-    defaults.
+- **Diversity** — rotation‑scale crop diversity (Hill numbers)
 
-2.  **Input validation**: Ensures that all required elements from
-    [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
-    are present and structurally valid.
+- **Inverse disturbance** — EPA mechanistic or STIR method
+
+- **Organic inputs** — amendments + animal integration
+
+By default, SHMI is computed using the official national settings
+(“locked mode”). In expert mode, users may override any setting, but the
+resulting SHMI values are no longer comparable to the national SHMI
+scale.
+
+\## Required inputs
+
+The function expects a list returned by
+[`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
+with:
+
+- `rot_bounds` — rotation start/end dates and rotation years
+
+- `crop` — harmonized crop windows (one row per species)
+
+- `dist` — disturbance events (EPA/STIR inputs)
+
+- `amend` — amendment events
+
+- `animal` — animal integration events
+
+- `mgt` — management metadata (study, farm, field, treatment)
+
+\## Disturbance method
+
+Disturbance can be computed using:
+
+- `"EPA"` — mechanistic soil‑mixing model (profile penetration)
+
+- `"STIR"` — daily summed mixing efficiency (SD_mixeff)
+
+Both methods classify annual tillage intensity using the modified Tier‑3
+Z–K scheme and compute inverse disturbance on a 0–100 scale.
+
+\## Settings and expert mode
+
+In locked mode (`expert_mode = FALSE`), SHMI uses the official national
+settings:
+
+- seasonal cover weights
+
+- Hill‑number order and maximum diversity
+
+- STIR normalization constant
+
+- amendment/animal weights
+
+- pillar weights for SHMI aggregation
+
+In expert mode, user‑supplied settings override defaults. Missing
+settings are filled from the official values.
+
+\## SHMI computation workflow
+
+1.  **Settings**: locked mode vs expert mode.
+
+2.  **Input validation**: structural checks on all required inputs.
 
 3.  **Pillar computation**:
 
-    - Cover — via
+    - Cover —
       [`compute_cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.md)
 
-    - Diversity — via
+    - Diversity —
       [`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md)
 
-    - Inverse disturbance — via
+    - Inverse disturbance —
       [`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md)
 
-    - Organic inputs — via
+    - Organic inputs —
       [`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)
 
-4.  **Weighted combination**: Sub-indices are normalized so their
-    weights sum to 1, then combined into a single SHMI score: \$\$ SHMI
-    = w\_{cover} \cdot Cover + w\_{div} \cdot Diversity + w\_{dist}
-    \cdot InvDist + w\_{orginput} \cdot OrgInputs \$\$
+4.  **Weighted combination**: Pillar scores are normalized so weights
+    sum to 1, then combined:
 
-5.  **Output assembly**: Returns a tidy data frame of SHMI scores along
-    with metadata describing the settings used and computation
+    \$\$ SHMI = w\_{cover} \cdot Cover + w\_{div} \cdot Diversity +
+    w\_{dist} \cdot InvDist + w\_{ani} \cdot OrgInput \$\$
+
+5.  **Output assembly**: Returns a tidy data frame of SHMI scores and
+    metadata describing the settings used, SHMI version, and computation
     timestamp.

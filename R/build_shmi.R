@@ -139,27 +139,27 @@ build_shmi <- function(shmi_inputs,
   # --------------------------------------------------------------------------
   official <- list(
     # cover
-    w_winter = 0.155,
-    w_spring = 0.141,
-    w_summer = 0.417,
-    w_fall   = 0.287,
+    w_winter = 0.148,
+    w_spring = 0.149,
+    w_summer = 0.434,
+    w_fall   = 0.269,
 
     # diversity
     hill      = 1,
     max_div   = 8,
 
     # disturbance
-    max_stir    = 283,
+    max_stir    = 294,
 
     # organic amendments
-    w_amend   = 0.555,
-    w_animals = 0.445,
+    w_amend   = 0.481,
+    w_animals = 0.519,
 
     # shmi weights
-    w_cover    = 0.638,
-    w_div      = 0.072,
-    w_dist     = 0.123,
-    w_ani      = 0.167
+    w_cover    = 0.672,
+    w_div      = 0.077,
+    w_dist     = 0.094,
+    w_ani      = 0.157
   )
 
   # --------------------------------------------------------------------------

@@ -247,6 +247,22 @@ build_shmi <- function(shmi_inputs,
   # 5. Combine sub-indices
   # --------------------------------------------------------------------------
   cli::cli_progress_step("Combining indices...")
+
+  # Ensure all pillars contain all MGT_combo values
+  all_sites <- mgt %>% dplyr::distinct(MGT_combo)
+
+  cover     <- all_sites %>% left_join(cover,     by = "MGT_combo") %>%
+    mutate(Cover     = replace_na(Cover,     0))
+
+  diversity <- all_sites %>% left_join(diversity, by = "MGT_combo") %>%
+    mutate(Diversity = replace_na(Diversity, 0))
+
+  invdist   <- all_sites %>% left_join(invdist,   by = "MGT_combo") %>%
+    mutate(InvDist   = replace_na(InvDist,   0))
+
+  orginput  <- all_sites %>% left_join(orginput,  by = "MGT_combo") %>%
+    mutate(OrgInput  = replace_na(OrgInput,  0))
+
   indicator_df <- purrr::reduce(
     list(mgt, cover, diversity, invdist, orginput),
     dplyr::full_join,
@@ -276,9 +292,6 @@ build_shmi <- function(shmi_inputs,
       "InvDist", "OrgInput"
     ))) %>%
     dplyr::arrange(.data$MGT_combo)
-
-  indicator_df <- indicator_df %>%
-    filter(!is.na(SHMI))
 
   cli::cli_progress_done()
   cli::cli_progress_cleanup()

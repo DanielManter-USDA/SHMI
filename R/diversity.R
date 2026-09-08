@@ -92,9 +92,6 @@ compute_diversity <- function(crop,
                               hill = 2,
                               max_div = 8) {
 
-  crop <- crop %>%
-    filter(!tolower(CD_name) %in% c("Fallow", "fallow", "none"))
-
   # ---- 1. Expand mixtures into species ----
   expand_mixtures <- function(df) {
 
@@ -121,13 +118,14 @@ compute_diversity <- function(crop,
     bind_rows(placeholder, realmix)
   }
 
-  expanded <- expand_mixtures(crop)
+  expanded <- expand_mixtures(crop)%>%
+    filter(tolower(species) != "fallow")
 
   # ---- 2. Compute plant-days per species ----
   species_days <- expanded %>%
     mutate(
       days = as.integer(crop_end - crop_start) + 1L,
-      days = if_else(species == "fallow", 0L, days)
+      days = if_else(species %in% c("Fallow", "fallow", "none", "bare"), 0L, days)
     ) %>%
     group_by(MGT_combo, species) %>%
     summarize(

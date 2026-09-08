@@ -104,31 +104,71 @@
 #'   }
 #'
 #' @export
-compute_cover <- function(crop,
-                          rot_bounds,
-                          w_winter = 0.130,
-                          w_spring = 0.129,
-                          w_summer = 0.513,
-                          w_fall   = 0.227) {
+compute_cover <- function(
+    crop,
+    rot_bounds,
+    w_winter = 0.130,
+    w_spring = 0.129,
+    w_summer = 0.513,
+    w_fall   = 0.227
+) {
 
+  # -------------------------------------------------------------------------
+  # 0. Tag fallow rows in the original crop table
+  # -------------------------------------------------------------------------
   crop <- crop %>%
-    filter(!tolower(CD_name) %in% c("Fallow", "fallow", "none"))
+    mutate(is_fallow = tolower(CD_name) %in% c("fallow", "none", "bare"))
 
-  # ---- 1. Collapse mixtures into cover windows ----
+  # -------------------------------------------------------------------------
+  # 1. Collapse mixtures into cover windows (preserve fallow flag)
+  # -------------------------------------------------------------------------
   cover_windows <- crop %>%
     group_by(MGT_combo, CD_seq_num) %>%
     summarize(
       crop_start = min(crop_start, na.rm = TRUE),
       crop_end   = max(crop_end,   na.rm = TRUE),
+      is_fallow  = any(is_fallow),
       .groups = "drop"
     )
 
-  # ---- 2. Expand each cover window into daily rows ----
+  # -------------------------------------------------------------------------
+  # 2. Add synthetic fallow windows for sites with no crop rows
+  # -------------------------------------------------------------------------
+  all_sites <- rot_bounds %>% distinct(MGT_combo)
+  sites_with_crop <- cover_windows %>% distinct(MGT_combo)
+  sites_missing <- anti_join(all_sites, sites_with_crop, by = "MGT_combo")
+
+  synthetic_fallow <- rot_bounds %>%
+    semi_join(sites_missing, by = "MGT_combo") %>%
+    mutate(
+      CD_seq_num = -1L,
+      crop_start = rot_start,
+      crop_end   = rot_end,
+      is_fallow  = TRUE
+    ) %>%
+    select(MGT_combo, CD_seq_num, crop_start, crop_end, is_fallow)
+
+  cover_windows <- bind_rows(cover_windows, synthetic_fallow)
+
+  # -------------------------------------------------------------------------
+  # 3. Expand windows into daily rows
+  #    - fallow windows get ONE placeholder day
+  #    - non-fallow windows expand normally
+  # -------------------------------------------------------------------------
   cover_days <- cover_windows %>%
-    mutate(n_days = as.integer(crop_end - crop_start) + 1L) %>%
+    mutate(
+      n_days = as.integer(crop_end - crop_start) + 1L,
+      n_days = if_else(is_fallow, 1L, n_days)   # placeholder row for fallow
+    ) %>%
     tidyr::uncount(n_days) %>%
-    group_by(MGT_combo, crop_start, crop_end) %>%
-    mutate(date = crop_start + (row_number() - 1L)) %>%
+    group_by(MGT_combo, crop_start, crop_end, is_fallow) %>%
+    mutate(
+      date = if_else(
+        is_fallow,
+        crop_start,   # placeholder date
+        crop_start + (row_number() - 1L)
+      )
+    ) %>%
     ungroup() %>%
     mutate(
       month = lubridate::month(date),
@@ -137,14 +177,20 @@ compute_cover <- function(crop,
         month %in% c(3, 4, 5)   ~ "spring",
         month %in% c(6, 7, 8)   ~ "summer",
         month %in% c(9, 10, 11) ~ "fall"
-      )
+      ),
+      plant_days = if_else(is_fallow, 0L, 1L)
     )
 
-  # ---- 3. Count plant-days per season ----
+  # -------------------------------------------------------------------------
+  # 4. Count plant-days per season
+  # -------------------------------------------------------------------------
   season_counts <- cover_days %>%
-    count(MGT_combo, season, name = "plant_days")
+    group_by(MGT_combo, season) %>%
+    summarize(plant_days = sum(plant_days), .groups = "drop")
 
-  # ---- 4. Expand rotation bounds into daily rows ----
+  # -------------------------------------------------------------------------
+  # 5. Expand rotation bounds into daily rows
+  # -------------------------------------------------------------------------
   rot_days <- rot_bounds %>%
     mutate(
       rot_start = as.Date(rot_start),
@@ -166,12 +212,19 @@ compute_cover <- function(crop,
     ) %>%
     count(MGT_combo, season, name = "days_possible")
 
-  # ---- 5. Merge plant-days and possible-days ----
-  season_totals <- full_join(season_counts, rot_days,
-                             by = c("MGT_combo", "season")) %>%
+  # -------------------------------------------------------------------------
+  # 6. Merge plant-days and possible-days
+  # -------------------------------------------------------------------------
+  season_totals <- full_join(
+    season_counts,
+    rot_days,
+    by = c("MGT_combo", "season")
+  ) %>%
     replace_na(list(plant_days = 0, days_possible = 0))
 
-  # ---- 6. Compute seasonal proportions ----
+  # -------------------------------------------------------------------------
+  # 7. Compute seasonal proportions
+  # -------------------------------------------------------------------------
   season_totals <- season_totals %>%
     mutate(
       prop = if_else(days_possible > 0,
@@ -179,7 +232,9 @@ compute_cover <- function(crop,
                      0)
     )
 
-  # ---- 7. Normalize weights ----
+  # -------------------------------------------------------------------------
+  # 8. Normalize seasonal weights
+  # -------------------------------------------------------------------------
   w_sum <- w_winter + w_spring + w_summer + w_fall
   w <- c(
     winter = w_winter / w_sum,
@@ -188,7 +243,9 @@ compute_cover <- function(crop,
     fall   = w_fall   / w_sum
   )
 
-  # ---- 8. Weighted cover score ----
+  # -------------------------------------------------------------------------
+  # 9. Weighted cover score
+  # -------------------------------------------------------------------------
   cover <- season_totals %>%
     mutate(weight = w[season]) %>%
     group_by(MGT_combo) %>%

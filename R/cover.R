@@ -111,6 +111,9 @@ compute_cover <- function(crop,
                           w_summer = 0.513,
                           w_fall   = 0.227) {
 
+  crop <- crop %>%
+    filter(!tolower(CD_name) %in% c("Fallow", "fallow", "none"))
+
   # ---- 1. Collapse mixtures into cover windows ----
   cover_windows <- crop %>%
     group_by(MGT_combo, CD_seq_num) %>%

@@ -92,6 +92,9 @@ compute_diversity <- function(crop,
                               hill = 2,
                               max_div = 8) {
 
+  crop <- crop %>%
+    filter(!tolower(CD_name) %in% c("Fallow", "fallow", "none"))
+
   # ---- 1. Expand mixtures into species ----
   expand_mixtures <- function(df) {
 

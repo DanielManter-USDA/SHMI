@@ -231,7 +231,7 @@ build_shmi <- function(shmi_inputs,
     dist          = dist,
     rot_bounds    = rot_bounds,
     dist_meth     = dist_meth,
-    max_stir      = 300
+    max_stir      = settings$max_stir
   )
 
   # Organic inputs (amendments + animals)

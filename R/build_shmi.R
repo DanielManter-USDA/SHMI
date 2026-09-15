@@ -139,27 +139,27 @@ build_shmi <- function(shmi_inputs,
   # --------------------------------------------------------------------------
   official <- list(
     # cover
-    w_winter = 0.157,
-    w_spring = 0.159,
-    w_summer = 0.463,
-    w_fall   = 0.222,
+    w_winter = 0.25,
+    w_spring = 0.25,
+    w_summer = 0.25,
+    w_fall   = 0.25,
 
     # diversity
-    hill      = 1,
+    hill      = 2,
     max_div   = 8,
 
     # disturbance
-    max_stir    = 299,
+    max_stir = 300,
 
     # organic amendments
-    w_amend   = 0.461,
-    w_animals = 0.539,
+    w_amend   = 0.5,
+    w_animals = 0.5,
 
     # shmi weights
-    w_cover    = 0.670,
-    w_div      = 0.082,
-    w_dist     = 0.097,
-    w_ani      = 0.151
+    w_cover    = 0.25,
+    w_div      = 0.25,
+    w_dist     = 0.25,
+    w_ani      = 0.25
   )
 
   # --------------------------------------------------------------------------
@@ -229,8 +229,9 @@ build_shmi <- function(shmi_inputs,
   cli::cli_progress_step("Computing disturbance...")
   invdist <- compute_disturbance(
     dist          = dist,
-    dist_meth   = dist_meth,
-    rot_bounds    = rot_bounds
+    rot_bounds    = rot_bounds,
+    dist_meth     = dist_meth,
+    max_stir      = 300
   )
 
   # Organic inputs (amendments + animals)

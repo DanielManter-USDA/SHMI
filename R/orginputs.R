@@ -1,133 +1,125 @@
 #' Compute the Organic Inputs Sub-index (Amendments + Animals)
 #'
 #' Calculates the SHMI organic-inputs indicator for each management unit
-#' (`MGT_combo`) by identifying rotation years in which *any* organic input
-#' occurred—either an organic amendment or an animal event. Presence is treated
-#' as binary within each year: a year receives a value of 1 if at least one
-#' qualifying event occurred, regardless of the number of applications or
-#' events. User-specified weights determine whether amendments and/or animals
-#' contribute to presence, but do not affect magnitude. The final score is the
-#' percentage of rotation years with organic inputs (0–100), without min–max
-#' scaling.
+#' (`MGT_combo`) by determining the proportion of rotation years in which
+#' organic amendments and animal inputs occurred. Each component is treated
+#' independently:
 #'
-#' @param rot_bounds A data frame from \code{prepare_shmi_inputs()} containing
-#'   rotation-year bounds for each management unit, with columns:
-#'   \itemize{
-#'     \item \code{MGT_combo}
-#'     \item \code{rot_start_yr}
-#'     \item \code{rot_end_yr}
-#'   }
-#'
-#' @param amend A data frame of amendment events (from the
-#'   \code{Amendment_Diversity} sheet), containing:
-#'   \itemize{
-#'     \item \code{MGT_combo}
-#'     \item \code{SA_date} — amendment date
-#'     \item \code{SA_cat} — amendment category (e.g., "Organic")
-#'   }
-#'   Only rows with \code{SA_cat == "Organic"} contribute to the index.
-#'
-#' @param animal A data frame of animal events (from the
-#'   \code{Animal_Diversity} sheet), containing:
-#'   \itemize{
-#'     \item \code{MGT_combo}
-#'     \item \code{AD_start_date} — start of animal presence
-#'   }
-#'
-#' @param w_amend Numeric weight controlling whether organic amendments
-#'   contribute to presence (default 1; values > 0 include amendments).
-#'
-#' @param w_animal Numeric weight controlling whether animal events contribute
-#'   to presence (default 1; values > 0 include animals).
-#'
-#' @details
-#' The algorithm proceeds in five steps:
-#'
-#' \enumerate{
-#'
-#'   \item \strong{Rotation-year grid}:
-#'     Construct a sequence of rotation years for each \code{MGT_combo}.
-#'
-#'   \item \strong{Amendment presence}:
-#'     Identify rotation years with organic amendments and mark them as
-#'     \code{amend_present = 1}.
-#'
-#'   \item \strong{Animal presence}:
-#'     Identify rotation years with animal events and mark them as
-#'     \code{ani_present = 1}.
-#'
-#'   \item \strong{Binary organic-input presence}:
-#'     A rotation year receives \code{org_present = 1} if either
-#'     \code{amend_present == 1} and \code{w_amend > 0}, or
-#'     \code{ani_present == 1} and \code{w_animal > 0}.
-#'     Multiple events within a year do not increase the score.
-#'
-#'   \item \strong{Final score}:
-#'     The organic-inputs indicator is returned as
-#'     \deqn{ \mathrm{OrgInputs} = 100 \times \mathrm{mean}(org\_present) }
-#'     representing the percentage of rotation years with organic inputs.
-#'     Units with no organic inputs receive a score of 0.
-#'
+#' \itemize{
+#'   \item \strong{Amendment proportion} — fraction of rotation years with at
+#'         least one organic amendment event.
+#'   \item \strong{Animal proportion} — fraction of rotation years with at
+#'         least one animal event.
 #' }
 #'
-#' @return A data frame with:
-#'   \itemize{
-#'     \item \code{MGT_combo}
-#'     \item \code{OrgInputs} — organic-input score (0–100)
+#' User-specified weights (\code{w_amend}, \code{w_animal}) determine the
+#' relative importance of amendments versus animals in the final score.
+#' Weighted proportions are combined and rescaled to a 0–100 SHMI-compatible
+#' index:
+#'
+#' \deqn{
+#'   \mathrm{OrgInput} =
+#'   100 \times
+#'   \frac{
+#'     w_{\mathrm{amend}} \cdot p_{\mathrm{amend}} +
+#'     w_{\mathrm{animal}} \cdot p_{\mathrm{animal}}
+#'   }{
+#'     w_{\mathrm{amend}} + w_{\mathrm{animal}}
 #'   }
+#' }
+#'
+#' Units with no organic inputs receive a score of 0.
+#'
+#'
+#' ## Required Inputs
+#'
+#' ### Rotation bounds
+#' A data frame containing rotation-year boundaries:
+#' \itemize{
+#'   \item \code{MGT_combo}
+#'   \item \code{rot_start_yr}
+#'   \item \code{rot_end_yr}
+#' }
+#'
+#' ### Amendment events
+#' A data frame containing:
+#' \itemize{
+#'   \item \code{MGT_combo}
+#'   \item \code{SA_date} — amendment date
+#'   \item \code{SA_cat} — amendment category (only \code{"Organic"} counted)
+#' }
+#'
+#' ### Animal events
+#' A data frame containing:
+#' \itemize{
+#'   \item \code{MGT_combo}
+#'   \item \code{AD_start_date} — start date of animal presence
+#' }
+#'
+#'
+#' @param rot_bounds Rotation-year boundaries for each management unit.
+#' @param amend Amendment event table.
+#' @param animal Animal event table.
+#' @param w_amend Weight for amendment presence (default 0.5).
+#' @param w_animal Weight for animal presence (default 0.5).
+#'
+#' @return A data frame with:
+#' \itemize{
+#'   \item \code{MGT_combo}
+#'   \item \code{OrgInput} — organic-input score (0–100)
+#' }
 #'
 #' @export
 compute_orginput <- function(rot_bounds,
                              amend,
                              animal,
-                             w_amend = 1,
-                             w_animal = 1) {
+                             w_amend = 0.5,
+                             w_animal = 0.5) {
 
-  # 1. Build year grid
+  # 1. Build rotation-year grid
   rot_grid <- rot_bounds %>%
-    mutate(year = map2(rot_start_yr, rot_end_yr, seq)) %>%
-    unnest(year) %>%
+    mutate(year = purrr::map2(rot_start_yr, rot_end_yr, seq)) %>%
+    tidyr::unnest(year) %>%
     select(MGT_combo, year)
 
-  # 2. Amendment presence (binary)
+  # 2. Amendment presence (binary per year)
   amend_events <- amend %>%
     filter(SA_cat == "Organic") %>%
-    mutate(year = year(SA_date)) %>%
+    mutate(year = lubridate::year(SA_date)) %>%
     distinct(MGT_combo, year) %>%
     mutate(amend_present = 1)
 
-  # 3. Animal presence (binary)
+  # 3. Animal presence (binary per year)
   ani_events <- animal %>%
-    mutate(year = year(AD_start_date)) %>%
+    mutate(year = lubridate::year(AD_start_date)) %>%
     distinct(MGT_combo, year) %>%
     mutate(ani_present = 1)
 
-  # 4. Weighted binary presence
+  # 4. Join + binary presence flags
   bio_events <- rot_grid %>%
     left_join(amend_events, by = c("MGT_combo", "year")) %>%
     left_join(ani_events,   by = c("MGT_combo", "year")) %>%
     mutate(
-      amend_present = replace_na(amend_present, 0),
-      ani_present   = replace_na(ani_present, 0),
-      org_present   = if_else(
-        (w_amend > 0 & amend_present == 1) |
-          (w_animal > 0 & ani_present == 1),
-        1, 0
-      )
+      amend_present = tidyr::replace_na(amend_present, 0),
+      ani_present   = tidyr::replace_na(ani_present, 0)
     )
 
-  # 5. Frequency across rotation
-  org_freq <- bio_events %>%
+  # 5. Compute proportions per rotation
+  org_props <- bio_events %>%
     group_by(MGT_combo) %>%
     summarise(
-      freq = mean(org_present),
+      p_amend  = mean(amend_present),
+      p_animal = mean(ani_present),
       .groups = "drop"
     )
 
-  # 6. Final 0–100 score
-  org_final <- org_freq %>%
-    mutate(OrgInput = 100 * freq) %>%
-    select(-freq)
+  # 6. Weighted combination + 0–100 scaling
+  org_final <- org_props %>%
+    mutate(
+      raw_score = w_amend * p_amend + w_animal * p_animal,
+      OrgInput  = 100 * raw_score / (w_amend + w_animal)
+    ) %>%
+    select(MGT_combo, OrgInput)
 
   return(org_final)
 }

@@ -9,37 +9,44 @@
 #' }
 #'
 #' Both methods produce an annual tillage-intensity (TI) value for each
-#' rotation year. Annual TI values are then classified into a **modified Tier 3
+#' rotation year. Annual TI values are then classified into a **Tier 3
 #' tillage-intensity scheme (Z–K)** derived from the EPA Soil-Mixing Report.
 #'
-#' ## Modified Tier 3 Classification (Z–K)
 #'
-#' The published Tier 3 ranges (A–K) contain gaps and do not include a
-#' zero-disturbance class. To ensure complete coverage of the \code{[0, 1]}
-#' domain:
+#' ## Tier 3 Classification (Z–K)
 #'
-#' \itemize{
-#'   \item A new class **Z** is added for \code{TI = 0}.
-#'   \item All class boundaries are converted to **closed–open intervals**
-#'         (e.g., \code{[0.01, 0.04)}), ensuring each TI maps to exactly one class.
-#'   \item The midpoint for class Z is explicitly set to **0**.
-#' }
+#' The Tier 3 scheme partitions the \code{[0, 1]} disturbance domain into
+#' nonlinear classes (Z–K). Each class has a lower and upper TI bound
+#' (\code{ti_min}, \code{ti_max}). Class Z is added to represent
+#' \code{TI = 0}. All classes use closed–open intervals
+#' (e.g., \code{[0.01, 0.04)}) to ensure each TI maps to exactly one class.
 #'
-#' Each annual TI is replaced by the midpoint of its class:
-#'
-#' \deqn{ T_{t}^{mid} = (TI_{min} + TI_{max}) / 2 }
-#'
-#' with \code{T_{t}^{mid} = 0} for class Z.
-#'
-#' The inverse-disturbance score rescales midpoints so that:
+#' After classification, each TI is replaced by a **class representative**:
 #'
 #' \itemize{
-#'   \item **0 disturbance → 100**, and
-#'   \item **midpoint of class K → 0**.
+#'   \item \code{"min"} — lower class boundary (\code{ti_min})
+#'   \item \code{"mid"} — class midpoint (\code{(ti_min + ti_max)/2})
+#'   \item \code{"max"} — upper class boundary (\code{ti_max})
 #' }
+#'
+#' The default representative is \code{"mid"}, which corresponds to the
+#' midpoint-based EPA Tier 3 interpretation used in the national SHMI.
+#'
+#'
+#' ## Inverse Disturbance
+#'
+#' The inverse-disturbance score is computed as:
 #'
 #' \deqn{
-#'   T_{t}^{inv} = 100 \times \left(1 - \frac{T_{t}^{mid}}{T_{K}^{mid}}\right)
+#'   T_{t}^{inv} = 100 \times (1 - TI_{\text{used}})
+#' }
+#'
+#' where \code{TI_used} is the class representative selected by
+#' \code{ti_rep}. This formulation ensures:
+#'
+#' \itemize{
+#'   \item \code{TI_used = 0} → \code{InvDist = 100} (no disturbance)
+#'   \item \code{TI_used = 1} → \code{InvDist = 0} (maximum disturbance)
 #' }
 #'
 #' Rotation-level disturbance is the mean of annual inverse-disturbance values.
@@ -51,7 +58,8 @@
 #' The EPA method computes mechanistic profile penetration for each tillage
 #' pass using mixing efficiency and tillage depth. Passes occurring on the same
 #' date are treated as sequential operations, producing a *daily* TI value.
-#' Daily TI values are summed to annual TI.
+#' Daily TI values are summed to annual TI. EPA TI values are naturally bounded
+#' in \code{[0, 1]} and require no additional normalization.
 #'
 #' Required columns in `dist`:
 #'
@@ -70,8 +78,13 @@
 #' \deqn{ SDsum = \sum SD\_mixeff }
 #'
 #' summed across all passes on a given date. Annual STIR is the sum of daily
-#' SDsum values. Annual STIR is normalized to \code{TI = STIR\_raw / max\_stir}
-#' and classified using the same Z–K scheme.
+#' SDsum values. Because STIR is unbounded, annual STIR is normalized to:
+#'
+#' \deqn{
+#'   TI = \frac{STIR_{\text{raw}}}{\text{max\_stir}}
+#' }
+#'
+#' and truncated to \code{[0, 1]} before Tier 3 classification.
 #'
 #' Required columns in `dist`:
 #'
@@ -98,7 +111,8 @@
 #' @param dist Disturbance-event table (EPA or STIR inputs).
 #' @param rot_bounds Rotation-year boundaries for each management unit.
 #' @param dist_meth Character string: `"EPA"` or `"STIR"`.
-#' @param max_stir Maximum annual STIR value used for normalization (default 190).
+#' @param max_stir Maximum annual STIR value used for normalization (default 300).
+#' @param ti_rep Class representative to use: `"max"` (default), `"min"`, or `"mid"`.
 #'
 #' @return A data frame with:
 #' \itemize{
@@ -110,17 +124,20 @@
 compute_disturbance <- function(dist,
                                 rot_bounds,
                                 dist_meth = c("EPA", "STIR"),
-                                max_stir = 190) {
+                                max_stir = 300,
+                                ti_rep = c("max", "min", "mid")) {
 
   dist_meth <- match.arg(dist_meth)
+  ti_rep    <- match.arg(ti_rep)
+
   all_mgts  <- rot_bounds %>% dplyr::select(MGT_combo)
 
   full_years <- rot_bounds %>%
-    mutate(year = map2(rot_start_yr, rot_end_yr, seq)) %>%
-    unnest(year) %>%
-    select(MGT_combo, year)
+    dplyr::mutate(year = purrr::map2(rot_start_yr, rot_end_yr, seq)) %>%
+    tidyr::unnest(year) %>%
+    dplyr::select(MGT_combo, year)
 
-  # ---- Tier-3 classes (shared by both methods) ----
+  # ---- Tier-3 classes ----
   ti_classes <- tibble::tribble(
     ~class, ~ti_min, ~ti_max,
     "Z",    0.000,   0.001,
@@ -141,9 +158,15 @@ compute_disturbance <- function(dist,
       ti_mid = dplyr::if_else(class == "Z", 0, ti_mid)
     )
 
-  max_mid <- max(ti_classes$ti_mid)
+  # Choose representative column
+  rep_col <- switch(ti_rep,
+                    "mid" = ti_classes$ti_mid,
+                    "min" = ti_classes$ti_min,
+                    "max" = ti_classes$ti_max)
 
-  # ---- EPA mechanistic method ----
+  # ============================================================
+  # EPA mechanistic method
+  # ============================================================
   if (dist_meth == "EPA") {
 
     dist_epa <- dist %>%
@@ -163,137 +186,110 @@ compute_disturbance <- function(dist,
         T_t            = SD_mixeff * pmax(SD_depth_cm - cum_ME, 0),
         T_t_norm       = T_t / 30
       ) %>%
-      dplyr::summarize(
-        T_t_daily = sum(T_t_norm, na.rm = TRUE),
-        .groups   = "drop"
-      )
+      dplyr::summarize(T_t_daily = sum(T_t_norm, na.rm = TRUE), .groups = "drop")
 
     annual <- daily %>%
       dplyr::group_by(MGT_combo, year) %>%
-      dplyr::summarize(
-        T_t_annual = sum(T_t_daily, na.rm = TRUE),
-        .groups    = "drop"
-      )
+      dplyr::summarize(T_t_annual = sum(T_t_daily, na.rm = TRUE), .groups = "drop")
 
+    # ---- Tier-3 classification ----
     idx <- sapply(annual$T_t_annual, function(x) {
       which(x >= ti_classes$ti_min & x < ti_classes$ti_max)
     })
 
     idx_fixed <- sapply(seq_along(idx), function(i) {
-      if (length(idx[[i]]) == 1) {
-        idx[[i]]
-      } else if (length(idx[[i]]) > 1) {
-        idx[[i]][1]
-      } else {
-        which.min(abs(annual$T_t_annual[i] - ti_classes$ti_mid))
-      }
+      if (length(idx[[i]]) == 1) idx[[i]]
+      else if (length(idx[[i]]) > 1) idx[[i]][1]
+      else which.min(abs(annual$T_t_annual[i] - ti_classes$ti_mid))
     })
 
-    annual$class   <- ti_classes$class[idx_fixed]
-    annual$T_t_mid <- ti_classes$ti_mid[idx_fixed]
+    annual$class <- ti_classes$class[idx_fixed]
 
     annual <- annual %>%
       dplyr::mutate(
-        T_t_inv = 100 * (1 - (T_t_mid / max_mid))
+        TI_used = rep_col[idx_fixed],
+        TI_used = dplyr::if_else(class == "Z", 0, TI_used),
+        T_t_inv = 100 * (1 - TI_used)
       )
 
     annual_full <- full_years %>%
-      left_join(annual, by = c("MGT_combo", "year")) %>%
-      mutate(
-        # missing years → TI_mid = 0 (class Z)
-        T_t_mid = replace_na(T_t_mid, 0),
-        T_t_inv = 100 * (1 - (T_t_mid / max_mid))
+      dplyr::left_join(annual, by = c("MGT_combo", "year")) %>%
+      dplyr::mutate(
+        TI_used = tidyr::replace_na(TI_used, 0),
+        T_t_inv = 100 * (1 - TI_used)
       )
 
     rot <- annual_full %>%
       dplyr::group_by(MGT_combo) %>%
-      dplyr::summarize(
-        InvDist = mean(T_t_inv, na.rm = TRUE),
-        .groups = "drop"
-      ) %>%
+      dplyr::summarize(InvDist = mean(T_t_inv, na.rm = TRUE), .groups = "drop") %>%
       dplyr::mutate(InvDist = dplyr::if_else(is.na(InvDist), 100, InvDist))
 
-    return(
-      all_mgts %>%
-        dplyr::left_join(rot, by = "MGT_combo") %>%
-        dplyr::mutate(InvDist = tidyr::replace_na(InvDist, 100))
-    )
+    return(all_mgts %>%
+             dplyr::left_join(rot, by = "MGT_combo") %>%
+             dplyr::mutate(InvDist = tidyr::replace_na(InvDist, 100)))
   }
 
-  # ---- STIR-based method ----
+  # ============================================================
+  # STIR method
+  # ============================================================
   if (dist_meth == "STIR") {
 
-    # 1. Full year grid from rotation bounds
     full_years <- rot_bounds %>%
       dplyr::mutate(year = purrr::map2(rot_start_yr, rot_end_yr, seq)) %>%
       tidyr::unnest(year) %>%
       dplyr::select(MGT_combo, year)
 
-    # 2. Annual STIR from daily disturbance
     daily <- dist %>%
-      group_by(MGT_combo, SD_date) %>%
-      summarise(SDsum = sum(SD_mixeff),
-                .groups = "drop")
+      dplyr::group_by(MGT_combo, SD_date) %>%
+      dplyr::summarize(SDsum = sum(SD_mixeff), .groups = "drop")
 
     stir_years <- daily %>%
       dplyr::arrange(MGT_combo, SD_date) %>%
       dplyr::mutate(year = lubridate::year(SD_date)) %>%
       dplyr::group_by(MGT_combo, year) %>%
-      dplyr::summarise(
-        STIR_raw = sum(SDsum, na.rm = TRUE),
-        .groups  = "drop"
-      )
+      dplyr::summarize(STIR_raw = sum(SDsum, na.rm = TRUE), .groups = "drop")
 
-    # 3. Join + normalize TI in [0, 1]
     annual <- full_years %>%
       dplyr::left_join(stir_years, by = c("MGT_combo", "year")) %>%
       dplyr::mutate(
         STIR_raw = tidyr::replace_na(STIR_raw, 0),
-        STIR_raw = pmin(STIR_raw, max_stir),
-        TI       = pmin(STIR_raw / max_stir, 1)
+        TI = STIR_raw / max_stir,
+        TI = pmin(TI, 1)
       )
 
-    # 4. Vectorized interval matching
     idx <- sapply(annual$TI, function(x) {
       which(x >= ti_classes$ti_min & x < ti_classes$ti_max)
     })
 
     idx_fixed <- sapply(seq_along(idx), function(i) {
-      if (length(idx[[i]]) == 1) {
-        idx[[i]]
-      } else if (length(idx[[i]]) > 1) {
-        idx[[i]][1]
-      } else {
-        which.min(abs(annual$TI[i] - ti_classes$ti_mid))
-      }
+      if (length(idx[[i]]) == 1) idx[[i]]
+      else if (length(idx[[i]]) > 1) idx[[i]][1]
+      else which.min(abs(annual$TI[i] - ti_classes$ti_mid))
     })
 
-    annual$class  <- ti_classes$class[idx_fixed]
-    annual$TI_mid <- ti_classes$ti_mid[idx_fixed]
+    annual$class <- ti_classes$class[idx_fixed]
 
-    max_mid <- max(ti_classes$ti_mid)
-    annual$T_t_inv <- 100 * (1 - (annual$TI_mid / max_mid))
+    annual <- annual %>%
+      dplyr::mutate(
+        TI_used = rep_col[idx_fixed],
+        TI_used = dplyr::if_else(class == "Z", 0, TI_used),
+        T_t_inv = 100 * (1 - TI_used)
+      )
 
     annual_full <- full_years %>%
-      left_join(annual, by = c("MGT_combo", "year")) %>%
-      mutate(
-        # missing years → TI_mid = 0 (class Z)
-        TI_mid = replace_na(TI_mid, 0),
-        T_t_inv = 100 * (1 - (TI_mid / max_mid))
+      dplyr::left_join(annual, by = c("MGT_combo", "year")) %>%
+      dplyr::mutate(
+        TI_used = tidyr::replace_na(TI_used, 0),
+        T_t_inv = 100 * (1 - TI_used)
       )
 
     rot <- annual_full %>%
       dplyr::group_by(MGT_combo) %>%
-      dplyr::summarise(
-        InvDist = mean(T_t_inv, na.rm = TRUE),
-        .groups = "drop"
-      ) %>%
+      dplyr::summarize(InvDist = mean(T_t_inv, na.rm = TRUE), .groups = "drop") %>%
       dplyr::mutate(InvDist = dplyr::if_else(is.na(InvDist), 100, InvDist))
 
-    return(
-      all_mgts %>%
-        dplyr::left_join(rot, by = "MGT_combo") %>%
-        dplyr::mutate(InvDist = tidyr::replace_na(InvDist, 100))
-    )
+    return(all_mgts %>%
+             dplyr::left_join(rot, by = "MGT_combo") %>%
+             dplyr::mutate(InvDist = tidyr::replace_na(InvDist, 100)))
   }
 }

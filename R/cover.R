@@ -92,10 +92,10 @@
 #'     \item \code{rot_end}
 #'   }
 #'
-#' @param w_winter Weight for winter cover (default 0.130).
-#' @param w_spring Weight for spring cover (default 0.129).
-#' @param w_summer Weight for summer cover (default 0.513).
-#' @param w_fall   Weight for fall cover   (default 0.227).
+#' @param w_winter Weight for winter cover (default 0.250).
+#' @param w_spring Weight for spring cover (default 0.250).
+#' @param w_summer Weight for summer cover (default 0.250).
+#' @param w_fall   Weight for fall cover   (default 0.250).
 #'
 #' @return A data frame with:
 #'   \itemize{
@@ -107,10 +107,10 @@
 compute_cover <- function(
     crop,
     rot_bounds,
-    w_winter = 0.130,
-    w_spring = 0.129,
-    w_summer = 0.513,
-    w_fall   = 0.227
+    w_winter = 0.250,
+    w_spring = 0.250,
+    w_summer = 0.250,
+    w_fall   = 0.250
 ) {
 
   # -------------------------------------------------------------------------

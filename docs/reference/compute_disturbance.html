@@ -64,7 +64,8 @@
 <span>  <span class="va">dist</span>,</span>
 <span>  <span class="va">rot_bounds</span>,</span>
 <span>  dist_meth <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"EPA"</span>, <span class="st">"STIR"</span><span class="op">)</span>,</span>
-<span>  max_stir <span class="op">=</span> <span class="fl">190</span></span>
+<span>  max_stir <span class="op">=</span> <span class="fl">300</span>,</span>
+<span>  ti_rep <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mid"</span>, <span class="st">"min"</span>, <span class="st">"max"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -85,7 +86,11 @@
 
 
 <dt id="arg-max-stir">max_stir<a class="anchor" aria-label="anchor" href="#arg-max-stir"></a></dt>
-<dd><p>Maximum annual STIR value used for normalization (default 190).</p></dd>
+<dd><p>Maximum annual STIR value used for normalization (default 300).</p></dd>
+
+
+<dt id="arg-ti-rep">ti_rep<a class="anchor" aria-label="anchor" href="#arg-ti-rep"></a></dt>
+<dd><p>Class representative to use: `"max"` (default), `"min"`, or `"mid"`.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -99,33 +104,40 @@
 <ul><li><p>**EPA mechanistic soil-mixing model** (profile penetration–based), or</p></li>
 <li><p>**STIR disturbance intensity** (daily summed mixing efficiency).</p></li>
 </ul><p>Both methods produce an annual tillage-intensity (TI) value for each
-rotation year. Annual TI values are then classified into a **modified Tier 3
+rotation year. Annual TI values are then classified into a **Tier 3
 tillage-intensity scheme (Z–K)** derived from the EPA Soil-Mixing Report.</p>
-<p>## Modified Tier 3 Classification (Z–K)</p>
-<p>The published Tier 3 ranges (A–K) contain gaps and do not include a
-zero-disturbance class. To ensure complete coverage of the <code>[0, 1]</code>
-domain:</p>
-<ul><li><p>A new class **Z** is added for <code>TI = 0</code>.</p></li>
-<li><p>All class boundaries are converted to **closed–open intervals**
-        (e.g., <code>[0.01, 0.04)</code>), ensuring each TI maps to exactly one class.</p></li>
-<li><p>The midpoint for class Z is explicitly set to **0**.</p></li>
-</ul><p>Each annual TI is replaced by the midpoint of its class:</p>
-<p>$$ T_{t}^{mid} = (TI_{min} + TI_{max}) / 2 $$</p>
-<p>with <code>T_{t}^{mid} = 0</code> for class Z.</p>
-<p>The inverse-disturbance score rescales midpoints so that:</p>
-<ul><li><p>**0 disturbance → 100**, and</p></li>
-<li><p>**midpoint of class K → 0**.</p></li>
-</ul><p>$$
-  T_{t}^{inv} = 100 \times \left(1 - \frac{T_{t}^{mid}}{T_{K}^{mid}}\right)
+
+<p>## Tier 3 Classification (Z–K)</p>
+<p>The Tier 3 scheme partitions the <code>[0, 1]</code> disturbance domain into
+nonlinear classes (Z–K). Each class has a lower and upper TI bound
+(<code>ti_min</code>, <code>ti_max</code>). Class Z is added to represent
+<code>TI = 0</code>. All classes use closed–open intervals
+(e.g., <code>[0.01, 0.04)</code>) to ensure each TI maps to exactly one class.</p>
+<p>After classification, each TI is replaced by a **class representative**:</p>
+<ul><li><p><code>"min"</code> — lower class boundary (<code>ti_min</code>)</p></li>
+<li><p><code>"mid"</code> — class midpoint (<code>(ti_min + ti_max)/2</code>)</p></li>
+<li><p><code>"max"</code> — upper class boundary (<code>ti_max</code>)</p></li>
+</ul><p>The default representative is <code>"mid"</code>, which corresponds to the
+midpoint-based EPA Tier 3 interpretation used in the national SHMI.</p>
+
+<p>## Inverse Disturbance</p>
+<p>The inverse-disturbance score is computed as:</p>
+<p>$$
+  T_{t}^{inv} = 100 \times (1 - TI_{\text{used}})
 $$</p>
-<p>Rotation-level disturbance is the mean of annual inverse-disturbance values.
+<p>where <code>TI_used</code> is the class representative selected by
+<code>ti_rep</code>. This formulation ensures:</p>
+<ul><li><p><code>TI_used = 0</code> → <code>InvDist = 100</code> (no disturbance)</p></li>
+<li><p><code>TI_used = 1</code> → <code>InvDist = 0</code> (maximum disturbance)</p></li>
+</ul><p>Rotation-level disturbance is the mean of annual inverse-disturbance values.
 Units with no disturbance events receive a score of 100.</p>
 
 <p>## EPA Mechanistic Method</p>
 <p>The EPA method computes mechanistic profile penetration for each tillage
 pass using mixing efficiency and tillage depth. Passes occurring on the same
 date are treated as sequential operations, producing a *daily* TI value.
-Daily TI values are summed to annual TI.</p>
+Daily TI values are summed to annual TI. EPA TI values are naturally bounded
+in <code>[0, 1]</code> and require no additional normalization.</p>
 <p>Required columns in `dist`:</p>
 <ul><li><p><code>MGT_combo</code> — management unit identifier</p></li>
 <li><p><code>SD_date</code> — date of tillage pass</p></li>
@@ -135,8 +147,11 @@ Daily TI values are summed to annual TI.</p>
 <p>The STIR method computes daily disturbance intensity as:</p>
 <p>$$ SDsum = \sum SD\_mixeff $$</p>
 <p>summed across all passes on a given date. Annual STIR is the sum of daily
-SDsum values. Annual STIR is normalized to <code>TI = STIR\_raw / max\_stir</code>
-and classified using the same Z–K scheme.</p>
+SDsum values. Because STIR is unbounded, annual STIR is normalized to:</p>
+<p>$$
+  TI = \frac{STIR_{\text{raw}}}{\text{max\_stir}}
+$$</p>
+<p>and truncated to <code>[0, 1]</code> before Tier 3 classification.</p>
 <p>Required columns in `dist`:</p>
 <ul><li><p><code>MGT_combo</code></p></li>
 <li><p><code>SD_date</code></p></li>

@@ -8,7 +8,8 @@ compute_disturbance(
   dist,
   rot_bounds,
   dist_meth = c("EPA", "STIR"),
-  max_stir = 190
+  max_stir = 300,
+  ti_rep = c("mid", "min", "max")
 )
 }
 \arguments{
@@ -18,7 +19,9 @@ compute_disturbance(
 
 \item{dist_meth}{Character string: `"EPA"` or `"STIR"`.}
 
-\item{max_stir}{Maximum annual STIR value used for normalization (default 190).}
+\item{max_stir}{Maximum annual STIR value used for normalization (default 300).}
+
+\item{ti_rep}{Class representative to use: `"max"` (default), `"min"`, or `"mid"`.}
 }
 \value{
 A data frame with:
@@ -38,37 +41,44 @@ Computes the SHMI disturbance sub-index for each management unit
 }
 
 Both methods produce an annual tillage-intensity (TI) value for each
-rotation year. Annual TI values are then classified into a **modified Tier 3
+rotation year. Annual TI values are then classified into a **Tier 3
 tillage-intensity scheme (Z–K)** derived from the EPA Soil-Mixing Report.
 
-## Modified Tier 3 Classification (Z–K)
 
-The published Tier 3 ranges (A–K) contain gaps and do not include a
-zero-disturbance class. To ensure complete coverage of the \code{[0, 1]}
-domain:
+## Tier 3 Classification (Z–K)
 
-\itemize{
-  \item A new class **Z** is added for \code{TI = 0}.
-  \item All class boundaries are converted to **closed–open intervals**
-        (e.g., \code{[0.01, 0.04)}), ensuring each TI maps to exactly one class.
-  \item The midpoint for class Z is explicitly set to **0**.
-}
+The Tier 3 scheme partitions the \code{[0, 1]} disturbance domain into
+nonlinear classes (Z–K). Each class has a lower and upper TI bound
+(\code{ti_min}, \code{ti_max}). Class Z is added to represent
+\code{TI = 0}. All classes use closed–open intervals
+(e.g., \code{[0.01, 0.04)}) to ensure each TI maps to exactly one class.
 
-Each annual TI is replaced by the midpoint of its class:
-
-\deqn{ T_{t}^{mid} = (TI_{min} + TI_{max}) / 2 }
-
-with \code{T_{t}^{mid} = 0} for class Z.
-
-The inverse-disturbance score rescales midpoints so that:
+After classification, each TI is replaced by a **class representative**:
 
 \itemize{
-  \item **0 disturbance → 100**, and
-  \item **midpoint of class K → 0**.
+  \item \code{"min"} — lower class boundary (\code{ti_min})
+  \item \code{"mid"} — class midpoint (\code{(ti_min + ti_max)/2})
+  \item \code{"max"} — upper class boundary (\code{ti_max})
 }
+
+The default representative is \code{"mid"}, which corresponds to the
+midpoint-based EPA Tier 3 interpretation used in the national SHMI.
+
+
+## Inverse Disturbance
+
+The inverse-disturbance score is computed as:
 
 \deqn{
-  T_{t}^{inv} = 100 \times \left(1 - \frac{T_{t}^{mid}}{T_{K}^{mid}}\right)
+  T_{t}^{inv} = 100 \times (1 - TI_{\text{used}})
+}
+
+where \code{TI_used} is the class representative selected by
+\code{ti_rep}. This formulation ensures:
+
+\itemize{
+  \item \code{TI_used = 0} → \code{InvDist = 100} (no disturbance)
+  \item \code{TI_used = 1} → \code{InvDist = 0} (maximum disturbance)
 }
 
 Rotation-level disturbance is the mean of annual inverse-disturbance values.
@@ -80,7 +90,8 @@ Units with no disturbance events receive a score of 100.
 The EPA method computes mechanistic profile penetration for each tillage
 pass using mixing efficiency and tillage depth. Passes occurring on the same
 date are treated as sequential operations, producing a *daily* TI value.
-Daily TI values are summed to annual TI.
+Daily TI values are summed to annual TI. EPA TI values are naturally bounded
+in \code{[0, 1]} and require no additional normalization.
 
 Required columns in `dist`:
 
@@ -99,8 +110,13 @@ The STIR method computes daily disturbance intensity as:
 \deqn{ SDsum = \sum SD\_mixeff }
 
 summed across all passes on a given date. Annual STIR is the sum of daily
-SDsum values. Annual STIR is normalized to \code{TI = STIR\_raw / max\_stir}
-and classified using the same Z–K scheme.
+SDsum values. Because STIR is unbounded, annual STIR is normalized to:
+
+\deqn{
+  TI = \frac{STIR_{\text{raw}}}{\text{max\_stir}}
+}
+
+and truncated to \code{[0, 1]} before Tier 3 classification.
 
 Required columns in `dist`:
 

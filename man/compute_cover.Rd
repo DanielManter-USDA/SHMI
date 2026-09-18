@@ -7,10 +7,10 @@
 compute_cover(
   crop,
   rot_bounds,
-  w_winter = 0.13,
-  w_spring = 0.129,
-  w_summer = 0.513,
-  w_fall = 0.227
+  w_winter = 0.25,
+  w_spring = 0.25,
+  w_summer = 0.25,
+  w_fall = 0.25
 )
 }
 \arguments{
@@ -30,13 +30,13 @@ management unit, with:
   \item \code{rot_end}
 }}
 
-\item{w_winter}{Weight for winter cover (default 0.130).}
+\item{w_winter}{Weight for winter cover (default 0.250).}
 
-\item{w_spring}{Weight for spring cover (default 0.129).}
+\item{w_spring}{Weight for spring cover (default 0.250).}
 
-\item{w_summer}{Weight for summer cover (default 0.513).}
+\item{w_summer}{Weight for summer cover (default 0.250).}
 
-\item{w_fall}{Weight for fall cover   (default 0.227).}
+\item{w_fall}{Weight for fall cover   (default 0.250).}
 }
 \value{
 A data frame with:

@@ -1,67 +1,37 @@
 # Compute the Organic Inputs Sub-index (Amendments + Animals)
 
 Calculates the SHMI organic-inputs indicator for each management unit
-(\`MGT_combo\`) by identifying rotation years in which \*any\* organic
-input occurred—either an organic amendment or an animal event. Presence
-is treated as binary within each year: a year receives a value of 1 if
-at least one qualifying event occurred, regardless of the number of
-applications or events. User-specified weights determine whether
-amendments and/or animals contribute to presence, but do not affect
-magnitude. The final score is the percentage of rotation years with
-organic inputs (0–100), without min–max scaling.
+(\`MGT_combo\`) by determining the proportion of rotation years in which
+organic amendments and animal inputs occurred. Each component is treated
+independently:
 
 ## Usage
 
 ``` r
-compute_orginput(rot_bounds, amend, animal, w_amend = 1, w_animal = 1)
+compute_orginput(rot_bounds, amend, animal, w_amend = 0.5, w_animal = 0.5)
 ```
 
 ## Arguments
 
 - rot_bounds:
 
-  A data frame from
-  [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
-  containing rotation-year bounds for each management unit, with
-  columns:
-
-  - `MGT_combo`
-
-  - `rot_start_yr`
-
-  - `rot_end_yr`
+  Rotation-year boundaries for each management unit.
 
 - amend:
 
-  A data frame of amendment events (from the `Amendment_Diversity`
-  sheet), containing:
-
-  - `MGT_combo`
-
-  - `SA_date` — amendment date
-
-  - `SA_cat` — amendment category (e.g., "Organic")
-
-  Only rows with `SA_cat == "Organic"` contribute to the index.
+  Amendment event table.
 
 - animal:
 
-  A data frame of animal events (from the `Animal_Diversity` sheet),
-  containing:
-
-  - `MGT_combo`
-
-  - `AD_start_date` — start of animal presence
+  Animal event table.
 
 - w_amend:
 
-  Numeric weight controlling whether organic amendments contribute to
-  presence (default 1; values \> 0 include amendments).
+  Weight for amendment presence (default 0.5).
 
 - w_animal:
 
-  Numeric weight controlling whether animal events contribute to
-  presence (default 1; values \> 0 include animals).
+  Weight for animal presence (default 0.5).
 
 ## Value
 
@@ -69,27 +39,46 @@ A data frame with:
 
 - `MGT_combo`
 
-- `OrgInputs` — organic-input score (0–100)
+- `OrgInput` — organic-input score (0–100)
 
 ## Details
 
-The algorithm proceeds in five steps:
+- **Amendment proportion** — fraction of rotation years with at least
+  one organic amendment event.
 
-1.  **Rotation-year grid**: Construct a sequence of rotation years for
-    each `MGT_combo`.
+- **Animal proportion** — fraction of rotation years with at least one
+  animal event.
 
-2.  **Amendment presence**: Identify rotation years with organic
-    amendments and mark them as `amend_present = 1`.
+User-specified weights (`w_amend`, `w_animal`) determine the relative
+importance of amendments versus animals in the final score. Weighted
+proportions are combined and rescaled to a 0–100 SHMI-compatible index:
 
-3.  **Animal presence**: Identify rotation years with animal events and
-    mark them as `ani_present = 1`.
+\$\$ \mathrm{OrgInput} = 100 \times \frac{ w\_{\mathrm{amend}} \cdot
+p\_{\mathrm{amend}} + w\_{\mathrm{animal}} \cdot p\_{\mathrm{animal}} }{
+w\_{\mathrm{amend}} + w\_{\mathrm{animal}} } \$\$
 
-4.  **Binary organic-input presence**: A rotation year receives
-    `org_present = 1` if either `amend_present == 1` and `w_amend > 0`,
-    or `ani_present == 1` and `w_animal > 0`. Multiple events within a
-    year do not increase the score.
+Units with no organic inputs receive a score of 0.
 
-5.  **Final score**: The organic-inputs indicator is returned as \$\$
-    \mathrm{OrgInputs} = 100 \times \mathrm{mean}(org\\present) \$\$
-    representing the percentage of rotation years with organic inputs.
-    Units with no organic inputs receive a score of 0.
+\## Required Inputs
+
+\### Rotation bounds A data frame containing rotation-year boundaries:
+
+- `MGT_combo`
+
+- `rot_start_yr`
+
+- `rot_end_yr`
+
+\### Amendment events A data frame containing:
+
+- `MGT_combo`
+
+- `SA_date` — amendment date
+
+- `SA_cat` — amendment category (only `"Organic"` counted)
+
+\### Animal events A data frame containing:
+
+- `MGT_combo`
+
+- `AD_start_date` — start date of animal presence

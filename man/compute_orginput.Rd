@@ -4,84 +4,81 @@
 \alias{compute_orginput}
 \title{Compute the Organic Inputs Sub-index (Amendments + Animals)}
 \usage{
-compute_orginput(rot_bounds, amend, animal, w_amend = 1, w_animal = 1)
+compute_orginput(rot_bounds, amend, animal, w_amend = 0.5, w_animal = 0.5)
 }
 \arguments{
-\item{rot_bounds}{A data frame from \code{prepare_shmi_inputs()} containing
-rotation-year bounds for each management unit, with columns:
+\item{rot_bounds}{Rotation-year boundaries for each management unit.}
+
+\item{amend}{Amendment event table.}
+
+\item{animal}{Animal event table.}
+
+\item{w_amend}{Weight for amendment presence (default 0.5).}
+
+\item{w_animal}{Weight for animal presence (default 0.5).}
+}
+\value{
+A data frame with:
+\itemize{
+  \item \code{MGT_combo}
+  \item \code{OrgInput} — organic-input score (0–100)
+}
+}
+\description{
+Calculates the SHMI organic-inputs indicator for each management unit
+(`MGT_combo`) by determining the proportion of rotation years in which
+organic amendments and animal inputs occurred. Each component is treated
+independently:
+}
+\details{
+\itemize{
+  \item \strong{Amendment proportion} — fraction of rotation years with at
+        least one organic amendment event.
+  \item \strong{Animal proportion} — fraction of rotation years with at
+        least one animal event.
+}
+
+User-specified weights (\code{w_amend}, \code{w_animal}) determine the
+relative importance of amendments versus animals in the final score.
+Weighted proportions are combined and rescaled to a 0–100 SHMI-compatible
+index:
+
+\deqn{
+  \mathrm{OrgInput} =
+  100 \times
+  \frac{
+    w_{\mathrm{amend}} \cdot p_{\mathrm{amend}} +
+    w_{\mathrm{animal}} \cdot p_{\mathrm{animal}}
+  }{
+    w_{\mathrm{amend}} + w_{\mathrm{animal}}
+  }
+}
+
+Units with no organic inputs receive a score of 0.
+
+
+## Required Inputs
+
+### Rotation bounds
+A data frame containing rotation-year boundaries:
 \itemize{
   \item \code{MGT_combo}
   \item \code{rot_start_yr}
   \item \code{rot_end_yr}
-}}
+}
 
-\item{amend}{A data frame of amendment events (from the
-\code{Amendment_Diversity} sheet), containing:
+### Amendment events
+A data frame containing:
 \itemize{
   \item \code{MGT_combo}
   \item \code{SA_date} — amendment date
-  \item \code{SA_cat} — amendment category (e.g., "Organic")
+  \item \code{SA_cat} — amendment category (only \code{"Organic"} counted)
 }
-Only rows with \code{SA_cat == "Organic"} contribute to the index.}
 
-\item{animal}{A data frame of animal events (from the
-\code{Animal_Diversity} sheet), containing:
+### Animal events
+A data frame containing:
 \itemize{
   \item \code{MGT_combo}
-  \item \code{AD_start_date} — start of animal presence
-}}
-
-\item{w_amend}{Numeric weight controlling whether organic amendments
-contribute to presence (default 1; values > 0 include amendments).}
-
-\item{w_animal}{Numeric weight controlling whether animal events contribute
-to presence (default 1; values > 0 include animals).}
-}
-\value{
-A data frame with:
-  \itemize{
-    \item \code{MGT_combo}
-    \item \code{OrgInputs} — organic-input score (0–100)
-  }
-}
-\description{
-Calculates the SHMI organic-inputs indicator for each management unit
-(`MGT_combo`) by identifying rotation years in which *any* organic input
-occurred—either an organic amendment or an animal event. Presence is treated
-as binary within each year: a year receives a value of 1 if at least one
-qualifying event occurred, regardless of the number of applications or
-events. User-specified weights determine whether amendments and/or animals
-contribute to presence, but do not affect magnitude. The final score is the
-percentage of rotation years with organic inputs (0–100), without min–max
-scaling.
-}
-\details{
-The algorithm proceeds in five steps:
-
-\enumerate{
-
-  \item \strong{Rotation-year grid}:
-    Construct a sequence of rotation years for each \code{MGT_combo}.
-
-  \item \strong{Amendment presence}:
-    Identify rotation years with organic amendments and mark them as
-    \code{amend_present = 1}.
-
-  \item \strong{Animal presence}:
-    Identify rotation years with animal events and mark them as
-    \code{ani_present = 1}.
-
-  \item \strong{Binary organic-input presence}:
-    A rotation year receives \code{org_present = 1} if either
-    \code{amend_present == 1} and \code{w_amend > 0}, or
-    \code{ani_present == 1} and \code{w_animal > 0}.
-    Multiple events within a year do not increase the score.
-
-  \item \strong{Final score}:
-    The organic-inputs indicator is returned as
-    \deqn{ \mathrm{OrgInputs} = 100 \times \mathrm{mean}(org\_present) }
-    representing the percentage of rotation years with organic inputs.
-    Units with no organic inputs receive a score of 0.
-
+  \item \code{AD_start_date} — start date of animal presence
 }
 }

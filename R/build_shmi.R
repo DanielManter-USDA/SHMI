@@ -229,7 +229,7 @@ build_shmi <- function(shmi_inputs,
   invdist <- compute_disturbance(
     dist          = dist,
     rot_bounds    = rot_bounds,
-    dist_meth     = setting$dist_meth,
+    dist_meth     = settings$dist_meth,
     max_stir      = settings$max_stir,
     ti_rep        = settings$ti_rep
   )
@@ -272,10 +272,10 @@ build_shmi <- function(shmi_inputs,
 
   w_sum   <- settings$w_cover + settings$w_diversity + settings$w_invdist + settings$w_orginput
 
-  w_cover     <- settings$w_cover / w_sum
-  w_diversity <- settings$w_diversity   / w_sum
-  w_invdist   <- settings$w_invdist  / w_sum
-  w_orginput  <- settings$w_orginput   / w_sum
+  w_cover     <- settings$w_cover     / w_sum
+  w_diversity <- settings$w_diversity / w_sum
+  w_invdist   <- settings$w_invdist   / w_sum
+  w_orginput  <- settings$w_orginput  / w_sum
 
   indicator_df <- indicator_df %>%
     dplyr::mutate(

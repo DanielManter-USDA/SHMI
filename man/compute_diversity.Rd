@@ -4,7 +4,7 @@
 \alias{compute_diversity}
 \title{Compute Rotation‑Scale Crop Diversity (Entropy‑Based Hill Numbers)}
 \usage{
-compute_diversity(crop, hill = 2, max_div = 8)
+compute_diversity(crop, hill = 2, max_div = 16)
 }
 \arguments{
 \item{crop}{A data frame containing one row per crop species with harmonized

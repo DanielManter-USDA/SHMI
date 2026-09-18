@@ -82,9 +82,9 @@
 #'     \deqn{
 #'       SHMI =
 #'         w_{cover} \cdot Cover +
-#'         w_{div}   \cdot Diversity +
-#'         w_{dist}  \cdot InvDist +
-#'         w_{ani}   \cdot OrgInput
+#'         w_{diversity} \cdot Diversity +
+#'         w_{invdist} \cdot InvDist +
+#'         w_{orginput} \cdot OrgInput
 #'     }
 #'
 #'   \item \strong{Output assembly}:
@@ -118,11 +118,8 @@
 #'
 #' @export
 build_shmi <- function(shmi_inputs,
-                       dist_meth = c("EPA", "STIR"),
                        settings = NULL,
                        expert_mode = FALSE) {
-
-  dist_meth <- match.arg(dist_meth)
 
   cli::cli_progress_step("Validating inputs...")
 
@@ -146,20 +143,22 @@ build_shmi <- function(shmi_inputs,
 
     # diversity
     hill      = 2,
-    max_div   = 8,
+    max_div   = 16,
 
     # disturbance
-    max_stir = 300,
+    dist_meth = "EPA",
+    max_stir  = 400,
+    ti_rep    = "max",
 
     # organic amendments
-    w_amend   = 0.5,
-    w_animals = 0.5,
+    w_amend  = 0.5,
+    w_animal = 0.5,
 
     # shmi weights
-    w_cover    = 0.25,
-    w_div      = 0.25,
-    w_dist     = 0.25,
-    w_ani      = 0.25
+    w_cover      = 0.25,
+    w_diversity  = 0.25,
+    w_invdist    = 0.25,
+    w_orginput   = 0.25
   )
 
   # --------------------------------------------------------------------------
@@ -230,8 +229,9 @@ build_shmi <- function(shmi_inputs,
   invdist <- compute_disturbance(
     dist          = dist,
     rot_bounds    = rot_bounds,
-    dist_meth     = dist_meth,
-    max_stir      = settings$max_stir
+    dist_meth     = setting$dist_meth,
+    max_stir      = settings$max_stir,
+    ti_rep        = settings$ti_rep
   )
 
   # Organic inputs (amendments + animals)
@@ -241,7 +241,7 @@ build_shmi <- function(shmi_inputs,
     amend       = amend,
     animal      = animal,
     w_amend     = settings$w_amend,
-    w_animal    = settings$w_animals
+    w_animal    = settings$w_animal
   )
 
   # --------------------------------------------------------------------------
@@ -270,20 +270,20 @@ build_shmi <- function(shmi_inputs,
     by = "MGT_combo"
   )
 
-  w_sum   <- settings$w_cover + settings$w_div + settings$w_dist + settings$w_ani
+  w_sum   <- settings$w_cover + settings$w_diversity + settings$w_invdist + settings$w_orginput
 
-  w_cover    <- settings$w_cover / w_sum
-  w_div      <- settings$w_div   / w_sum
-  w_dist     <- settings$w_dist  / w_sum
-  w_ani      <- settings$w_ani   / w_sum
+  w_cover     <- settings$w_cover / w_sum
+  w_diversity <- settings$w_diversity   / w_sum
+  w_invdist   <- settings$w_invdist  / w_sum
+  w_orginput  <- settings$w_orginput   / w_sum
 
   indicator_df <- indicator_df %>%
     dplyr::mutate(
       SHMI = (
-          w_cover * .data$Cover +
-          w_div   * .data$Diversity +
-          w_dist  * .data$InvDist +
-          w_ani   * .data$OrgInput
+          w_cover     * .data$Cover +
+          w_diversity * .data$Diversity +
+          w_invdist   * .data$InvDist +
+          w_orginput  * .data$OrgInput
       )
     ) %>%
     dplyr::select(any_of(c(
@@ -308,7 +308,7 @@ build_shmi <- function(shmi_inputs,
     indicator_df = indicator_df,
     settings_used = settings,
     expert_mode   = expert_mode,
-    shmi_version  = "1.0.2",
+    shmi_version  = "1.0.3",
     timestamp     = Sys.time()
   )
 }

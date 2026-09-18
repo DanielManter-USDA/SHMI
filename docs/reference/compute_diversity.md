@@ -9,7 +9,7 @@ or Simpson). The final diversity score is scaled to 0–100.
 ## Usage
 
 ``` r
-compute_diversity(crop, hill = 2, max_div = 8)
+compute_diversity(crop, hill = 2, max_div = 16)
 ```
 
 ## Arguments

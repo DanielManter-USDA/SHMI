@@ -4,24 +4,19 @@
 \alias{build_shmi}
 \title{Build SHMI Scores from Prepared Inputs}
 \usage{
-build_shmi(
-  shmi_inputs,
-  dist_meth = c("EPA", "STIR"),
-  settings = NULL,
-  expert_mode = FALSE
-)
+build_shmi(shmi_inputs, settings = NULL, expert_mode = FALSE)
 }
 \arguments{
 \item{shmi_inputs}{A list returned by \code{prepare_shmi_inputs()} containing
 harmonized rotation‑scale inputs (see Details).}
-
-\item{dist_meth}{Disturbance method: \code{"EPA"} or \code{"STIR"}.}
 
 \item{settings}{Optional named list of SHMI settings. Ignored unless
 \code{expert_mode = TRUE}.}
 
 \item{expert_mode}{Logical; if \code{TRUE}, user‑supplied settings override
 official defaults.}
+
+\item{dist_meth}{Disturbance method: \code{"EPA"} or \code{"STIR"}.}
 }
 \value{
 A list with:
@@ -119,9 +114,9 @@ are filled from the official values.
     \deqn{
       SHMI =
         w_{cover} \cdot Cover +
-        w_{div}   \cdot Diversity +
-        w_{dist}  \cdot InvDist +
-        w_{ani}   \cdot OrgInput
+        w_{diversity} \cdot Diversity +
+        w_{invdist} \cdot InvDist +
+        w_{orginput} \cdot OrgInput
     }
 
   \item \strong{Output assembly}:

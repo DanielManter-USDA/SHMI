@@ -8,12 +8,7 @@ SHMI is a weighted composite of four sub‑indices:
 ## Usage
 
 ``` r
-build_shmi(
-  shmi_inputs,
-  dist_meth = c("EPA", "STIR"),
-  settings = NULL,
-  expert_mode = FALSE
-)
+build_shmi(shmi_inputs, settings = NULL, expert_mode = FALSE)
 ```
 
 ## Arguments
@@ -24,10 +19,6 @@ build_shmi(
   [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
   containing harmonized rotation‑scale inputs (see Details).
 
-- dist_meth:
-
-  Disturbance method: `"EPA"` or `"STIR"`.
-
 - settings:
 
   Optional named list of SHMI settings. Ignored unless
@@ -36,6 +27,10 @@ build_shmi(
 - expert_mode:
 
   Logical; if `TRUE`, user‑supplied settings override official defaults.
+
+- dist_meth:
+
+  Disturbance method: `"EPA"` or `"STIR"`.
 
 ## Value
 
@@ -137,8 +132,9 @@ settings are filled from the official values.
 4.  **Weighted combination**: Pillar scores are normalized so weights
     sum to 1, then combined:
 
-    \$\$ SHMI = w\_{cover} \cdot Cover + w\_{div} \cdot Diversity +
-    w\_{dist} \cdot InvDist + w\_{ani} \cdot OrgInput \$\$
+    \$\$ SHMI = w\_{cover} \cdot Cover + w\_{diversity} \cdot
+    Diversity + w\_{invdist} \cdot InvDist + w\_{orginput} \cdot
+    OrgInput \$\$
 
 5.  **Output assembly**: Returns a tidy data frame of SHMI scores and
     metadata describing the settings used, SHMI version, and computation

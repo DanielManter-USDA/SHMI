@@ -115,19 +115,22 @@ custom <- list(
 
   # crop diversity
   hill    = 2,
-  max_div = 8,
+  max_div = 16,
 
   # inverse disturbance
-  # NA
+  dist_meth = "EPA",
+  max_stir  = 400,
+  ti_rep    = "max",
+    
   # organic inputs
-  w_amend   = 1,
-  w_animals = 1,
+  w_amend   = 0.5,
+  w_animals = 0.5,
   
   # SHMI index weights
-  w_cover = 0.25,
-  w_div   = 0.25,
-  w_dist  = 0.25,
-  w_ani   = 0.25
+  w_cover     = 0.25,
+  w_diversity = 0.25,
+  w_invdist   = 0.25,
+  w_orginput  = 0.25
 )
 
 shmi_exp <- build_shmi(inputs, settings = custom, expert_mode = TRUE)

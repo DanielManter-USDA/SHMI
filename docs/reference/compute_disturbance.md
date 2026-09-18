@@ -10,8 +10,8 @@ compute_disturbance(
   dist,
   rot_bounds,
   dist_meth = c("EPA", "STIR"),
-  max_stir = 300,
-  ti_rep = c("mid", "min", "max")
+  max_stir = 400,
+  ti_rep = c("max", "min", "mid")
 )
 ```
 
@@ -31,7 +31,7 @@ compute_disturbance(
 
 - max_stir:
 
-  Maximum annual STIR value used for normalization (default 300).
+  Maximum annual STIR value used for normalization (default 400).
 
 - ti_rep:
 

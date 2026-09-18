@@ -90,7 +90,7 @@
 #' @export
 compute_diversity <- function(crop,
                               hill = 2,
-                              max_div = 8) {
+                              max_div = 16) {
 
   # ---- 1. Expand mixtures into species ----
   expand_mixtures <- function(df) {

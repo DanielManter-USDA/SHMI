@@ -161,7 +161,7 @@ compute_cover <- function(
       n_days = if_else(is_fallow, 1L, n_days)   # placeholder row for fallow
     ) %>%
     tidyr::uncount(n_days) %>%
-    group_by(MGT_combo, crop_start, crop_end, is_fallow) %>%
+    group_by(MGT_combo, CD_seq_num, crop_start, crop_end, is_fallow) %>%
     mutate(
       date = if_else(
         is_fallow,

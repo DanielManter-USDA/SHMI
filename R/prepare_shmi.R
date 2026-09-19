@@ -534,7 +534,7 @@ prepare_shmi_inputs <- function(path,
 
       crop_end = dplyr::case_when(
         CD_cat == "Annual" & (!is.na(harv_min) | !is.na(term_min)) ~
-          pmin(harv_min, term_min, na.rm = TRUE),
+          coalesce(term_min, harv_min),
         CD_cat == "Annual" & is.na(harv_min) & is.na(term_min) &
           !is.na(next_min) ~ next_min,
         CD_cat == "Annual" & is.na(harv_min) & is.na(term_min) &
@@ -547,7 +547,7 @@ prepare_shmi_inputs <- function(path,
     ) %>%
     dplyr::ungroup() %>%
     dplyr::select(
-      MGT_combo, CD_seq_num, CD_mix, CD_cat, CD_group, CD_name,
+      MGT_combo, CD_seq_num, CD_cat, CD_group, CD_name,
       crop_start, crop_end, rot_start, rot_end, rot_start_yr, rot_end_yr
     ) %>%
     dplyr::mutate(
@@ -698,4 +698,538 @@ prepare_shmi_inputs <- function(path,
     yield      = yield,
     n_rate     = n_rate
   )
+}
+#' Prepare and Validate SHMI Input Data from an Excel Workbook
+#'
+#' Reads, validates, harmonizes, and expands all input sheets required to
+#' compute the Soil Health Management Index (SHMI). This function is the
+#' official entry point for SHMI data preparation and produces a standardized
+#' list of rotation‑scale objects used directly by \code{build_shmi()}.
+#'
+#' ## Overview
+#'
+#' The function performs:
+#' \itemize{
+#'   \item robust Excel ingestion with sheet‑level validation
+#'   \item management‑unit filtering
+#'   \item biological validation of crop chronology (annual/perennial rules)
+#'   \item mixture‑aware harmonization of crop windows
+#'   \item construction of rotation bounds (start/end dates and rotation years)
+#'   \item assembly of disturbance, amendment, and animal event tables
+#'   \item optional extraction of yield and nitrogen‑rate data
+#'   \item override‑aware clipping of all event types
+#' }
+#'
+#' The result is a clean, rotation‑scale dataset suitable for SHMI pillar
+#' computation: cover, diversity, inverse disturbance, and organic inputs.
+#'
+#'
+#' ## Required workbook structure
+#'
+#' The Excel file must contain the standard SHMI sheets:
+#'
+#' \itemize{
+#'   \item \code{Mgt_Unit}
+#'   \item \code{Crop_Diversity}
+#'   \item \code{Soil_Disturbance}
+#'   \item \code{Amendment_Diversity}
+#'   \item \code{Animal_Diversity}
+#' }
+#'
+#' Sheets may be empty; empty sheets are safely ignored.
+#'
+#'
+#' ## Date overrides
+#'
+#' If \code{start_date_override} or \code{end_date_override} are supplied,
+#' all event types (crop, disturbance, amendment, animal, yield, N‑rate)
+#' occurring outside the override window are removed, and rotation bounds are
+#' clipped accordingly.
+#'
+#'
+#' ## Crop harmonization
+#'
+#' Crop windows are validated for biological realism:
+#'
+#' \itemize{
+#'   \item annual crops must terminate within the same year
+#'   \item perennials may span years but must follow valid chronology
+#'   \item mixtures are collapsed to event‑level windows (min start, max end)
+#' }
+#'
+#' The returned \code{crop} table contains one row per species with harmonized
+#' start/end dates suitable for cover and diversity scoring.
+#'
+#'
+#' ## Disturbance, amendments, and animals
+#'
+#' Disturbance events are returned in EPA/STIR‑ready format:
+#'
+#' \itemize{
+#'   \item \code{SD_date}
+#'   \item \code{SD_mixeff}
+#'   \item \code{SD_depth}
+#' }
+#'
+#' Amendment and animal events are clipped by overrides and returned in
+#' rotation‑scale format for \code{compute_orginput()}.
+#'
+#'
+#' ## Optional yield and nitrogen‑rate extraction
+#'
+#' If enabled:
+#'
+#' \itemize{
+#'   \item Yield is extracted per crop event, unit‑standardized to kg/ha,
+#'         and clipped by overrides.
+#'   \item Nitrogen rate is extracted from amendment events, converted to
+#'         kg N/ha, summarized per \code{MGT_combo × year}, and clipped by
+#'         overrides.
+#' }
+#'
+#' Missing values are retained as \code{NA}.
+#'
+#'
+#' ## Front‑end validation
+#'
+#' The function automatically runs \code{validate_excel_input()} to check:
+#'
+#' \itemize{
+#'   \item required sheets and columns
+#'   \item valid date formats
+#'   \item consistent \code{MGT_combo} values
+#'   \item malformed entries
+#' }
+#'
+#' If validation fails, execution stops with clear, actionable error messages.
+#'
+#'
+#' @param path Path to the SHMI Excel workbook.
+#'
+#' @param exclude Optional character vector of \code{MGT_combo} identifiers to
+#'   exclude from processing.
+#'
+#' @param verbose Logical; if \code{TRUE}, prints progress messages.
+#'
+#' @param start_date_override Optional \code{Date} or date‑coercible value.
+#'
+#' @param end_date_override Optional \code{Date} or date‑coercible value.
+#'
+#' @param calc_yield Logical; if \code{TRUE}, extract and standardize yield.
+#'
+#' @param calc_n_rate Logical; if \code{TRUE}, extract and standardize N‑rate.
+#'
+#'
+#' @return A named list containing:
+#' \describe{
+#'   \item{\code{rot_bounds}}{Rotation start/end dates and rotation years.}
+#'   \item{\code{crop}}{Mixture‑aware crop windows (one row per species).}
+#'   \item{\code{dist}}{Disturbance event table (EPA/STIR‑ready).}
+#'   \item{\code{amend}}{Amendment event table.}
+#'   \item{\code{animal}}{Animal event table.}
+#'   \item{\code{mgt}}{Management‑unit metadata.}
+#'   \item{\code{yield}}{Optional crop‑event‑level yield table (kg/ha).}
+#'   \item{\code{n_rate}}{Optional year‑level nitrogen‑rate table (kg N/ha).}
+#' }
+#'
+#' @section Error Handling:
+#' The function stops with informative errors if:
+#' \itemize{
+#'   \item required sheets or columns are missing
+#'   \item crop chronology is biologically impossible
+#'   \item date overrides produce empty rotations
+#' }
+#'
+#' @seealso
+#'   \code{\link{build_shmi}} for computing SHMI scores from prepared inputs.
+#'
+#' @export
+
+prepare_shmi_inputs <- function(path,
+                                verbose = TRUE,
+                                exclude = NULL,
+                                start_date_override = NULL,
+                                end_date_override = NULL,
+                                end_at_sample_date = FALSE,
+                                calc_yield = FALSE,
+                                calc_n_rate = FALSE) {
+
+  # ------------------------------------------------------------
+  # 1. Read all sheets
+  # ------------------------------------------------------------
+  cli::cli_progress_step("Reading Excel file...")
+
+  mgt <- .safe_read(
+    path,
+    sheet = "Mgt_Unit",
+    required_cols = c("MGT_combo", "MGT_study", "MGT_field", "MGT_trt"),
+    skip = 3,
+    verbose = verbose
+  ) %>%
+    janitor::remove_empty("rows") %>%
+    dplyr::filter(!(MGT_combo %in% exclude))
+
+  if (end_at_sample_date) {
+    mgt_dates <- mgt %>%
+      select(MGT_combo, MGT_sample_date) %>%
+      mutate(MGT_sample_date = as.Date(MGT_sample_date))
+  }
+
+  crop <- .safe_read(
+    path,
+    sheet = "Crop_Diversity",
+    required_cols = c("MGT_combo", "CD_plant_date", "CD_term_date"),
+    skip = 3,
+    verbose = verbose
+  ) %>%
+    dplyr::filter(!(MGT_combo %in% exclude))
+
+  if (!"CD_harv_date" %in% names(crop)) crop$CD_harv_date <- NA
+  if (!"CD_cat" %in% names(crop))       crop$CD_cat       <- NA_character_
+
+  crop <- crop %>%
+    dplyr::mutate(
+      CD_plant_date = as.Date(unname(.parse_shmi_date(CD_plant_date))),
+      CD_harv_date  = as.Date(unname(.parse_shmi_date(CD_harv_date))),
+      CD_term_date  = as.Date(unname(.parse_shmi_date(CD_term_date)))
+    )
+
+  dist <- .safe_read(
+    path,
+    sheet = "Soil_Disturbance",
+    required_cols = c("MGT_combo", "SD_date", "SD_mixeff"),
+    skip = 3,
+    verbose = verbose
+  ) %>%
+    janitor::remove_empty("rows") %>%
+    dplyr::filter(!(MGT_combo %in% exclude)) %>%
+    dplyr::mutate(SD_date = as.Date(unname(.parse_shmi_date(SD_date))))
+
+  amend <- .safe_read(
+    path,
+    sheet = "Soil_Amendments",
+    required_cols = NULL,
+    skip = 3,
+    verbose = verbose
+  )
+
+  if (is.null(amend) || !("SA_date" %in% names(amend)) ||
+      all(is.na(.parse_shmi_date(amend$SA_date)))) {
+
+    amend <- tibble::tibble(
+      MGT_combo = character(),
+      SA_date   = as.Date(character()),
+      SA_cat    = character(),
+      SA_N      = numeric()
+    )
+
+  } else {
+
+    amend <- amend %>%
+      dplyr::mutate(
+        SA_date = as.Date(unname(.parse_shmi_date(SA_date)))
+      ) %>%
+      janitor::remove_empty("rows") %>%
+      dplyr::filter(!(MGT_combo %in% exclude))
+  }
+
+  animal <- .safe_read(
+    path,
+    sheet = "Animal_Diversity",
+    required_cols = NULL,
+    skip = 3,
+    verbose = verbose
+  )
+
+  if (is.null(animal) ||
+      !all(c("AD_start_date", "AD_end_date") %in% names(animal)) ||
+      (
+        all(is.na(.parse_shmi_date(animal$AD_start_date))) &&
+        all(is.na(.parse_shmi_date(animal$AD_end_date)))
+      )) {
+
+    animal <- tibble::tibble(
+      MGT_combo     = character(),
+      AD_start_date = as.Date(character()),
+      AD_end_date   = as.Date(character()),
+      AD_type       = character()
+    )
+
+  } else {
+
+    animal <- animal %>%
+      dplyr::mutate(
+        AD_start_date = as.Date(unname(.parse_shmi_date(AD_start_date))),
+        AD_end_date   = as.Date(unname(.parse_shmi_date(AD_end_date)))
+      ) %>%
+      janitor::remove_empty("rows") %>%
+      dplyr::filter(!(MGT_combo %in% exclude))
+  }
+
+  # ------------------------------------------------------------
+  # 2. Identify rotation-wide min/max years per MGT_combo
+  # ------------------------------------------------------------
+  all_dates <- bind_rows(
+    crop %>% select(MGT_combo, date = CD_plant_date),
+    crop %>% select(MGT_combo, date = CD_harv_date),
+    crop %>% select(MGT_combo, date = CD_term_date),
+    dist %>% select(MGT_combo, date = SD_date),
+    amend %>% select(MGT_combo, date = SA_date),
+    animal %>% select(MGT_combo, date = AD_start_date),
+    animal %>% select(MGT_combo, date = AD_end_date)
+  ) %>%
+    filter(!is.na(date))
+
+  rot_bounds <- all_dates %>%
+    mutate(yr = lubridate::year(date)) %>%
+    group_by(MGT_combo) %>%
+    summarize(
+      rot_start_yr = min(yr),
+      rot_end_yr   = max(yr),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      rot_start = as.Date(paste0(rot_start_yr, "-01-01")),
+      rot_end   = as.Date(paste0(rot_end_yr,   "-12-31"))
+    )
+
+  # ------------------------------------------------------------
+  # 3. Infer crop_start and crop_end
+  # ------------------------------------------------------------
+  safe_min_date <- function(x) {
+    if (all(is.na(x))) return(NA_Date_)
+    as.Date(min(x, na.rm = TRUE))
+  }
+
+  safe_max_date <- function(x) {
+    if (all(is.na(x))) return(NA_Date_)
+    as.Date(max(x, na.rm = TRUE))
+  }
+
+  # collapse crop to one row per plant species
+  crop <- crop %>%
+    group_by(MGT_combo, CD_seq_num, CD_cat, CD_name) %>%
+    summarize(
+      CD_plant_date = safe_min_date(CD_plant_date),
+      CD_harv_date  = safe_max_date(CD_harv_date),
+      CD_term_date  = safe_max_date(CD_term_date),
+      .groups = "drop"
+    )
+
+  seq_info <- crop %>%
+    group_by(MGT_combo, CD_seq_num) %>%
+    summarize(
+      seq_any_plant = any(!is.na(CD_plant_date)),
+      seq_min_plant = safe_min_date(CD_plant_date),
+      seq_max_harv  = safe_max_date(CD_harv_date),
+      seq_max_term  = safe_max_date(CD_term_date),
+      .groups = "drop"
+    ) %>%
+    arrange(MGT_combo, CD_seq_num) %>%
+    group_by(MGT_combo) %>%
+    mutate(
+      prev_seq_end   = lag(pmax(seq_max_harv, seq_max_term, na.rm = TRUE)),
+      next_seq_start = lead(seq_min_plant),
+
+      planted_into_prev = if_else(
+        !is.na(seq_min_plant) & !is.na(prev_seq_end) &
+          seq_min_plant < prev_seq_end,
+        TRUE,
+        FALSE
+      )
+    ) %>%
+    ungroup()
+
+  crop_windows <- crop %>%
+    left_join(seq_info, by = c("MGT_combo", "CD_seq_num")) %>%
+    left_join(rot_bounds, by = "MGT_combo") %>%
+    group_by(MGT_combo, CD_seq_num, CD_cat, CD_name) %>%
+    mutate(
+      # ------------------------------------------------------------
+      # crop_start (true biological start)
+      # ------------------------------------------------------------
+      crop_start = case_when(
+        # First seq: use plant date if present
+        CD_seq_num == min(CD_seq_num) & !is.na(CD_plant_date) ~ CD_plant_date,
+
+        # First seq: no plant → rot_start
+        CD_seq_num == min(CD_seq_num) ~ rot_start,
+
+        # Middle/last: use plant date if present
+        !is.na(CD_plant_date) ~ CD_plant_date,
+
+        # Middle/last: no plant → previous seq end
+        TRUE ~ coalesce(prev_seq_end, rot_start)
+      ),
+
+      # ------------------------------------------------------------
+      # candidate ends (already harmonized)
+      # ------------------------------------------------------------
+      max_harv_name = CD_harv_date,
+      max_term_name = CD_term_date,
+
+      # ------------------------------------------------------------
+      # annual vs perennial end
+      # ------------------------------------------------------------
+      annual_end = coalesce(
+        max_term_name,
+        max_harv_name,
+
+        # planted-into-previous-crop → do NOT use next_seq_start
+        if (planted_into_prev) NA_Date_ else next_seq_start,
+        as.Date(rot_end)
+      ),
+
+      perennial_end = coalesce(
+        max_term_name,
+        if (planted_into_prev) NA_Date_ else next_seq_start,
+        as.Date(rot_end)
+      ),
+
+      crop_end = case_when(
+        CD_cat %in% c("annual", "Annual", "cash", "Cash") ~ annual_end,
+        TRUE ~ perennial_end
+      ),
+
+      # ------------------------------------------------------------
+      # monotonicity
+      # ------------------------------------------------------------
+      crop_end = if_else(crop_end < crop_start, crop_start, crop_end)
+    ) %>%
+    ungroup() %>%
+    select(MGT_combo, CD_seq_num, CD_cat, CD_name, crop_start, crop_end, planted_into_prev)
+
+  # ------------------------------------------------------------
+  # 4. Apply date overrides
+  # ------------------------------------------------------------
+  if (!is.null(start_date_override) || !is.null(end_date_override)) {
+
+    start_override <- if (!is.null(start_date_override)) as.Date(start_date_override) else as.Date("0001-01-01")
+    end_override <- if (!is.null(end_date_override))   as.Date(end_date_override)   else as.Date("9999-12-31")
+
+    # Crop windows
+    crop_windows <- crop_windows %>%
+      filter(crop_end >= start_override) %>%
+      filter(crop_start <= end_override) %>%
+      mutate(
+        crop_start = pmax(crop_start, start_override),
+        crop_end   = pmin(crop_end, end_override)
+      )
+
+    # Disturbance
+    dist <- dist %>%
+      filter(SD_date >= start_override) %>%
+      filter(SD_date <= end_override)
+
+    # Amendments
+    amend <- amend %>%
+      filter(SA_date >= start_override) %>%
+      filter(SA_date <= end_override)
+
+    # Animal
+    animal <- animal %>%
+      filter(AD_end_date >= start_override) %>%
+      filter(AD_start_date <= end_override) %>%
+      mutate(
+        AD_start_date = pmax(AD_start_date, start_override),
+        AD_end_date   = pmin(AD_end_date, end_override)
+      )
+
+    # Rotation bounds
+    rot_bounds <- rot_bounds %>%
+      mutate(
+        rot_start = start_override,
+        rot_end   = end_override,
+        rot_start_yr = lubridate::year(rot_start),
+        rot_end_yr = lubridate::year(rot_end)
+      )
+
+  }
+
+  # ------------------------------------------------------------
+  # 5. Apply sample date override
+  # ------------------------------------------------------------
+
+  if (end_at_sample_date) {
+
+    # Crop windows
+    crop_windows <- crop_windows %>%
+      left_join(mgt_dates, by = "MGT_combo") %>%
+      filter(crop_start <= MGT_sample_date) %>%
+      mutate(
+        crop_end = pmin(crop_end, MGT_sample_date)
+      )
+
+    # Disturbance
+    dist <- dist %>%
+      left_join(mgt_dates, by = "MGT_combo") %>%
+      filter(SD_date <= MGT_sample_date)
+
+    # Amendments
+    amend <- amend %>%
+      left_join(mgt_dates, by = "MGT_combo") %>%
+      filter(SA_date <= MGT_sample_date)
+
+    # Animal
+    animal <- animal %>%
+      left_join(mgt_dates, by = "MGT_combo") %>%
+      filter(AD_start_date <= MGT_sample_date) %>%
+      mutate(
+        AD_end_date = pmin(AD_end_date, MGT_sample_date)
+      )
+
+    # Rotation bounds
+    rot_bounds <- rot_bounds %>%
+      left_join(mgt_dates, by = "MGT_combo") %>%
+      mutate(
+        rot_end = MGT_sample_date,
+        rot_end_yr = lubridate::year(rot_end)
+      )
+  }
+
+  # ------------------------------------------------------------
+  # 6. Yield / N-rate
+  # ------------------------------------------------------------
+  if (calc_yield) {
+    cli::cli_progress_step("Computing crop yields...")
+    yield <- .prepare_yield(
+      path,
+      exclude = exclude,
+      start_date_override = start_date_override,
+      end_date_override   = end_date_override
+    )
+  } else {
+    yield <- NULL
+  }
+
+  if (calc_n_rate) {
+    cli::cli_progress_step("Computing N rates...")
+    n_rate <- .prepare_n_rate(
+      path,
+      exclude = exclude,
+      start_date_override = start_date_override,
+      end_date_override   = end_date_override
+    )
+  } else {
+    n_rate <- NULL
+  }
+
+  cli::cli_progress_done()
+  cli::cli_progress_cleanup()
+
+  # ------------------------------------------------------------
+  # 6. Return updated inputs list
+  # ------------------------------------------------------------
+  inputs <- list(
+    rot_bounds = rot_bounds,
+    mgt        = mgt,
+    crop       = crop_windows,
+    dist       = dist,
+    amend      = amend,
+    animal     = animal,
+    yield      = yield,
+    n_rate     = n_rate
+  )
+
+  return(inputs)
 }

@@ -146,7 +146,7 @@
 prepare_shmi_inputs <- function(path,
                                 exclude = NULL,
                                 verbose = TRUE,
-                                rot_calc = c("napeshm", "farmer"),
+                                rot_calc = c("calendar", "farmer"),
                                 start_date_override = NULL,
                                 end_date_override   = NULL,
                                 end_sample_date = FALSE,
@@ -156,11 +156,10 @@ prepare_shmi_inputs <- function(path,
   rot_calc <- match.arg(rot_calc)
 
   # ------------------------------------------------------------
-  # 1. Validating inputs
+  # 1. Validate inputs
   # ------------------------------------------------------------
   cli::cli_progress_step("Validating inputs...")
 
-  # Validate Excel file before ingestion
   val <- validate_excel_input(path, verbose)
 
   if (!val$ok) {
@@ -189,15 +188,7 @@ prepare_shmi_inputs <- function(path,
   }
 
   # ------------------------------------------------------------
-  # 2. Helper to read + filter sheets
-  # ------------------------------------------------------------
-  safe_select <- function(df, cols) {
-    cols <- intersect(cols, names(df))
-    dplyr::select(df, all_of(cols))
-  }
-
-  # ------------------------------------------------------------
-  # 3. Load MGT first (needed for joins)
+  # 2. Read MGT
   # ------------------------------------------------------------
   cli::cli_progress_step("Reading Excel file...")
 
@@ -208,16 +199,22 @@ prepare_shmi_inputs <- function(path,
     skip = 3,
     verbose = verbose
   ) %>%
-    select(any_of(c(
-      "user_name", "MGT_combo", "MGT_study", "MGT_farm", "MGT_field", "MGT_trt", "MGT_sample_date"
+    dplyr::select(dplyr::any_of(c(
+      "user_name", "MGT_combo", "MGT_study", "MGT_farm",
+      "MGT_field", "MGT_trt", "MGT_sample_date"
     ))) %>%
     janitor::remove_empty("rows") %>%
-    filter(!(MGT_combo %in% exclude))
+    dplyr::filter(!(MGT_combo %in% exclude))
+
+  if (end_sample_date) {
+    mgt_dates <- mgt %>%
+      select(MGT_combo, MGT_sample_date) %>%
+      mutate(MGT_sample_date = as.Date(MGT_sample_date))
+  }
 
   # ------------------------------------------------------------
-  # 4. Load all sheets
+  # 3. Read Crop_Diversity
   # ------------------------------------------------------------
-  #   ---- Load Crop_Diversity ----
   crop <- .safe_read(
     path,
     sheet = "Crop_Diversity",
@@ -225,19 +222,21 @@ prepare_shmi_inputs <- function(path,
     skip = 3,
     verbose = verbose
   ) %>%
-    filter(!(MGT_combo %in% exclude))
+    dplyr::filter(!(MGT_combo %in% exclude))
 
   if (!"CD_harv_date" %in% names(crop)) crop$CD_harv_date <- NA
   if (!"CD_cat" %in% names(crop))       crop$CD_cat       <- NA_character_
 
   crop <- crop %>%
-    mutate(
+    dplyr::mutate(
       CD_plant_date = as.Date(unname(.parse_shmi_date(CD_plant_date))),
       CD_harv_date  = as.Date(unname(.parse_shmi_date(CD_harv_date))),
       CD_term_date  = as.Date(unname(.parse_shmi_date(CD_term_date)))
     )
 
-  #   ---- Load Soil_Disturbance ----
+  # ------------------------------------------------------------
+  # 4. Read Soil_Disturbance
+  # ------------------------------------------------------------
   dist <- .safe_read(
     path,
     sheet = "Soil_Disturbance",
@@ -245,62 +244,12 @@ prepare_shmi_inputs <- function(path,
     skip = 3,
     verbose = verbose
   ) %>%
-    filter(!(MGT_combo %in% exclude))
+    dplyr::filter(!(MGT_combo %in% exclude)) %>%
+    dplyr::mutate(SD_date = as.Date(unname(.parse_shmi_date(SD_date))))
 
-  dist <- dist %>%
-    mutate(SD_date = as.Date(unname(.parse_shmi_date(SD_date))))
-
-  #   ---- Apply year overrides BEFORE inference ----
-  if (!is.null(start_date_override)) {
-    S <- as.Date(start_date_override)
-    crop <- crop %>% filter(is.na(CD_term_date) | CD_term_date >= S) %>%
-      mutate(CD_plant_date = if_else(CD_plant_date < S, S, CD_plant_date))
-    dist <- dist %>% filter(SD_date >= S)
-  }
-
-  if (!is.null(end_date_override)) {
-    E <- as.Date(end_date_override)
-    crop <- crop %>% filter(CD_plant_date <= E) %>%
-      mutate(CD_term_date = if_else(!is.na(CD_term_date) & CD_term_date > E, E, CD_term_date))
-    dist <- dist %>% filter(SD_date <= E)
-  }
-
-  if (end_sample_date) {
-    crop <- crop %>%
-      left_join(mgt %>% select(MGT_combo, MGT_sample_date), by = "MGT_combo") %>%
-      mutate(MGT_sample_date = as.Date(MGT_sample_date)) %>%
-      filter(CD_plant_date <= MGT_sample_date) %>%
-      mutate(CD_term_date = if_else(!is.na(CD_term_date) & CD_term_date > MGT_sample_date, MGT_sample_date, CD_term_date))
-    dist <- dist %>%
-      left_join(mgt %>% select(MGT_combo, MGT_sample_date), by = "MGT_combo") %>%
-      mutate(MGT_sample_date = as.Date(MGT_sample_date)) %>%
-      filter(SD_date <= MGT_sample_date)
-  }
-
-  #   ---- INFER TERMINATION DATES (planting + disturbance) ----
-  # 1. Next planting date
-  safe_min_date <- function(x) {
-    x2 <- x[!is.na(x)]
-    if (length(x2) == 0) return(as.Date(NA))  # NA_Date_
-    as.Date(min(x2))
-  }
-
-  seq_dates <- crop %>%
-    group_by(MGT_combo, CD_seq_num) %>%
-    summarize(
-      seq_plant = safe_min_date(CD_plant_date),
-      .groups   = "drop"
-    ) %>%
-    arrange(MGT_combo, CD_seq_num) %>%
-    group_by(MGT_combo) %>%
-    mutate(next_seq_plant = dplyr::lead(seq_plant)) %>%
-    ungroup()
-
-  crop <- crop %>%
-    left_join(seq_dates, by = c("MGT_combo", "CD_seq_num")) %>%
-    mutate(next_plant = next_seq_plant)
-
-  # ---- Load Soil_Amendments ----
+  # ------------------------------------------------------------
+  # 5. Read Soil_Amendments
+  # ------------------------------------------------------------
   amend <- .safe_read(
     path,
     sheet = "Soil_Amendments",
@@ -309,7 +258,6 @@ prepare_shmi_inputs <- function(path,
     verbose = verbose
   )
 
-  # If sheet is missing OR contains no valid amendment dates → skip
   if (is.null(amend) || !("SA_date" %in% names(amend)) ||
       all(is.na(.parse_shmi_date(amend$SA_date)))) {
 
@@ -322,29 +270,16 @@ prepare_shmi_inputs <- function(path,
 
   } else {
 
-    # Normal processing
     amend <- amend %>%
-      mutate(
+      dplyr::mutate(
         SA_date = as.Date(unname(.parse_shmi_date(SA_date)))
       ) %>%
-      filter(!(MGT_combo %in% exclude))
-
-    if (!is.null(start_date_override)) {
-      amend <- amend %>% filter(SA_date >= S)
-    }
-
-    if (!is.null(end_date_override)) {
-      amend <- amend %>% filter(SA_date <= E)
-    }
-
-    if (end_sample_date) {
-      amend <- amend %>%
-        left_join(mgt %>% select(MGT_combo, MGT_sample_date), by = "MGT_combo") %>%
-        filter(SA_date <= MGT_sample_date)
-    }
+      dplyr::filter(!(MGT_combo %in% exclude))
   }
 
-  # ---- Load Animal_Diversity ----
+  # ------------------------------------------------------------
+  # 6. Read Animal_Diversity
+  # ------------------------------------------------------------
   animal <- .safe_read(
     path,
     sheet = "Animal_Diversity",
@@ -353,7 +288,6 @@ prepare_shmi_inputs <- function(path,
     verbose = verbose
   )
 
-  # If sheet is missing OR contains no valid amendment dates → skip
   if (is.null(animal) ||
       !all(c("AD_start_date", "AD_end_date") %in% names(animal)) ||
       (
@@ -361,7 +295,6 @@ prepare_shmi_inputs <- function(path,
         all(is.na(.parse_shmi_date(animal$AD_end_date)))
       )) {
 
-    # Return an empty tibble with expected structure
     animal <- tibble::tibble(
       MGT_combo     = character(),
       AD_start_date = as.Date(character()),
@@ -371,226 +304,201 @@ prepare_shmi_inputs <- function(path,
 
   } else {
 
-    # Normal processing
     animal <- animal %>%
-      mutate(
+      dplyr::mutate(
         AD_start_date = as.Date(unname(.parse_shmi_date(AD_start_date))),
         AD_end_date   = as.Date(unname(.parse_shmi_date(AD_end_date)))
       ) %>%
-      filter(!(MGT_combo %in% exclude))
-
-    # ---- Apply start-date override (interval clipping) ----
-    if (!is.null(start_date_override)) {
-      S <- as.Date(start_date_override)
-
-      animal <- animal %>%
-        # Drop windows ending before S
-        filter(AD_end_date >= S) %>%
-        # Clip windows overlapping S
-        mutate(
-          AD_start_date = if_else(AD_start_date < S, S, AD_start_date)
-        )
-    }
-
-    # ---- Apply end-date override (interval clipping) ----
-    if (!is.null(end_date_override)) {
-      E <- as.Date(end_date_override)
-
-      animal <- animal %>%
-        # Drop windows starting after E
-        filter(AD_start_date <= E) %>%
-        # Clip windows overlapping E
-        mutate(
-          AD_end_date = if_else(AD_end_date > E, E, AD_end_date)
-        )
-    }
-
-    if (end_sample_date) {
-      animal <- animal %>%
-        left_join(mgt %>% select(MGT_combo, MGT_sample_date), by = "MGT_combo") %>%
-        mutate(MGT_sample_date = as.Date(MGT_sample_date)) %>%
-        filter(AD_start_date <= MGT_sample_date) %>%
-        mutate(
-          AD_end_date = if_else(AD_end_date > MGT_sample_date, as.Date(MGT_sample_date), AD_end_date)
-        )
-    }
+      dplyr::filter(!(MGT_combo %in% exclude))
   }
 
   # ------------------------------------------------------------
-  # 5. Bounds helper
+  # 7. Infer next planting (for crop_end logic)
+  # ------------------------------------------------------------
+  safe_min_date <- function(x) {
+    x2 <- x[!is.na(x)]
+    if (length(x2) == 0) return(as.Date(NA))
+    as.Date(min(x2))
+  }
+
+  seq_dates <- crop %>%
+    dplyr::group_by(MGT_combo, CD_seq_num) %>%
+    dplyr::summarize(
+      seq_plant = safe_min_date(CD_plant_date),
+      .groups   = "drop"
+    ) %>%
+    dplyr::arrange(MGT_combo, CD_seq_num) %>%
+    dplyr::group_by(MGT_combo) %>%
+    dplyr::mutate(next_seq_plant = dplyr::lead(seq_plant)) %>%
+    dplyr::ungroup()
+
+  crop <- crop %>%
+    dplyr::left_join(seq_dates, by = c("MGT_combo", "CD_seq_num")) %>%
+    dplyr::mutate(next_plant = next_seq_plant)
+
+  # ------------------------------------------------------------
+  # 8. Category harmonization (Annual / Perennial)
+  # ------------------------------------------------------------
+  crop <- crop %>%
+    dplyr::mutate(
+      CD_cat = dplyr::case_when(
+        CD_cat %in% c("annual", "cash", "cover", "fallow", "Cash", "Cover", "Fallow") ~ "Annual",
+        CD_cat %in% c("perennial", "woody perennial") ~ "Perennial",
+        TRUE ~ CD_cat
+      )
+    )
+
+  # ------------------------------------------------------------
+  # 9. Compute rotation bounds from raw events (no overrides yet)
   # ------------------------------------------------------------
   cli::cli_progress_step("Computing rotation bounds...")
 
-  compute_bounds <- function(crop, dist, amend, animal,
-                             rot_calc = "farmer",
-                             end_sample_date = TRUE,
-                             start_date_override = NULL,
-                             end_date_override   = NULL) {
+  clean_df <- function(df, date_cols) {
+    if (is.null(df)) return(NULL)
+    if (nrow(df) == 0) return(NULL)
+    if (!"MGT_combo" %in% names(df)) return(NULL)
 
-    # Helper: drop NULL or empty data frames
-    clean_df <- function(df, date_cols) {
-      if (is.null(df)) return(NULL)
-      if (nrow(df) == 0) return(NULL)
-      if (!"MGT_combo" %in% names(df)) return(NULL)  # <- key line
+    df <- df %>% dplyr::filter(!is.na(MGT_combo))
+    df <- df %>%
+      dplyr::filter(rowSums(!is.na(dplyr::across(dplyr::all_of(date_cols)))) > 0)
 
-      df <- df %>% filter(!is.na(MGT_combo))
-
-      df <- df %>%
-        filter(rowSums(!is.na(across(all_of(date_cols)))) > 0)
-
-      if (nrow(df) == 0) return(NULL)
-      df
-    }
-
-    crop_h   <- clean_df(crop,   c("CD_plant_date", "CD_harv_date", "CD_term_date"))
-    dist_h   <- clean_df(dist,   c("SD_date"))
-    amend_h  <- clean_df(amend,  c("SA_date"))
-    animal_h <- clean_df(animal, c("AD_start_date", "AD_end_date"))
-
-    dfs <- list(crop_h, dist_h, amend_h, animal_h)
-    dfs <- dfs[!vapply(dfs, is.null, logical(1))]
-
-    if (length(dfs) == 0) {
-      stop("No valid crop, disturbance, amendment, or animal data found.", call. = FALSE)
-    }
-
-    # Summaries
-    summarize_bounds <- function(df, start_cols, end_cols) {
-      df %>%
-        group_by(MGT_combo) %>%
-        summarize(
-          # earliest activity across all start columns
-          start = {
-            s <- pmin(!!!rlang::syms(start_cols), na.rm = TRUE)
-            s[is.infinite(s)] <- NA
-            min(s, na.rm = TRUE)
-          },
-
-          # latest activity across all end columns
-          end = {
-            e <- pmax(!!!rlang::syms(end_cols), na.rm = TRUE)
-            e[is.infinite(e)] <- NA
-            max(e, na.rm = TRUE)
-          },
-
-          .groups = "drop"
-        )
-    }
-
-    df_list <- list()
-
-    if (!is.null(crop_h)) {
-      df_list[[length(df_list)+1]] <- summarize_bounds(
-        crop_h,
-        start_cols = c("CD_plant_date", "CD_harv_date", "CD_term_date"),
-        end_cols  = c("CD_harv_date", "CD_term_date")
-      )
-    }
-
-    if (!is.null(dist_h)) {
-      df_list[[length(df_list)+1]] <- summarize_bounds(
-        dist_h,
-        start_cols = "SD_date",
-        end_cols  = "SD_date"
-      )
-    }
-
-    if (!is.null(amend_h)) {
-      df_list[[length(df_list)+1]] <- summarize_bounds(
-        amend_h,
-        start_cols = "SA_date",
-        end_cols  = "SA_date"
-      )
-    }
-
-    if (!is.null(animal_h)) {
-      df_list[[length(df_list)+1]] <- summarize_bounds(
-        animal_h,
-        start_cols = "AD_start_date",
-        end_cols  = "AD_end_date"
-      )
-    }
-
-    df_all <- bind_rows(df_list)
-
-    if (end_sample_date) {
-      df_all <- df_all %>%
-        left_join(
-          mgt %>%
-            select(MGT_combo, MGT_sample_date) %>%
-            group_by(MGT_combo) %>%
-            mutate(MGT_sample_date = as.Date(MGT_sample_date)) %>%
-
-            summarize(MGT_sample_date = max(MGT_sample_date), .groups = "drop"),
-          by = "MGT_combo"
-        )
-      }
-
-    # ---- FULL-YEAR LOGIC (NAPESHM) ----
-    if (rot_calc == "napeshm") {
-
-      rot_bounds <- df_all %>%
-        group_by(MGT_combo) %>%
-        summarize(
-          # Determine calendar-year bounds from actual data
-          yr_min = min(lubridate::year(start), na.rm = TRUE),
-          yr_max = max(lubridate::year(end),   na.rm = TRUE),
-
-          # Full-year defaults
-          rot_start_default = as.Date(paste0(yr_min, "-01-01")),
-          rot_end_default   = as.Date(paste0(yr_max, "-12-31")),
-
-          # Apply overrides if present
-          rot_start = if (!is.null(start_date_override))
-            as.Date(start_date_override)
-          else
-            rot_start_default,
-
-          rot_end   = if (!is.null(end_date_override))
-            as.Date(end_date_override)
-          else if (end_sample_date)
-            as.Date(max(MGT_sample_date))
-          else
-            rot_end_default,
-          .groups = "drop"
-        ) %>%
-        select(MGT_combo, rot_start, rot_end)
-    }
-
-    # ---- DATA-YEAR LOGIC ----
-    if (rot_calc == "farmer") {
-      rot_bounds <- df_all %>%
-        group_by(MGT_combo) %>%
-        summarize(
-          # Determine calendar-year bounds from actual data
-          yr_min = min(lubridate::year(start), na.rm = TRUE),
-          yr_max = max(lubridate::year(end),   na.rm = TRUE),
-
-          # Full-year defaults
-          rot_start_default = min(start, na.rm = TRUE),
-          rot_end_default   = max(end, na.rm = TRUE),
-
-          # Apply overrides if present
-          rot_start = if (!is.null(start_date_override))
-            as.Date(start_date_override)
-          else
-            rot_start_default,
-
-          rot_end   = if (!is.null(end_date_override))
-            as.Date(end_date_override)
-          else if (end_sample_date)
-            as.Date(max(MGT_sample_date))
-          else
-            rot_end_default,
-          .groups = "drop"
-        ) %>%
-        select(MGT_combo, rot_start, rot_end)
-    }
-
-    rot_bounds
+    if (nrow(df) == 0) return(NULL)
+    df
   }
 
-  rot_bounds <- compute_bounds(crop, dist, amend, animal, rot_calc=rot_calc, end_sample_date=end_sample_date)
+  crop_h   <- clean_df(crop,   c("CD_plant_date", "CD_harv_date", "CD_term_date"))
+  dist_h   <- clean_df(dist,   c("SD_date"))
+  amend_h  <- clean_df(amend,  c("SA_date"))
+  animal_h <- clean_df(animal, c("AD_start_date", "AD_end_date"))
+
+  summarize_bounds <- function(df, start_cols, end_cols) {
+    df %>%
+      dplyr::group_by(MGT_combo) %>%
+      dplyr::summarize(
+        start = {
+          s <- pmin(!!!rlang::syms(start_cols), na.rm = TRUE)
+          s[is.infinite(s)] <- NA
+          if (all(is.na(s))) NA else min(s, na.rm = TRUE)
+        },
+        end = {
+          e <- pmax(!!!rlang::syms(end_cols), na.rm = TRUE)
+          e[is.infinite(e)] <- NA
+          if (all(is.na(e))) NA else max(e, na.rm = TRUE)
+        },
+        .groups = "drop"
+      )
+  }
+
+  df_list <- list()
+
+  if (!is.null(crop_h)) {
+    df_list[[length(df_list)+1]] <- summarize_bounds(
+      crop_h,
+      start_cols = c("CD_plant_date", "CD_harv_date", "CD_term_date"),
+      end_cols   = c("CD_harv_date", "CD_term_date")
+    )
+  }
+
+  if (!is.null(dist_h)) {
+    df_list[[length(df_list)+1]] <- summarize_bounds(
+      dist_h,
+      start_cols = "SD_date",
+      end_cols   = "SD_date"
+    )
+  }
+
+  if (!is.null(amend_h)) {
+    df_list[[length(df_list)+1]] <- summarize_bounds(
+      amend_h,
+      start_cols = "SA_date",
+      end_cols   = "SA_date"
+    )
+  }
+
+  if (!is.null(animal_h)) {
+    df_list[[length(df_list)+1]] <- summarize_bounds(
+      animal_h,
+      start_cols = "AD_start_date",
+      end_cols   = "AD_end_date"
+    )
+  }
+
+  df_all <- dplyr::bind_rows(df_list)
+
+  if (end_sample_date) {
+    df_all <- df_all %>%
+      dplyr::left_join(
+        mgt_dates %>%
+          dplyr::group_by(MGT_combo) %>%
+          dplyr::summarize(MGT_sample_date = max(MGT_sample_date), .groups = "drop"),
+        by = "MGT_combo"
+      )
+  }
+
+  # base bounds (before overrides)
+  if (rot_calc == "calendar") {
+    rot_bounds <- df_all %>%
+      dplyr::group_by(MGT_combo) %>%
+      dplyr::summarize(
+        yr_min = min(lubridate::year(start), na.rm = TRUE),
+        yr_max = max(lubridate::year(end),   na.rm = TRUE),
+        rot_start_default = as.Date(paste0(yr_min, "-01-01")),
+        rot_end_default   = as.Date(paste0(yr_max, "-12-31")),
+        rot_start = rot_start_default,
+        rot_end   = if (end_sample_date)
+          as.Date(max(MGT_sample_date))
+        else
+          rot_end_default,
+        .groups = "drop"
+      )
+  } else {
+    rot_bounds <- df_all %>%
+      dplyr::group_by(MGT_combo) %>%
+      dplyr::summarize(
+        rot_start_default = min(start, na.rm = TRUE),
+        rot_end_default   = max(end,   na.rm = TRUE),
+        rot_start = rot_start_default,
+        rot_end   = if (end_sample_date)
+          as.Date(max(MGT_sample_date))
+        else
+          rot_end_default,
+        .groups = "drop"
+      )
+  }
+
+  # ------------------------------------------------------------
+  # Remove rotations whose activity is entirely outside override window
+  # ------------------------------------------------------------
+  if (!is.null(start_date_override) || !is.null(end_date_override)) {
+
+    S <- as.Date(start_date_override)
+    E <- as.Date(end_date_override)
+
+    rot_bounds <- rot_bounds %>%
+      filter(
+        # keep only rotations that overlap the override window
+        rot_end_default   >= S & rot_start_default <= E
+      )
+
+    # drop from all tables
+    valid_combos <- rot_bounds$MGT_combo
+
+    mgt    <- mgt    %>% filter(MGT_combo %in% valid_combos)
+    crop   <- crop   %>% filter(MGT_combo %in% valid_combos)
+    dist   <- dist   %>% filter(MGT_combo %in% valid_combos)
+    amend  <- amend  %>% filter(MGT_combo %in% valid_combos)
+    animal <- animal %>% filter(MGT_combo %in% valid_combos)
+  }
+
+  # apply date overrides to bounds
+  if (!is.null(start_date_override)) {
+    rot_bounds <- rot_bounds %>%
+      dplyr::mutate(rot_start = as.Date(start_date_override))
+  }
+  if (!is.null(end_date_override)) {
+    rot_bounds <- rot_bounds %>%
+      dplyr::mutate(rot_end = as.Date(end_date_override))
+  }
 
   rot_bounds <- rot_bounds %>%
     dplyr::mutate(
@@ -598,33 +506,23 @@ prepare_shmi_inputs <- function(path,
       rot_end_yr   = lubridate::year(as.Date(rot_end))
     )
 
+  # ------------------------------------------------------------
+  # 10. Harmonize crop windows (using rot_bounds)
+  # ------------------------------------------------------------
   crop <- crop %>%
-    mutate(
-      CD_cat = case_when(
-        CD_cat %in% c("cash", "cover", "fallow", "Cover") ~ "Annual",
-        CD_cat %in% c("perennial", "woody perennial") ~ "Perennial",
-        TRUE ~ CD_cat
-      )
-    )
-
-  crop <- crop %>%
-    left_join(rot_bounds, by = "MGT_combo") %>%
-    group_by(MGT_combo, CD_seq_num) %>%
-    mutate(
-      # mixture-aware planting date
+    dplyr::left_join(rot_bounds, by = "MGT_combo") %>%
+    dplyr::group_by(MGT_combo, CD_seq_num) %>%
+    dplyr::mutate(
       plant_min_raw = suppressWarnings(min(CD_plant_date, na.rm = TRUE)),
       plant_min_raw = ifelse(is.infinite(plant_min_raw), NA, plant_min_raw),
+      plant_min     = as.Date(plant_min_raw),
 
-      # convert to Date BEFORE case_when
-      plant_min = as.Date(plant_min_raw),
-
-      crop_start = case_when(
-        !is.na(plant_min) ~ plant_min,     # earliest planting date
-        CD_seq_num == 1   ~ rot_start,     # special winter cover rule
-        TRUE              ~ rot_start      # fallback
+      crop_start = dplyr::case_when(
+        !is.na(plant_min) ~ plant_min,
+        CD_seq_num == 1   ~ rot_start,
+        TRUE              ~ rot_start
       ),
 
-      # collect mixture-wide dates
       harv_min_raw = suppressWarnings(min(CD_harv_date, na.rm = TRUE)),
       term_min_raw = suppressWarnings(min(CD_term_date, na.rm = TRUE)),
       next_min_raw = suppressWarnings(min(next_plant,   na.rm = TRUE)),
@@ -637,48 +535,112 @@ prepare_shmi_inputs <- function(path,
       term_min = as.Date(term_min_raw),
       next_min = as.Date(next_min_raw),
 
-      crop_end = case_when(
-
-        # Annuals: harvest or termination
+      crop_end = dplyr::case_when(
         CD_cat == "Annual" & (!is.na(harv_min) | !is.na(term_min)) ~
           pmin(harv_min, term_min, na.rm = TRUE),
-
-        # Annuals: fallback to next planting
         CD_cat == "Annual" & is.na(harv_min) & is.na(term_min) &
           !is.na(next_min) ~ next_min,
-
-        # Annuals: no harvest, no termination, no next planting → rotation end
         CD_cat == "Annual" & is.na(harv_min) & is.na(term_min) &
           is.na(next_min) ~ rot_end,
 
-        # Perennials: termination defines end
         CD_cat == "Perennial" & !is.na(term_min) ~ term_min,
-
-        # Perennials: fallback to next planting
         CD_cat == "Perennial" & is.na(term_min) & !is.na(next_min) ~ next_min,
-
-        # Perennials: no termination, no next planting → rotation end
         CD_cat == "Perennial" & is.na(term_min) & is.na(next_min) ~ rot_end
       )
     ) %>%
-    ungroup() %>%
-    select(MGT_combo, CD_seq_num, CD_mix, CD_cat, CD_group, CD_name,
-           crop_start, crop_end, rot_start, rot_end, rot_start_yr, rot_end_yr)
-
-  crop <- crop %>%
-    mutate(
+    dplyr::ungroup() %>%
+    dplyr::select(
+      MGT_combo, CD_seq_num, CD_mix, CD_cat, CD_group, CD_name,
+      crop_start, crop_end, rot_start, rot_end, rot_start_yr, rot_end_yr
+    ) %>%
+    dplyr::mutate(
       crop_start = as.Date(crop_start),
       crop_end   = as.Date(crop_end)
     )
 
   # ------------------------------------------------------------
-  # 7. VALIDATION
+  # 11. Apply interval-aware clipping to harmonized windows
   # ------------------------------------------------------------
-  # ---- VALIDATION (AFTER harmonization and bounds) ----
+  # start_date_override
+  if (!is.null(start_date_override)) {
+    S <- as.Date(start_date_override)
+
+    crop <- crop %>%
+      dplyr::filter(crop_end >= S) %>%
+      dplyr::mutate(
+        crop_start = if_else(crop_start < S, S, crop_start)
+      )
+
+    dist <- dist %>%
+      dplyr::filter(SD_date >= S)
+
+    amend <- amend %>%
+      dplyr::filter(SA_date >= S)
+
+    animal <- animal %>%
+      dplyr::filter(AD_end_date >= S) %>%
+      dplyr::mutate(
+        AD_start_date = if_else(AD_start_date < S, S, AD_start_date)
+      )
+  }
+
+  # end_date_override
+  if (!is.null(end_date_override)) {
+    E <- as.Date(end_date_override)
+
+    crop <- crop %>%
+      dplyr::filter(crop_start <= E) %>%
+      dplyr::mutate(
+        crop_end = if_else(crop_end > E, E, crop_end)
+      )
+
+    dist <- dist %>%
+      dplyr::filter(SD_date <= E)
+
+    amend <- amend %>%
+      dplyr::filter(SA_date <= E)
+
+    animal <- animal %>%
+      dplyr::filter(AD_start_date <= E) %>%
+      dplyr::mutate(
+        AD_end_date = if_else(AD_end_date > E, E, AD_end_date)
+      )
+  }
+
+  # end_sample_date
+  if (end_sample_date) {
+
+    crop <- crop %>%
+      dplyr::left_join(mgt_dates, by = "MGT_combo") %>%
+      dplyr::filter(crop_start <= MGT_sample_date) %>%
+      dplyr::mutate(
+        crop_end = if_else(crop_end > MGT_sample_date,
+                           MGT_sample_date, crop_end)
+      )
+
+    dist <- dist %>%
+      dplyr::left_join(mgt_dates, by = "MGT_combo") %>%
+      dplyr::filter(SD_date <= MGT_sample_date)
+
+    amend <- amend %>%
+      dplyr::left_join(mgt_dates, by = "MGT_combo") %>%
+      dplyr::filter(SA_date <= MGT_sample_date)
+
+    animal <- animal %>%
+      dplyr::left_join(mgt_dates, by = "MGT_combo") %>%
+      dplyr::filter(AD_start_date <= MGT_sample_date) %>%
+      dplyr::mutate(
+        AD_end_date = if_else(AD_end_date > MGT_sample_date,
+                              MGT_sample_date, AD_end_date)
+      )
+  }
+
+  # ------------------------------------------------------------
+  # 12. Validation
+  # ------------------------------------------------------------
   ch <- crop
 
-  # 1. Every crop must have an end date
-  missing_end <- ch %>% filter(is.na(crop_end))
+  missing_end <- ch %>% dplyr::filter(is.na(crop_end))
   if (nrow(missing_end) > 0) {
     stop(
       "Error: Some crops still have no end date even after inference:\n",
@@ -686,9 +648,8 @@ prepare_shmi_inputs <- function(path,
       call. = FALSE
     )
   }
-  #
-  # # 2. crop_end must be >= crop_start
-  bad_order <- ch %>% filter(crop_end < crop_start)
+
+  bad_order <- ch %>% dplyr::filter(crop_end < crop_start)
   if (nrow(bad_order) > 0) {
     stop(
       "Error: crop_end is before crop_start:\n",
@@ -697,17 +658,16 @@ prepare_shmi_inputs <- function(path,
     )
   }
 
-
   # ------------------------------------------------------------
-  # Get yield data
+  # 13. Yield / N-rate
   # ------------------------------------------------------------
   if (calc_yield) {
     cli::cli_progress_step("Computing crop yields...")
-
-    yield <- .prepare_yield(path,
-                            exclude = exclude,
-                            start_date_override = start_date_override,
-                            end_date_override = end_date_override
+    yield <- .prepare_yield(
+      path,
+      exclude = exclude,
+      start_date_override = start_date_override,
+      end_date_override   = end_date_override
     )
   } else {
     yield <- NULL
@@ -715,11 +675,12 @@ prepare_shmi_inputs <- function(path,
 
   if (calc_n_rate) {
     cli::cli_progress_step("Computing N rates...")
-
-    n_rate <- .prepare_n_rate(path,
-                              exclude = exclude,
-                              start_date_override = start_date_override,
-                              end_date_override   = end_date_override)
+    n_rate <- .prepare_n_rate(
+      path,
+      exclude = exclude,
+      start_date_override = start_date_override,
+      end_date_override   = end_date_override
+    )
   } else {
     n_rate <- NULL
   }
@@ -728,16 +689,16 @@ prepare_shmi_inputs <- function(path,
   cli::cli_progress_cleanup()
 
   # ------------------------------------------------------------
-  # 12. Return everything in one clean list
+  # 14. Return
   # ------------------------------------------------------------
   list(
-    rot_bounds      = rot_bounds,
-    mgt             = mgt,
-    crop            = crop,
-    dist            = dist,
-    amend           = amend,
-    animal          = animal,
-    yield           = yield,
-    n_rate          = n_rate
+    rot_bounds = rot_bounds,
+    mgt        = mgt,
+    crop       = crop,
+    dist       = dist,
+    amend      = amend,
+    animal     = animal,
+    yield      = yield,
+    n_rate     = n_rate
   )
 }

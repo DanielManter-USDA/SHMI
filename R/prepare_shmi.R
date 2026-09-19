@@ -471,8 +471,8 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   if (!is.null(start_date_override) || !is.null(end_date_override)) {
 
-    S <- as.Date(start_date_override)
-    E <- as.Date(end_date_override)
+    S <- if (!is.null(start_date_override)) as.Date(start_date_override) else as.Date("0001-01-01")
+    E <- if (!is.null(end_date_override))   as.Date(end_date_override)   else as.Date("9999-12-31")
 
     rot_bounds <- rot_bounds %>%
       filter(
@@ -491,14 +491,11 @@ prepare_shmi_inputs <- function(path,
   }
 
   # apply date overrides to bounds
-  if (!is.null(start_date_override)) {
-    rot_bounds <- rot_bounds %>%
-      dplyr::mutate(rot_start = as.Date(start_date_override))
-  }
-  if (!is.null(end_date_override)) {
-    rot_bounds <- rot_bounds %>%
-      dplyr::mutate(rot_end = as.Date(end_date_override))
-  }
+  rot_bounds <- rot_bounds %>%
+    mutate(
+      rot_start = if (!is.null(start_date_override)) as.Date(start_date_override) else rot_start_default,
+      rot_end   = if (!is.null(end_date_override))   as.Date(end_date_override)   else rot_end_default
+    )
 
   rot_bounds <- rot_bounds %>%
     dplyr::mutate(

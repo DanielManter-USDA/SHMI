@@ -884,8 +884,10 @@ prepare_shmi_inputs <- function(path,
   ) %>%
     dplyr::filter(!(MGT_combo %in% exclude))
 
-  if (!"CD_harv_date" %in% names(crop)) crop$CD_harv_date <- NA
-  if (!"CD_cat" %in% names(crop))       crop$CD_cat       <- NA_character_
+  if (!"CD_harv_date" %in% names(crop))   crop$CD_harv_date   <- NA
+  if (!"CD_yield" %in% names(crop))       crop$CD_yield       <- NA
+  if (!"CD_yield_units" %in% names(crop)) crop$CD_yield_units <- NA_character_
+  if (!"CD_cat" %in% names(crop))         crop$CD_cat         <- NA_character_
 
   crop <- crop %>%
     dplyr::mutate(
@@ -933,6 +935,10 @@ prepare_shmi_inputs <- function(path,
       dplyr::filter(!(MGT_combo %in% exclude))
   }
 
+  if (!"SA_date" %in% names(amend))  amend$SA_date  <- NA
+  if (!"SA_N" %in% names(amend))     amend$SA_N     <- NA
+  if (!"SA_units" %in% names(amend)) amend$SA_units <- NA_character_
+
   animal <- .safe_read(
     path,
     sheet = "Animal_Diversity",
@@ -969,6 +975,8 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   # 2. Identify rotation-wide min/max years per MGT_combo
   # ------------------------------------------------------------
+  cli::cli_progress_step("Calculating rotation lengths...")
+
   all_dates <- bind_rows(
     crop %>% select(MGT_combo, date = CD_plant_date),
     crop %>% select(MGT_combo, date = CD_harv_date),
@@ -996,6 +1004,8 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   # 3. Infer crop_start and crop_end
   # ------------------------------------------------------------
+  cli::cli_progress_step("Calculating crop start/end dates...")
+
   safe_min_date <- function(x) {
     if (all(is.na(x))) return(NA_Date_)
     as.Date(min(x, na.rm = TRUE))
@@ -1010,9 +1020,11 @@ prepare_shmi_inputs <- function(path,
   crop <- crop %>%
     group_by(MGT_combo, CD_seq_num, CD_cat, CD_name) %>%
     summarize(
-      CD_plant_date = safe_min_date(CD_plant_date),
-      CD_harv_date  = safe_max_date(CD_harv_date),
-      CD_term_date  = safe_max_date(CD_term_date),
+      CD_plant_date  = safe_min_date(CD_plant_date),
+      CD_harv_date   = safe_max_date(CD_harv_date),
+      CD_term_date   = safe_max_date(CD_term_date),
+      CD_yield       = mean(CD_yield, na.rm = TRUE),
+      CD_yield_units = first(CD_yield_units),
       .groups = "drop"
     )
 
@@ -1097,11 +1109,13 @@ prepare_shmi_inputs <- function(path,
       crop_end = if_else(crop_end < crop_start, crop_start, crop_end)
     ) %>%
     ungroup() %>%
-    select(MGT_combo, CD_seq_num, CD_cat, CD_name, crop_start, crop_end, planted_into_prev)
+    select(MGT_combo, CD_seq_num, CD_cat, CD_name, crop_start, crop_end, CD_yield, CD_yield_units)
 
   # ------------------------------------------------------------
   # 4. Apply date overrides
   # ------------------------------------------------------------
+  cli::cli_progress_step("Applying overrides...")
+
   if (!is.null(start_date_override) || !is.null(end_date_override)) {
 
     start_override <- if (!is.null(start_date_override)) as.Date(start_date_override) else as.Date("0001-01-01")
@@ -1192,24 +1206,14 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   if (calc_yield) {
     cli::cli_progress_step("Computing crop yields...")
-    yield <- .prepare_yield(
-      path,
-      exclude = exclude,
-      start_date_override = start_date_override,
-      end_date_override   = end_date_override
-    )
+    yield <- .prepare_yield(crop_windows)
   } else {
     yield <- NULL
   }
 
   if (calc_n_rate) {
     cli::cli_progress_step("Computing N rates...")
-    n_rate <- .prepare_n_rate(
-      path,
-      exclude = exclude,
-      start_date_override = start_date_override,
-      end_date_override   = end_date_override
-    )
+    n_rate <- .prepare_n_rate(amend)
   } else {
     n_rate <- NULL
   }
@@ -1223,7 +1227,7 @@ prepare_shmi_inputs <- function(path,
   inputs <- list(
     rot_bounds = rot_bounds,
     mgt        = mgt,
-    crop       = crop_windows,
+    crop       = crop_windows %>% select(-CD_yield, -CD_yield_units),
     dist       = dist,
     amend      = amend,
     animal     = animal,

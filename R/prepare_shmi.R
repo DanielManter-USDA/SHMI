@@ -153,6 +153,8 @@ prepare_shmi_inputs <- function(path,
                                 calc_yield  = FALSE,
                                 calc_n_rate = FALSE) {
 
+  cat("\n\n >>> ENTERED FUNCTION <<< \n\n")
+
   rot_calc <- match.arg(rot_calc)
 
   # ------------------------------------------------------------
@@ -321,19 +323,22 @@ prepare_shmi_inputs <- function(path,
     as.Date(min(x2))
   }
 
+  cat("\n\nThis should print\n\n")
+
   seq_dates <- crop %>%
-    dplyr::group_by(MGT_combo, CD_seq_num) %>%
-    dplyr::summarize(
-      seq_plant = safe_min_date(CD_plant_date),
-      .groups   = "drop"
-    ) %>%
-    dplyr::arrange(MGT_combo, CD_seq_num) %>%
-    dplyr::group_by(MGT_combo) %>%
-    dplyr::mutate(next_seq_plant = dplyr::lead(seq_plant)) %>%
-    dplyr::ungroup()
+    distinct(MGT_combo, CD_seq_num, .keep_all = TRUE) %>%
+    group_by(MGT_combo, CD_seq_num) %>%
+    summarize(seq_plant = safe_min_date(CD_plant_date), .groups = "drop") %>%
+    arrange(MGT_combo, CD_seq_num) %>%
+    group_by(MGT_combo) %>%
+    mutate(next_seq_plant = lead(seq_plant)) %>%
+    ungroup()
+
+  cat("\n\n ---- print ---- \n\n")
+  print(seq_dates)
 
   crop <- crop %>%
-    dplyr::left_join(seq_dates, by = c("MGT_combo", "CD_seq_num")) %>%
+    dplyr::left_join(seq_dates, by = c("MGT_combo", "CD_seq_num", "CD_cat", "CD_name")) %>%
     dplyr::mutate(next_plant = next_seq_plant)
 
   # ------------------------------------------------------------
@@ -508,7 +513,7 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   crop <- crop %>%
     dplyr::left_join(rot_bounds, by = "MGT_combo") %>%
-    dplyr::group_by(MGT_combo, CD_seq_num) %>%
+    dplyr::group_by(MGT_combo, CD_seq_num, CD_cat, CD_name) %>%
     dplyr::mutate(
       plant_min_raw = suppressWarnings(min(CD_plant_date, na.rm = TRUE)),
       plant_min_raw = ifelse(is.infinite(plant_min_raw), NA, plant_min_raw),
@@ -520,29 +525,29 @@ prepare_shmi_inputs <- function(path,
         TRUE              ~ rot_start
       ),
 
-      harv_min_raw = suppressWarnings(min(CD_harv_date, na.rm = TRUE)),
-      term_min_raw = suppressWarnings(min(CD_term_date, na.rm = TRUE)),
+      harv_max_raw = suppressWarnings(max(if_else(CD_cat == "Annual",   CD_harv_date, as.Date(NA)), na.rm = TRUE)),
+      term_max_raw = suppressWarnings(max(if_else(CD_cat == "Annual",   CD_term_date, as.Date(NA)), na.rm = TRUE)),
+      per_term_raw = suppressWarnings(max(if_else(CD_cat == "Perennial", CD_term_date, as.Date(NA)), na.rm = TRUE)),
       next_min_raw = suppressWarnings(min(next_plant,   na.rm = TRUE)),
 
-      harv_min_raw = ifelse(is.infinite(harv_min_raw), NA, harv_min_raw),
-      term_min_raw = ifelse(is.infinite(term_min_raw), NA, term_min_raw),
+      harv_max_raw = ifelse(is.infinite(harv_max_raw), NA, harv_max_raw),
+      term_max_raw = ifelse(is.infinite(term_max_raw), NA, term_max_raw),
+      per_term_raw = ifelse(is.infinite(per_term_raw), NA, per_term_raw),
       next_min_raw = ifelse(is.infinite(next_min_raw), NA, next_min_raw),
 
-      harv_min = as.Date(harv_min_raw),
-      term_min = as.Date(term_min_raw),
+      harv_max = as.Date(harv_max_raw),
+      term_max = as.Date(term_max_raw),
+      per_term = as.Date(per_term_raw),
       next_min = as.Date(next_min_raw),
 
       crop_end = dplyr::case_when(
-        CD_cat == "Annual" & (!is.na(harv_min) | !is.na(term_min)) ~
-          coalesce(term_min, harv_min),
-        CD_cat == "Annual" & is.na(harv_min) & is.na(term_min) &
-          !is.na(next_min) ~ next_min,
-        CD_cat == "Annual" & is.na(harv_min) & is.na(term_min) &
-          is.na(next_min) ~ rot_end,
+        CD_cat == "Annual"   & (!is.na(term_max) | !is.na(harv_max)) ~ coalesce(term_max, harv_max),
+        CD_cat == "Annual"   & is.na(term_max) & is.na(harv_max) & !is.na(next_min) ~ next_min,
+        CD_cat == "Annual"   & is.na(term_max) & is.na(harv_max) &  is.na(next_min) ~ rot_end,
 
-        CD_cat == "Perennial" & !is.na(term_min) ~ term_min,
-        CD_cat == "Perennial" & is.na(term_min) & !is.na(next_min) ~ next_min,
-        CD_cat == "Perennial" & is.na(term_min) & is.na(next_min) ~ rot_end
+        CD_cat == "Perennial" & !is.na(per_term) ~ per_term,
+        CD_cat == "Perennial" &  is.na(per_term) & !is.na(next_min) ~ next_min,
+        CD_cat == "Perennial" &  is.na(per_term) &  is.na(next_min) ~ rot_end
       )
     ) %>%
     dplyr::ungroup() %>%

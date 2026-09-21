@@ -6,12 +6,22 @@
 \usage{
 prepare_shmi_inputs(
   path,
-  exclude = NULL,
   verbose = TRUE,
-  rot_calc = c("napeshm", "farmer"),
+  exclude = NULL,
   start_date_override = NULL,
   end_date_override = NULL,
-  end_sample_date = FALSE,
+  end_at_sample_date = FALSE,
+  calc_yield = FALSE,
+  calc_n_rate = FALSE
+)
+
+prepare_shmi_inputs(
+  path,
+  verbose = TRUE,
+  exclude = NULL,
+  start_date_override = NULL,
+  end_date_override = NULL,
+  end_at_sample_date = FALSE,
   calc_yield = FALSE,
   calc_n_rate = FALSE
 )
@@ -19,10 +29,10 @@ prepare_shmi_inputs(
 \arguments{
 \item{path}{Path to the SHMI Excel workbook.}
 
+\item{verbose}{Logical; if \code{TRUE}, prints progress messages.}
+
 \item{exclude}{Optional character vector of \code{MGT_combo} identifiers to
 exclude from processing.}
-
-\item{verbose}{Logical; if \code{TRUE}, prints progress messages.}
 
 \item{start_date_override}{Optional \code{Date} or date‑coercible value.}
 
@@ -44,8 +54,25 @@ A named list containing:
   \item{\code{yield}}{Optional crop‑event‑level yield table (kg/ha).}
   \item{\code{n_rate}}{Optional year‑level nitrogen‑rate table (kg N/ha).}
 }
+
+A named list containing:
+\describe{
+  \item{\code{rot_bounds}}{Rotation start/end dates and rotation years.}
+  \item{\code{crop}}{Mixture‑aware crop windows (one row per species).}
+  \item{\code{dist}}{Disturbance event table (EPA/STIR‑ready).}
+  \item{\code{amend}}{Amendment event table.}
+  \item{\code{animal}}{Animal event table.}
+  \item{\code{mgt}}{Management‑unit metadata.}
+  \item{\code{yield}}{Optional crop‑event‑level yield table (kg/ha).}
+  \item{\code{n_rate}}{Optional year‑level nitrogen‑rate table (kg N/ha).}
+}
 }
 \description{
+Reads, validates, harmonizes, and expands all input sheets required to
+compute the Soil Health Management Index (SHMI). This function is the
+official entry point for SHMI data preparation and produces a standardized
+list of rotation‑scale objects used directly by \code{build_shmi()}.
+
 Reads, validates, harmonizes, and expands all input sheets required to
 compute the Soil Health Management Index (SHMI). This function is the
 official entry point for SHMI data preparation and produces a standardized
@@ -148,8 +175,113 @@ The function automatically runs \code{validate_excel_input()} to check:
 }
 
 If validation fails, execution stops with clear, actionable error messages.
+
+## Overview
+
+The function performs:
+\itemize{
+  \item robust Excel ingestion with sheet‑level validation
+  \item management‑unit filtering
+  \item biological validation of crop chronology (annual/perennial rules)
+  \item mixture‑aware harmonization of crop windows
+  \item construction of rotation bounds (start/end dates and rotation years)
+  \item assembly of disturbance, amendment, and animal event tables
+  \item optional extraction of yield and nitrogen‑rate data
+  \item override‑aware clipping of all event types
+}
+
+The result is a clean, rotation‑scale dataset suitable for SHMI pillar
+computation: cover, diversity, inverse disturbance, and organic inputs.
+
+
+## Required workbook structure
+
+The Excel file must contain the standard SHMI sheets:
+
+\itemize{
+  \item \code{Mgt_Unit}
+  \item \code{Crop_Diversity}
+  \item \code{Soil_Disturbance}
+  \item \code{Amendment_Diversity}
+  \item \code{Animal_Diversity}
+}
+
+Sheets may be empty; empty sheets are safely ignored.
+
+
+## Date overrides
+
+If \code{start_date_override} or \code{end_date_override} are supplied,
+all event types (crop, disturbance, amendment, animal, yield, N‑rate)
+occurring outside the override window are removed, and rotation bounds are
+clipped accordingly.
+
+
+## Crop harmonization
+
+Crop windows are validated for biological realism:
+
+\itemize{
+  \item annual crops must terminate within the same year
+  \item perennials may span years but must follow valid chronology
+  \item mixtures are collapsed to event‑level windows (min start, max end)
+}
+
+The returned \code{crop} table contains one row per species with harmonized
+start/end dates suitable for cover and diversity scoring.
+
+
+## Disturbance, amendments, and animals
+
+Disturbance events are returned in EPA/STIR‑ready format:
+
+\itemize{
+  \item \code{SD_date}
+  \item \code{SD_mixeff}
+  \item \code{SD_depth}
+}
+
+Amendment and animal events are clipped by overrides and returned in
+rotation‑scale format for \code{compute_orginput()}.
+
+
+## Optional yield and nitrogen‑rate extraction
+
+If enabled:
+
+\itemize{
+  \item Yield is extracted per crop event, unit‑standardized to kg/ha,
+        and clipped by overrides.
+  \item Nitrogen rate is extracted from amendment events, converted to
+        kg N/ha, summarized per \code{MGT_combo × year}, and clipped by
+        overrides.
+}
+
+Missing values are retained as \code{NA}.
+
+
+## Front‑end validation
+
+The function automatically runs \code{validate_excel_input()} to check:
+
+\itemize{
+  \item required sheets and columns
+  \item valid date formats
+  \item consistent \code{MGT_combo} values
+  \item malformed entries
+}
+
+If validation fails, execution stops with clear, actionable error messages.
 }
 \section{Error Handling}{
+
+The function stops with informative errors if:
+\itemize{
+  \item required sheets or columns are missing
+  \item crop chronology is biologically impossible
+  \item date overrides produce empty rotations
+}
+
 
 The function stops with informative errors if:
 \itemize{

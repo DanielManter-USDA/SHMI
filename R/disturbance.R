@@ -130,6 +130,22 @@ compute_disturbance <- function(dist,
   dist_meth <- match.arg(dist_meth)
   ti_rep    <- match.arg(ti_rep)
 
+  # ------------------------------------------------------------
+  # REQUIRED CHECK: STIR needs SD_depth
+  # ------------------------------------------------------------
+  if (dist_meth == "EPA") {
+
+    # Column missing entirely
+    if (!"SD_depth" %in% names(dist) || all(is.na(dist$SD_depth))) {
+      stop("dist_meth = 'EPA' requires SD_depth, but it is missing or blank.")
+    }
+
+    # Column present but all values blank/NA
+    if (!is.numeric(dist$SD_depth)) {
+      stop("SD_depth must be numeric for EPA disturbance calculations.")
+    }
+  }
+
   # -------------------------------------------------------------------------
   # 0. All MGT combos
   # -------------------------------------------------------------------------

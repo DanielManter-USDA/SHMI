@@ -131,6 +131,62 @@ compute_cover <- function(
       .groups = "drop"
     )
 
+  merge_intervals <- function(df) {
+
+    # Ensure chronological order
+    df <- df %>% arrange(crop_start, crop_end)
+
+    # If only one window, nothing to merge
+    if (nrow(df) == 1) {
+      return(df)
+    }
+
+    out <- list()
+
+    cur_start  <- df$crop_start[1]
+    cur_end    <- df$crop_end[1]
+    cur_fallow <- df$is_fallow[1]
+    cur_seq    <- df$CD_seq_num[1]
+
+    for (i in 2:nrow(df)) {
+      s <- df$crop_start[i]
+      e <- df$crop_end[i]
+      f <- df$is_fallow[i]
+      seq <- df$CD_seq_num[i]
+
+      if (s <= cur_end) {
+        cur_end    <- max(cur_end, e)
+        cur_fallow <- cur_fallow & f
+      } else {
+        out[[length(out) + 1]] <- tibble(
+          CD_seq_num = cur_seq,
+          crop_start = cur_start,
+          crop_end   = cur_end,
+          is_fallow  = cur_fallow
+        )
+
+        cur_start  <- s
+        cur_end    <- e
+        cur_fallow <- f
+        cur_seq    <- seq
+      }
+    }
+
+    out[[length(out) + 1]] <- tibble(
+      CD_seq_num = cur_seq,
+      crop_start = cur_start,
+      crop_end   = cur_end,
+      is_fallow  = cur_fallow
+    )
+
+    bind_rows(out)
+  }
+
+  cover_windows <- cover_windows %>%
+    group_by(MGT_combo) %>%
+    group_modify(~ merge_intervals(.x)) %>%
+    ungroup()
+
   # -------------------------------------------------------------------------
   # 2. Add synthetic fallow windows for sites with no crop rows
   # -------------------------------------------------------------------------

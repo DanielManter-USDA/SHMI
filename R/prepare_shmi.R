@@ -149,6 +149,7 @@ prepare_shmi_inputs <- function(path,
                                 start_date_override = NULL,
                                 end_date_override   = NULL,
                                 end_at_sample_date = FALSE,
+                                max_rot_range = 200,
                                 calc_yield  = FALSE,
                                 calc_n_rate = FALSE) {
 
@@ -331,6 +332,27 @@ prepare_shmi_inputs <- function(path,
       rot_end   = as.Date(paste0(rot_end_yr,   "-12-31"))
     )
 
+  rot_bounds <- rot_bounds %>%
+    rowwise() %>%
+    mutate(
+      year_range = rot_end_yr - rot_start_yr,
+      is_outlier = year_range > max_rot_range
+    ) %>%
+    ungroup()
+
+  if (any(rot_bounds$is_outlier)) {
+    bad <- rot_bounds %>% filter(is_outlier)
+    cli::cli_abort(c(
+      "Detected implausible rotation length.",
+      "x" = paste0(
+        "MGT_combo ", bad$MGT_combo,
+        " spans ", bad$rot_start_yr, "–", bad$rot_end_yr,
+        " (", bad$year_range, " years), exceeding max_rot_range = ", max_rot_range, "."
+      ),
+      "i" = "Check for typos in crop, disturbance, amendment, or animal dates."
+    ))
+  }
+
   # ------------------------------------------------------------
   # 4. Infer next planting (for crop_end logic)
   # ------------------------------------------------------------
@@ -360,9 +382,13 @@ prepare_shmi_inputs <- function(path,
       # annual vs perennial end
       raw_crop_end = case_when(
         CD_cat %in% c("annual", "Annual", "cash", "Cash") ~
-          coalesce(CD_term_date, CD_harv_date), # handles harvest in either column
+          coalesce(CD_term_date, CD_harv_date),
+
+        CD_cat %in% c("perennial", "Perennial", "woody perennial") ~
+          coalesce(CD_term_date, CD_harv_date, CD_plant_date),
+
         TRUE ~
-          CD_term_date  # only ends at termination for perennials
+          coalesce(CD_term_date, CD_harv_date, CD_plant_date)
       )
     )
 
@@ -375,7 +401,7 @@ prepare_shmi_inputs <- function(path,
       crop_start_eff = coalesce(CD_plant_date, raw_crop_end),
 
       # Biological overlap: crop starts before previous crop ends
-      overlaps_prev = crop_start_eff < lag(raw_crop_end),
+      overlaps_prev = crop_start_eff <= lag(raw_crop_end),
 
       # A new sequence begins only when there is NO overlap
       seq_break = case_when(
@@ -401,6 +427,15 @@ prepare_shmi_inputs <- function(path,
     mutate(next_seq_start = lead(seq_plant)) %>%
     ungroup()
 
+  crop <- crop %>%
+    left_join(seq_dates, by = c("MGT_combo", "CD_seq_num")) %>%
+    mutate(
+      crop_end = case_when(
+        CD_cat == "Perennial" ~ next_seq_start,
+        TRUE ~ raw_crop_end
+      )
+    )
+
   seq_info <- crop %>%
     group_by(MGT_combo, CD_seq_num) %>%
     summarize(
@@ -417,14 +452,11 @@ prepare_shmi_inputs <- function(path,
     ) %>%
     ungroup()
 
-  crop <- crop %>%
-    left_join(seq_dates, by = c("MGT_combo", "CD_seq_num")) %>%
-    left_join(seq_info,  by = c("MGT_combo", "CD_seq_num"))
-
   # ------------------------------------------------------------
   # 5. Category harmonization (Annual / Perennial)
   # ------------------------------------------------------------
   crop <- crop %>%
+    left_join(seq_info,  by = c("MGT_combo", "CD_seq_num")) %>%
     dplyr::mutate(
       CD_cat = dplyr::case_when(
         CD_cat %in% c("annual", "cash", "cover", "fallow", "Cash", "Cover", "Fallow") ~ "Annual",

@@ -523,24 +523,6 @@ prepare_shmi_inputs <- function(path,
 
   if (!is.null(start_date_override) || !is.null(end_date_override)) {
 
-    # Use existing rot_bounds values unless overridden
-    rot_bounds <- rot_bounds %>%
-      mutate(
-        rot_start = if (!is.null(start_date_override))
-          as.Date(start_date_override)
-        else
-          rot_start,
-
-        rot_end   = if (!is.null(end_date_override))
-          as.Date(end_date_override)
-        else
-          rot_end,
-
-        rot_start_yr = lubridate::year(rot_start),
-        rot_end_yr   = lubridate::year(rot_end)
-      )
-
-    # Now apply the same logic to crop_windows, dist, amend, animal
     if (!is.null(start_date_override)) {
       crop_windows <- crop_windows %>%
         filter(crop_end >= as.Date(start_date_override)) %>%
@@ -605,15 +587,31 @@ prepare_shmi_inputs <- function(path,
       mutate(
         AD_end_date = pmin(AD_end_date, MGT_sample_date)
       )
-
-    # Rotation bounds
-    rot_bounds <- rot_bounds %>%
-      left_join(mgt_dates, by = "MGT_combo") %>%
-      mutate(
-        rot_end = MGT_sample_date,
-        rot_end_yr = lubridate::year(rot_end)
-      )
   }
+
+  cli::cli_progress_step("Re-calculating rotation lengths...")
+
+  all_dates <- bind_rows(
+    crop_windows %>% select(MGT_combo, date = crop_start),
+    crop_windows %>% select(MGT_combo, date = crop_end),
+    dist %>% select(MGT_combo, date = SD_date),
+    amend %>% select(MGT_combo, date = SA_date),
+    animal %>% select(MGT_combo, date = AD_start_date),
+    animal %>% select(MGT_combo, date = AD_end_date)
+  ) %>%
+    filter(!is.na(date))
+
+  rot_bounds <- all_dates %>%
+    group_by(MGT_combo) %>%
+    summarize(
+      rot_start = min(date),
+      rot_end   = max(date),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      rot_start_yr = lubridate::year(rot_start),
+      rot_end_yr   = lubridate::year(rot_end)
+    )
 
   # ------------------------------------------------------------
   # 6. Yield / N-rate

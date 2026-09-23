@@ -613,6 +613,10 @@ prepare_shmi_inputs <- function(path,
       rot_end_yr   = lubridate::year(rot_end)
     )
 
+  mgt_combos <- unique(rot_bounds$MGT_combo)
+  mgt <- mgt %>%
+    filter(MGT_combo %in% mgt_combos)
+
   # ------------------------------------------------------------
   # 6. Yield / N-rate
   # ------------------------------------------------------------

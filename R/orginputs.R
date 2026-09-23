@@ -60,8 +60,8 @@
 #' @param rot_bounds Rotation-year boundaries for each management unit.
 #' @param amend Amendment event table.
 #' @param animal Animal event table.
-#' @param w_amend Weight for amendment presence (default 0.5).
-#' @param w_animal Weight for animal presence (default 0.5).
+#' @param w_amend Weight for amendment presence (default 0.6615).
+#' @param w_animal Weight for animal presence (default 0.3385).
 #'
 #' @return A data frame with:
 #' \itemize{
@@ -73,8 +73,8 @@
 compute_orginput <- function(rot_bounds,
                              amend,
                              animal,
-                             w_amend = 0.5,
-                             w_animal = 0.5) {
+                             w_amend = 0.6615,
+                             w_animal = 0.3385) {
 
   # 1. Build rotation-year grid
   rot_grid <- rot_bounds %>%

@@ -111,7 +111,7 @@
 #' @param dist Disturbance-event table (EPA or STIR inputs).
 #' @param rot_bounds Rotation-year boundaries for each management unit.
 #' @param dist_meth Character string: `"EPA"` or `"STIR"`.
-#' @param max_stir Maximum annual STIR value used for normalization (default 400).
+#' @param max_stir Maximum annual STIR value used for normalization (default 342).
 #' @param ti_rep Class representative to use: `"max"` (default), `"min"`, or `"mid"`.
 #'
 #' @return A data frame with:
@@ -124,7 +124,7 @@
 compute_disturbance <- function(dist,
                                 rot_bounds,
                                 dist_meth = c("EPA", "STIR"),
-                                max_stir = 400,
+                                max_stir = 342,
                                 ti_rep = c("max", "min", "mid")) {
 
   dist_meth <- match.arg(dist_meth)

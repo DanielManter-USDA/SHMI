@@ -1,8 +1,6 @@
 # Download a blank SHMI Excel template
 
-Saves the official SHMI Excel template to a user-specified file path.
-The template contains the required sheets and column names needed to
-enter management data for SHMI computation.
+Saves the official, blank SHMI Excel template to a file.
 
 ## Usage
 
@@ -14,45 +12,42 @@ download_shmi_template(path = "SHMI_template.xlsx", overwrite = TRUE)
 
 - path:
 
-  Full file path where the template should be saved. Defaults to
-  \`"SHMI_template.xlsx"\` in the current working directory.
+  File path for the template. Defaults to `"SHMI_template.xlsx"` in the
+  working directory.
 
 - overwrite:
 
-  Logical. Overwrite the file if it already exists?
+  Logical. Overwrite an existing file?
 
 ## Value
 
-The path to the saved file (invisibly).
+The path of the saved file, invisibly.
 
 ## Details
 
-This function copies the internal SHMI template (stored in
-\`inst/extdata/\`) to a local file path. The template is intentionally
-blank and must be filled in by the user before running
-\[\`prepare_shmi_inputs()\`\]. It includes the required structure for
-crop diversity, disturbance, organic inputs, and management units.
+The template contains the sheets and columns that
+[`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
+expects: management units, crop diversity, soil disturbance, soil
+amendments, and animal diversity. Fill it in, then pass the file to
+[`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md).
 
 ## See also
 
-\[download_shmi_example()\], \[get_shmi_example()\],
-\[prepare_shmi_inputs()\], \[build_shmi()\]
+[`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md),
+[`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
 
 Other SHMI helper functions:
-[`download_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/download_shmi_example.md)
+[`download_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/download_shmi_example.md),
+[`get_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_example.md)
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-# Save template to working directory
 download_shmi_template("SHMI_template.xlsx")
 
-# Save to a specific folder
-download_shmi_template(path = "~/Desktop/SHMI_template.xlsx")
-
-# After filling in the Excel file:
-inputs <- prepare_shmi_inputs("my_filled_template.xlsx")
+# After filling in the template:
+inputs <- prepare_shmi_inputs("SHMI_template.xlsx")
 result <- build_shmi(inputs)
 } # }
 ```

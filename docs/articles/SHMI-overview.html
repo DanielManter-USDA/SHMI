@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,255 +86,454 @@
 
     
     
-<div class="section level3">
-<h3 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
-</h3>
-<p>The Soil Health Management Index (SHMI) provides a quantitative,
-rotation‑scale assessment of soil‑health management practices. It
-integrates four biologically grounded sub‑indices:</p>
-<ul>
-<li>
-<strong>Cover/Roots</strong> — seasonal plant presence<br>
-</li>
-<li>
-<strong>Crop Diversity</strong> — rotation‑scale crop diversity
-(Hill numbers)<br>
-</li>
-<li>
-<strong>Inverse Disturbance</strong> — mechanistic mixing‑efficiency
-× depth metric<br>
-</li>
-<li>
-<strong>Organic Inputs</strong> — organic amendments and animal
-presence</li>
-</ul>
-<p>This vignette walks through the <strong>standard SHMI
-workflow</strong> using the official Excel template.</p>
-<hr>
-</div>
 <div class="section level2">
-<h2 id="preparing-inputs">
-<strong>1. Preparing Inputs</strong><a class="anchor" aria-label="anchor" href="#preparing-inputs"></a>
+<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>SHMI begins with a standardized Excel workbook containing the
-following sheets:</p>
+<p>The Soil Health Management Index (SHMI) turns a record of field
+management into a single 0-100 score. It combines four sub-indices, each
+also scored 0-100:</p>
 <ul>
 <li>
-<code>Mgt_Unit</code><br>
-</li>
+<strong>Cover</strong>: the season-weighted share of days with
+living plants.</li>
 <li>
-<code>Crop_Diversity</code><br>
-</li>
+<strong>Diversity</strong>: how many crop species were grown, and
+how evenly, over the rotation.</li>
 <li>
-<code>Soil_Disturbance</code><br>
-</li>
+<strong>Inverse disturbance (InvDist)</strong>: how little the soil
+was tilled; 100 means no disturbance.</li>
 <li>
-<code>Amendment_Diversity</code><br>
-</li>
-<li><code>Animal_Diversity</code></li>
+<strong>Organic inputs (OrgInput)</strong>: how often organic
+amendments were applied and animals were present.</li>
 </ul>
-<p>Download the blank template:</p>
+<p>This vignette walks through the standard workflow: fill in the Excel
+workbook, prepare the inputs, compute SHMI, and review the results.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://danielmanter-usda.github.io/SHMI/">SHMI</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Save the template to a specific file path</span></span>
-<span><span class="va">template_file</span> <span class="op">&lt;-</span> <span class="st">"SHMI_template.xlsx"</span></span>
-<span><span class="fu"><a href="../reference/download_shmi_template.html">download_shmi_template</a></span><span class="op">(</span>path <span class="op">=</span> <span class="va">template_file</span><span class="op">)</span></span></code></pre></div>
-<p>Then: 1. Open <strong>SHMI_template.xlsx</strong> in Excel<br>
-2. Enter your management data into each sheet<br>
-3. Save the completed file (e.g.,
-<code>"my_SHMI_inputs.xlsx"</code>)</p>
-<p>Prepare the inputs:</p>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://danielmanter-usda.github.io/SHMI/">SHMI</a></span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="get-a-workbook">1. Get a workbook<a class="anchor" aria-label="anchor" href="#get-a-workbook"></a>
+</h2>
+<p>SHMI reads a standard Excel workbook. Start from the blank template,
+or from a completed example to see how entries should look:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="st">"my_SHMI_inputs.xlsx"</span><span class="op">)</span></span></code></pre></div>
-<p><code><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code>:</p>
-<ul>
-<li>validates required sheets and columns<br>
-</li>
-<li>harmonizes crop windows<br>
-</li>
-<li>constructs rotation bounds<br>
-</li>
-<li>builds daily grids<br>
-</li>
-<li>computes daily disturbance<br>
-</li>
-<li>assembles amendment and animal events</li>
-</ul>
-<p>The returned object is a named list containing:</p>
-<ul>
-<li>
-<code>rot_bounds</code><br>
-</li>
-<li>
-<code>crop_harmonized</code><br>
-</li>
-<li>
-<code>daily</code><br>
-</li>
-<li>
-<code>daily_dist</code><br>
-</li>
-<li>
-<code>amend</code><br>
-</li>
-<li>
-<code>animal</code><br>
-</li>
-<li>metadata</li>
-</ul>
-<p>These feed directly into <code><a href="../reference/build_shmi.html">build_shmi()</a></code>.</p>
-<hr>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/download_shmi_template.html">download_shmi_template</a></span><span class="op">(</span><span class="st">"SHMI_template.xlsx"</span><span class="op">)</span>  <span class="co"># blank</span></span>
+<span><span class="fu"><a href="../reference/download_shmi_example.html">download_shmi_example</a></span><span class="op">(</span><span class="op">)</span>                       <span class="co"># completed example</span></span></code></pre></div>
+<p>The completed example is also installed with the package, and
+<code><a href="../reference/get_shmi_example.html">get_shmi_example()</a></code> returns its path. The rest of this
+vignette uses it: eight management units from a long-term experiment
+(2020-2024), with continuous corn and a rotation under several nitrogen
+and manure treatments.</p>
+<p>The workbook has one sheet per kind of record, each with column names
+on the fourth row:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Sheet</th>
+<th>Records</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>Mgt_Unit</code></td>
+<td>Management units (<code>MGT_combo</code>), with study, farm, field,
+and treatment</td>
+</tr>
+<tr class="even">
+<td><code>Crop_Diversity</code></td>
+<td>Crops: name, category, and plant, harvest, and termination
+dates</td>
+</tr>
+<tr class="odd">
+<td><code>Soil_Disturbance</code></td>
+<td>Tillage and other soil-disturbing passes</td>
+</tr>
+<tr class="even">
+<td><code>Soil_Amendments</code></td>
+<td>Amendments, including organic inputs</td>
+</tr>
+<tr class="odd">
+<td><code>Animal_Diversity</code></td>
+<td>Periods with grazing or other animals</td>
+</tr>
+</tbody>
+</table>
+<p>The disturbance, amendment, and animal sheets may be left empty. Each
+crop is entered by name with its dates; mixtures are entered as one row
+per species. Sequence numbers (<code>CD_seq_num</code>) and mixture
+flags (<code>CD_mix</code>) are not needed.</p>
 </div>
 <div class="section level2">
-<h2 id="computing-shmi">
-<strong>2. Computing SHMI</strong><a class="anchor" aria-label="anchor" href="#computing-shmi"></a>
+<h2 id="prepare-the-inputs">2. Prepare the inputs<a class="anchor" aria-label="anchor" href="#prepare-the-inputs"></a>
 </h2>
-<p>Once inputs are prepared:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">)</span></span>
-<span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span></span></code></pre></div>
-<p>The output includes:</p>
-<ul>
+<code class="sourceCode R"><span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="st">"my_SHMI_inputs.xlsx"</span><span class="op">)</span>   <span class="co"># your own workbook</span></span></code></pre></div>
+<p>With the installed example:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="fu"><a href="../reference/get_shmi_example.html">get_shmi_example</a></span><span class="op">(</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "rot_bounds"  "mgt"         "crop"        "dist"        "amend"      </span></span>
+<span><span class="co">#&gt; [6] "animal"      "yield"       "n_rate"      "assumptions"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">crop</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 8</span></span></span>
+<span><span class="co">#&gt;   MGT_combo        episode_id CD_cat CD_name crop_start crop_end   start_imputed</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A…          1 Annual Corn    2020-04-27 2020-10-13 FALSE        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A…          2 Annual Corn    2021-05-08 2021-10-20 FALSE        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A…          3 Annual Corn    2022-04-27 2022-10-20 FALSE        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A…          4 Annual Corn    2023-04-24 2023-10-23 FALSE        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A…          5 Annual Corn    2024-05-01 2024-10-22 FALSE        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A…          1 Annual Corn    2020-04-27 2020-10-13 FALSE        </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: end_imputed &lt;lgl&gt;</span></span></span></code></pre></div>
+<p><code><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code>:</p>
+<ol style="list-style-type: decimal">
 <li>
-<strong>Cover</strong><br>
-</li>
+<strong>Validates the workbook</strong> with
+<code><a href="../reference/validate_excel_input.html">validate_excel_input()</a></code> and stops with a list of problems
+if, for example, a required sheet or column is missing, a unit is not
+listed in <code>Mgt_Unit</code>, or a disturbance pass has no date.</li>
 <li>
-<strong>Diversity</strong><br>
-</li>
+<strong>Builds crop episodes</strong>: one row per species per
+continuous period of presence. Mixtures, relays, and intercrops are
+simply overlapping episodes. Harvest rows without a plant date are
+attached to a standing perennial as cuttings.</li>
 <li>
-<strong>InvDist</strong><br>
-</li>
+<strong>Fills in missing dates</strong>, following fixed rules. A
+crop with no plant date starts where the previous crop ended, or at the
+start of the record. A crop with no end date ends at the next planting,
+or at the end of the record.</li>
 <li>
-<strong>OrgInputs</strong><br>
-</li>
-<li><strong>SHMI</strong></li>
-</ul>
-<p>Plus metadata:</p>
-<ul>
-<li>
-<code>settings_used</code><br>
-</li>
-<li>
-<code>expert_mode</code><br>
-</li>
-<li>
-<code>timestamp</code><br>
-</li>
-<li><code>shmi_version</code></li>
-</ul>
-<hr>
+<strong>Sets the rotation window</strong> from the first to the last
+recorded event.</li>
+</ol>
+<p>It returns a list:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Element</th>
+<th>Contents</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>rot_bounds</code></td>
+<td>Rotation start and end for each unit</td>
+</tr>
+<tr class="even">
+<td><code>mgt</code></td>
+<td>Management-unit details</td>
+</tr>
+<tr class="odd">
+<td><code>crop</code></td>
+<td>Species episodes, with <code>crop_start</code> and
+<code>crop_end</code>
+</td>
+</tr>
+<tr class="even">
+<td>
+<code>dist</code>, <code>amend</code>, <code>animal</code>
+</td>
+<td>Disturbance, amendment, and animal events</td>
+</tr>
+<tr class="odd">
+<td>
+<code>yield</code>, <code>n_rate</code>
+</td>
+<td>Yields and nitrogen rates, if requested</td>
+</tr>
+<tr class="even">
+<td><code>assumptions</code></td>
+<td>Every date that was filled in, and every value to review</td>
+</tr>
+</tbody>
+</table>
+<div class="section level3">
+<h3 id="reviewing-assumptions">Reviewing assumptions<a class="anchor" aria-label="anchor" href="#reviewing-assumptions"></a>
+</h3>
+<p>Management records are rarely complete, particularly at the start and
+end of a record kept by calendar year. Rather than filling gaps
+silently, <code><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code> records each
+assumption:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">assumptions</span><span class="op">$</span><span class="va">type</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt; table of extent 0 &gt;</span></span>
+<span></span>
+<span><span class="co"># Items flagged for review, such as a perennial species entered as an annual</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">assumptions</span>, <span class="va">level</span> <span class="op">==</span> <span class="st">"check"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 0 × 8</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 8 variables: MGT_combo &lt;chr&gt;, source &lt;chr&gt;, name &lt;chr&gt;, date_start &lt;date&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   date_end &lt;date&gt;, level &lt;chr&gt;, type &lt;chr&gt;, message &lt;chr&gt;</span></span></span></code></pre></div>
+<p>Rows with <code>level == "assumption"</code> are routine gap-filling.
+Rows with <code>level == "check"</code> usually point to a data-entry
+issue worth correcting in the workbook.
+<code><a href="../reference/prepare_shmi_inputs.html">?prepare_shmi_inputs</a></code> describes each type.</p>
+</div>
+<div class="section level3">
+<h3 id="choosing-the-evaluation-window">Choosing the evaluation window<a class="anchor" aria-label="anchor" href="#choosing-the-evaluation-window"></a>
+</h3>
+<p>By default the rotation runs from the first to the last recorded
+event for each unit. To score a fixed period instead, give start and end
+dates; events outside the window are dropped, and crops and grazing
+periods are clipped to it:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">inputs_2022_23</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/get_shmi_example.html">get_shmi_example</a></span><span class="op">(</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  start_date_override <span class="op">=</span> <span class="st">"2022-01-01"</span>,</span>
+<span>  end_date_override   <span class="op">=</span> <span class="st">"2023-12-31"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">inputs_2022_23</span><span class="op">$</span><span class="va">rot_bounds</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 5</span></span></span>
+<span><span class="co">#&gt;   MGT_combo                   rot_start  rot_end    rot_start_yr rot_end_yr</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure  2022-04-08 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+ 2022-04-08 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0      2022-04-08 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160    2022-04-08 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0     2022-04-27 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120   2022-04-27 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180   2022-04-27 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60    2022-04-27 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span></code></pre></div>
+<p>Other options include <code>exclude</code> (leave out some units),
+<code>end_at_sample_date</code> (stop each unit at its soil sampling
+date), and <code>calc_yield</code> / <code>calc_n_rate</code> (also
+return yields in kg/ha and annual nitrogen rates).</p>
+</div>
 </div>
 <div class="section level2">
-<h2 id="expert-mode">
-<strong>3. Expert Mode</strong><a class="anchor" aria-label="anchor" href="#expert-mode"></a>
+<h2 id="compute-shmi">3. Compute SHMI<a class="anchor" aria-label="anchor" href="#compute-shmi"></a>
 </h2>
-<p>By default, SHMI uses the official national settings (locked
-mode).<br>
-To explore scenarios or conduct research, you may override settings:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">custom</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  <span class="co"># cover/roots</span></span>
-<span>  w_winter <span class="op">=</span> <span class="fl">0.25</span>,</span>
-<span>  w_spring <span class="op">=</span> <span class="fl">0.25</span>,</span>
-<span>  w_summer <span class="op">=</span> <span class="fl">0.25</span>,</span>
-<span>  w_fall   <span class="op">=</span> <span class="fl">0.25</span>,</span>
-<span></span>
-<span>  <span class="co"># crop diversity</span></span>
-<span>  hill    <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  max_div <span class="op">=</span> <span class="fl">8</span>,</span>
-<span></span>
-<span>  <span class="co"># inverse disturbance</span></span>
-<span>  <span class="co"># NA</span></span>
-<span>  <span class="co"># organic inputs</span></span>
-<span>  w_amend   <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  w_animals <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  </span>
-<span>  <span class="co"># SHMI index weights</span></span>
-<span>  w_cover <span class="op">=</span> <span class="fl">0.25</span>,</span>
-<span>  w_div   <span class="op">=</span> <span class="fl">0.25</span>,</span>
-<span>  w_dist  <span class="op">=</span> <span class="fl">0.25</span>,</span>
-<span>  w_ani   <span class="op">=</span> <span class="fl">0.25</span></span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">)</span></span>
+<span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 10</span></span></span>
+<span><span class="co">#&gt;   MGT_combo   MGT_study MGT_farm MGT_field MGT_trt  SHMI Cover Diversity InvDist</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  57.9  64.5         0    55.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  57.9  64.5         0    55.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N0   36.8  64.5         0    55.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N1…  36.8  64.5         0    55.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N0  43.4  64.9         0   100  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: OrgInput &lt;dbl&gt;</span></span></span></code></pre></div>
+<p><code>indicator_df</code> has one row per management unit, with
+<code>SHMI</code>, <code>Cover</code>, <code>Diversity</code>,
+<code>InvDist</code>, and <code>OrgInput</code>, plus the unit’s study,
+farm, field, and treatment. The result also records
+<code>settings_used</code>, <code>expert_mode</code>,
+<code>shmi_version</code>, and a <code>timestamp</code>, so every score
+can be traced to how it was computed.</p>
+<p>By default, <code><a href="../reference/build_shmi.html">build_shmi()</a></code> uses the official national
+settings. These include the <strong>EPA</strong> soil-mixing model for
+disturbance, which needs a tillage depth (<code>SD_depth</code>, in
+inches) for every pass. If your data record STIR values instead of
+depths, use expert mode (next section) with
+<code>dist_meth = "STIR"</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="expert-mode">4. Expert mode<a class="anchor" aria-label="anchor" href="#expert-mode"></a>
+</h2>
+<p>For research or scenario analysis, any setting can be changed.
+Settings you do not supply keep their official values:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Score disturbance with STIR instead of the EPA model</span></span>
+<span><span class="va">result_stir</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_shmi.html">build_shmi</a></span><span class="op">(</span></span>
+<span>  <span class="va">inputs</span>,</span>
+<span>  settings    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>dist_meth <span class="op">=</span> <span class="st">"STIR"</span><span class="op">)</span>,</span>
+<span>  expert_mode <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">shmi_exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">inputs</span>, settings <span class="op">=</span> <span class="va">custom</span>, expert_mode <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p>When <code>expert_mode = TRUE</code>, SHMI values are <strong>not
-comparable</strong> to the national scale.</p>
-<hr>
+<span><span class="co"># Equal weights throughout</span></span>
+<span><span class="va">custom</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  w_winter <span class="op">=</span> <span class="fl">0.25</span>, w_spring <span class="op">=</span> <span class="fl">0.25</span>, w_summer <span class="op">=</span> <span class="fl">0.25</span>, w_fall <span class="op">=</span> <span class="fl">0.25</span>,  <span class="co"># cover</span></span>
+<span>  hill <span class="op">=</span> <span class="fl">2</span>, max_div <span class="op">=</span> <span class="fl">16</span>,                                            <span class="co"># diversity</span></span>
+<span>  dist_meth <span class="op">=</span> <span class="st">"STIR"</span>, max_stir <span class="op">=</span> <span class="fl">400</span>, ti_rep <span class="op">=</span> <span class="st">"mid"</span>,                <span class="co"># disturbance</span></span>
+<span>  w_amend <span class="op">=</span> <span class="fl">0.5</span>, w_animal <span class="op">=</span> <span class="fl">0.5</span>,                                     <span class="co"># organic inputs</span></span>
+<span>  w_cover <span class="op">=</span> <span class="fl">0.25</span>, w_diversity <span class="op">=</span> <span class="fl">0.25</span>, w_invdist <span class="op">=</span> <span class="fl">0.25</span>,              <span class="co"># SHMI weights</span></span>
+<span>  w_orginput <span class="op">=</span> <span class="fl">0.25</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">result_custom</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">inputs</span>, settings <span class="op">=</span> <span class="va">custom</span>, expert_mode <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>Setting names must match exactly; <code><a href="../reference/build_shmi.html">?build_shmi</a></code> lists them
+with their official values. Scores computed in expert mode are
+<strong>not comparable</strong> to the national SHMI scale.</p>
 </div>
 <div class="section level2">
-<h2 id="subindex-details">
-<strong>4. Sub‑Index Details</strong><a class="anchor" aria-label="anchor" href="#subindex-details"></a>
+<h2 id="how-missing-records-are-scored">5. How missing records are scored<a class="anchor" aria-label="anchor" href="#how-missing-records-are-scored"></a>
 </h2>
-<p>You may compute sub‑indices individually:</p>
-<div class="section level4">
-<h4 id="cover">Cover<a class="anchor" aria-label="anchor" href="#cover"></a>
-</h4>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute_cover.html">compute_cover</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">daily</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">rot_bounds</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="diversity">Diversity<a class="anchor" aria-label="anchor" href="#diversity"></a>
-</h4>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute_diversity.html">compute_diversity</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">crop_harmonized</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">daily</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="inverse-disturbance">Inverse Disturbance<a class="anchor" aria-label="anchor" href="#inverse-disturbance"></a>
-</h4>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute_disturbance.html">compute_disturbance</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">daily_dist</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">rot_bounds</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="organic-inputs">Organic Inputs<a class="anchor" aria-label="anchor" href="#organic-inputs"></a>
-</h4>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute_orginput.html">compute_orginput</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">rot_bounds</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">amend</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">animal</span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="interpreting-shmi">
-<strong>5. Interpreting SHMI</strong><a class="anchor" aria-label="anchor" href="#interpreting-shmi"></a>
-</h2>
-<p>The final SHMI score reflects:</p>
+<p>SHMI treats a missing record as a practice that did not happen:</p>
 <ul>
-<li>year‑round cover<br>
-</li>
-<li>crop diversity<br>
-</li>
-<li>reduced soil disturbance<br>
-</li>
-<li>organic inputs</li>
+<li>
+<strong>No disturbance records</strong> means no tillage, so InvDist
+= 100. This is how continuous no-till is represented.</li>
+<li>
+<strong>No crop on a given day</strong> means no cover that day. A
+fallow reference site scores Cover = 0 and Diversity = 0.</li>
+<li>
+<strong>No amendment or animal records</strong> means no organic
+inputs, so OrgInput = 0.</li>
 </ul>
-<p>Higher SHMI values indicate management systems that are more
-supportive of soil health.</p>
-<hr>
+<p>Record every tillage pass, planting, harvest, and amendment for the
+period being evaluated, so that gaps in the records are not mistaken for
+practices.</p>
 </div>
 <div class="section level2">
-<h2 id="conclusion">Conclusion<a class="anchor" aria-label="anchor" href="#conclusion"></a>
+<h2 id="the-sub-indices-one-at-a-time">6. The sub-indices one at a time<a class="anchor" aria-label="anchor" href="#the-sub-indices-one-at-a-time"></a>
 </h2>
-<p>The SHMI package provides a fast, reproducible, and biologically
-grounded framework for quantifying soil‑health management across diverse
-systems.</p>
-<p>For more details:</p>
+<p>Each sub-index can be computed directly from the prepared inputs:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute_cover.html">compute_cover</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">crop</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">rot_bounds</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 2</span></span></span>
+<span><span class="co">#&gt;   MGT_combo                   Cover</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure   64.5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+  64.5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0       64.5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160     64.5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0      64.9</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120    64.9</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180    64.9</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60     64.9</span></span>
+<span><span class="fu"><a href="../reference/compute_diversity.html">compute_diversity</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">crop</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 2</span></span></span>
+<span><span class="co">#&gt;   MGT_combo                   Diversity</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure          0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+         0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0              0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160            0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0             0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120           0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180           0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60            0</span></span>
+<span><span class="fu"><a href="../reference/compute_disturbance.html">compute_disturbance</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">dist</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">rot_bounds</span>, dist_meth <span class="op">=</span> <span class="st">"EPA"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 2</span></span></span>
+<span><span class="co">#&gt;   MGT_combo                   InvDist</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure     55.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+    55.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0         55.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160       55.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0       100  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120     100  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180     100  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60      100</span></span>
+<span><span class="fu"><a href="../reference/compute_orginput.html">compute_orginput</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">rot_bounds</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">amend</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">animal</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 2</span></span></span>
+<span><span class="co">#&gt;   MGT_combo                   OrgInput</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure      66.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+     66.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0           0  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160         0  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0          0  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120        0  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180        0  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60         0</span></span></code></pre></div>
+<p>The functions also accept small tables built by hand, which is a
+quick way to see how each one responds to a change in management. Here
+is one field over two years: corn followed by a cereal rye cover crop,
+then soybean.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">crop</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  MGT_combo  <span class="op">=</span> <span class="st">"field_1"</span>,</span>
+<span>  CD_name    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Corn"</span>, <span class="st">"Rye"</span>, <span class="st">"Soybean"</span><span class="op">)</span>,</span>
+<span>  crop_start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2019-05-01"</span>, <span class="st">"2019-10-15"</span>, <span class="st">"2020-05-10"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  crop_end   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2019-09-30"</span>, <span class="st">"2020-04-20"</span>, <span class="st">"2020-09-25"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">rot_bounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  MGT_combo    <span class="op">=</span> <span class="st">"field_1"</span>,</span>
+<span>  rot_start    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2019-01-01"</span><span class="op">)</span>,</span>
+<span>  rot_end      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-12-31"</span><span class="op">)</span>,</span>
+<span>  rot_start_yr <span class="op">=</span> <span class="fl">2019</span>,</span>
+<span>  rot_end_yr   <span class="op">=</span> <span class="fl">2020</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><strong>Cover</strong> is the season-weighted share of days with a
+living crop. The rye covers most of the winter and spring:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute_cover.html">compute_cover</a></span><span class="op">(</span><span class="va">crop</span>, <span class="va">rot_bounds</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 2</span></span></span>
+<span><span class="co">#&gt;   MGT_combo Cover</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> field_1    71.9</span></span></code></pre></div>
+<p><strong>Diversity</strong> uses the number of days each species was
+present. Three species, present for unequal lengths of time:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/compute_diversity.html">compute_diversity</a></span><span class="op">(</span><span class="va">crop</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 2</span></span></span>
+<span><span class="co">#&gt;   MGT_combo Diversity</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> field_1        47.3</span></span></code></pre></div>
+<p><strong>Inverse disturbance</strong> here uses STIR values, a disk
+harrow before corn and a planter pass each year. The 2019 total is much
+larger, so 2019 scores lower than 2020, and the rotation score is the
+mean of the two years:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  MGT_combo <span class="op">=</span> <span class="st">"field_1"</span>,</span>
+<span>  SD_date   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2019-04-20"</span>, <span class="st">"2019-05-01"</span>, <span class="st">"2020-05-10"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  SD_mixeff <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">39</span>, <span class="fl">2.4</span>, <span class="fl">2.4</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/compute_disturbance.html">compute_disturbance</a></span><span class="op">(</span><span class="va">dist</span>, <span class="va">rot_bounds</span>, dist_meth <span class="op">=</span> <span class="st">"STIR"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   MGT_combo InvDist</span></span>
+<span><span class="co">#&gt; 1   field_1    92.3</span></span></code></pre></div>
+<p><strong>Organic inputs</strong>: manure applied in one of the two
+years, and no animals:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">amend</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>MGT_combo <span class="op">=</span> <span class="st">"field_1"</span>,</span>
+<span>                     SA_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2019-04-01"</span><span class="op">)</span>, SA_cat <span class="op">=</span> <span class="st">"Organic"</span><span class="op">)</span></span>
+<span><span class="va">animal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>MGT_combo <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>                     AD_start_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/compute_orginput.html">compute_orginput</a></span><span class="op">(</span><span class="va">rot_bounds</span>, <span class="va">amend</span>, <span class="va">animal</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 2</span></span></span>
+<span><span class="co">#&gt;   MGT_combo OrgInput</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> field_1       33.1</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="plotting-results">7. Plotting results<a class="anchor" aria-label="anchor" href="#plotting-results"></a>
+</h2>
+<p>One unit, with a gauge for each sub-index and for overall SHMI:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_shmi_gauge.html">plot_shmi_gauge</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span>, row <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="SHMI-overview_files/figure-html/plot-gauge-1.png" class="r-plt" alt="" width="768"></p>
+<p>Many units, overall SHMI sorted by score:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_shmi_lollipop.html">plot_shmi_lollipop</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span><span class="op">)</span></span></code></pre></div>
+<p><img src="SHMI-overview_files/figure-html/plot-lollipop-1.png" class="r-plt" alt="" width="672"></p>
+<p>Select a unit by name with <code>MGT_combo = "..."</code> instead of
+<code>row</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="interpreting-shmi">8. Interpreting SHMI<a class="anchor" aria-label="anchor" href="#interpreting-shmi"></a>
+</h2>
+<p>Higher scores indicate management that is more supportive of soil
+health: more of the year under living cover, a more diverse rotation,
+less soil disturbance, and more frequent organic inputs.</p>
+<p>When comparing units, keep the weights in mind. Under the official
+settings, Cover carries about 45 percent of the weight and Organic
+Inputs about 32 percent. A unit with no organic inputs therefore cannot
+score above about 68, even with perfect cover, diversity, and no
+tillage. Looking at the four sub-indices alongside SHMI shows which
+practices drive a unit’s score.</p>
+</div>
+<div class="section level2">
+<h2 id="further-reading">Further reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>
+</h2>
 <ul>
 <li>
-<code><a href="../reference/prepare_shmi_inputs.html">?prepare_shmi_inputs</a></code><br>
-</li>
+<code><a href="../reference/prepare_shmi_inputs.html">?prepare_shmi_inputs</a></code>: workbook structure, crop-date
+rules, the assumptions table, and overrides.</li>
 <li>
-<code><a href="../reference/build_shmi.html">?build_shmi</a></code><br>
-</li>
+<code><a href="../reference/build_shmi.html">?build_shmi</a></code>: official settings and expert mode.</li>
 <li>
-<code><a href="../reference/compute_cover.html">?compute_cover</a></code><br>
-</li>
-<li>
-<code><a href="../reference/compute_diversity.html">?compute_diversity</a></code><br>
-</li>
-<li>
-<code><a href="../reference/compute_disturbance.html">?compute_disturbance</a></code><br>
-</li>
-<li><code><a href="../reference/compute_orginput.html">?compute_orginput</a></code></li>
+<code><a href="../reference/compute_cover.html">?compute_cover</a></code>, <code><a href="../reference/compute_diversity.html">?compute_diversity</a></code>,
+<code><a href="../reference/compute_disturbance.html">?compute_disturbance</a></code>, <code><a href="../reference/compute_orginput.html">?compute_orginput</a></code>: how
+each sub-index is calculated.</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

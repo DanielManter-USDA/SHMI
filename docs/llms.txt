@@ -3,45 +3,51 @@
 ![License:
 MIT](https://img.shields.io/badge/License-MIT-blue.svg?logo=open-source-initiative&logoColor=white)
 
-SHMI converts multi‑year crop, disturbance, and amendment records into
-standardized soil‑health management scores.
+SHMI converts multi-year crop, disturbance, and amendment records into
+standardized soil-health management scores.
 
 ------------------------------------------------------------------------
 
 The **SHMI** R package provides a complete, reproducible workflow for
-computing the Soil Health Management Index (SHMI) from standardized
-Excel workbooks or R‑native example data. SHMI integrates four
-management sub‑indices:
+computing the Soil Health Management Index (SHMI) from a standardized
+Excel workbook. SHMI is a 0-100 score built from four management
+sub-indices, each also scored 0-100:
 
-- **Cover** — seasonal plant presence  
-- **Diversity** — rotation‑scale crop diversity (Hill numbers)  
-- **Inverse Disturbance** — mechanistic mixing‑efficiency × depth
-  metric  
-- **Organic Inputs** — organic amendments and animal presence
+- **Cover**: season-weighted share of days with living plants
+- **Diversity**: how many crop species were grown, and how evenly, over
+  the rotation
+- **Inverse Disturbance**: how little the soil was tilled (EPA
+  soil-mixing model or STIR)
+- **Organic Inputs**: how often organic amendments were applied and
+  animals were present
 
 The package includes:
 
-- robust Excel ingestion and validation  
-- biologically realistic crop‑window harmonization  
-- fast vectorized daily‑grid construction
-- customizable date ranges
-- mechanistic disturbance modeling  
-- rotation‑scale aggregation  
-- official national SHMI settings (locked mode)  
-- expert‑mode overrides for research and scenario analysis
+- Excel ingestion with validation and clear error messages
+- crop records converted to species episodes, so mixtures, relays,
+  intercrops, and perennial cuttings are handled without sequence
+  numbers
+- a report of every assumption made while filling gaps in the records
+- customizable evaluation windows (start/end date overrides)
+- mechanistic disturbance modeling
+- yield and nitrogen-rate conversion to kg/ha
+- official national SHMI settings (locked mode)
+- expert-mode overrides for research and scenario analysis
+- plots for single units and for comparing many units
 
 ------------------------------------------------------------------------
 
 ## ⭐ Why SHMI?
 
 Agricultural management is multidimensional, and many soil health
-indicators respond to **long‑term patterns**, not single‑year practices.
+indicators respond to **long-term patterns**, not single-year practices.
 SHMI provides:
 
-- A **rotation‑scale** measure of management intensity  
-- A **standardized, reproducible** workflow for diverse datasets  
-- A **transparent scoring system** grounded in ecological function  
-- A **consistent template** for data entry and QA/QC  
+- A **rotation-scale** measure of management intensity
+- A **standardized, reproducible** workflow for diverse datasets
+- A **transparent scoring system** grounded in ecological function, with
+  every assumption reported
+- A **consistent template** for data entry and QA/QC
 - Tools that help researchers and practitioners compare systems,
   evaluate interventions, and link management to soil outcomes
 
@@ -60,8 +66,8 @@ devtools::install_github("DanielManter-USDA/SHMI")
 
 # 📘 Quick Start
 
-SHMI supports two primary workflows, depending on whether you want to
-test the package or analyze your own management data.
+SHMI supports two workflows, depending on whether you want to try the
+package or analyze your own management data.
 
 ------------------------------------------------------------------------
 
@@ -74,15 +80,18 @@ library(SHMI)
 
 # Save the example Excel file to your working directory
 my_file <- download_shmi_example()
-```
 
-If you want to save it somewhere specific (e.g., your desktop)
-
-``` r
+# ...or somewhere specific
 my_file <- download_shmi_example(path = "~/Desktop")
 ```
 
-Now run the full workflow
+Or skip the download and use the copy installed with the package:
+
+``` r
+my_file <- get_shmi_example()
+```
+
+Now run the full workflow:
 
 ``` r
 inputs <- prepare_shmi_inputs(my_file)
@@ -91,10 +100,11 @@ result <- build_shmi(inputs)
 result$indicator_df
 ```
 
-This example file contains example management data and is already
-formatted correctly. It is ideal for:
+The example contains eight management units from a long-term experiment
+(2020-2024), already formatted correctly and scored under the official
+settings. It is ideal for:
 
-- testing SHMI end‑to‑end
+- testing SHMI end-to-end
 - verifying installation and dependencies
 - learning the expected input structure
 
@@ -129,90 +139,163 @@ result$indicator_df
 ```
 
 **Important:** The template is intentionally blank. It contains the
-required sheets and column structure, but no management data. You must
-fill in your crop, disturbance, amendment, and animal records before
-running
+required sheets and column structure, but no management data. Fill in
+your crop, disturbance, amendment, and animal records before running
 [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md).
+Enter each crop by name with its dates; mixtures are one row per
+species, and sequence numbers are not needed.
+
 [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
-performs full validation and will return clear, actionable error
-messages if:
+validates the workbook and stops with clear, actionable error messages
+if, for example:
 
 - required sheets or columns are missing
-- dates are invalid
-- MGT_combo identifiers are inconsistent
-- crop windows are malformed
-- disturbance or amendment entries are incomplete
+- a management unit (`MGT_combo`) is missing, duplicated, or not listed
+  in `Mgt_Unit`
+- a disturbance pass has a missing or invalid date
+- disturbance values are non-numeric or negative
 
-This workflow is the one most users will follow when computing SHMI for
-their own fields or research datasets
+This is the workflow most users will follow when computing SHMI for
+their own fields or research datasets.
+
+------------------------------------------------------------------------
+
+## 🔍 Reviewing assumptions
+
+Management records are rarely complete, especially at the start and end
+of a record kept by calendar year. SHMI fills gaps with fixed rules and
+records every one:
+
+``` r
+table(inputs$assumptions$type)
+
+# Items flagged for review, e.g. a perennial species entered as an annual
+subset(inputs$assumptions, level == "check")
+```
+
+Rows with `level == "assumption"` are routine gap-filling (for example,
+a crop with no end date ending at the next planting). Rows with
+`level == "check"` usually point to a data-entry issue worth correcting
+in the workbook.
+
+------------------------------------------------------------------------
+
+## ⚙️ Settings, evaluation windows, and missing records
+
+**Official settings.** By default,
+[`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
+uses the official national settings, including the **EPA** soil-mixing
+model for disturbance, which needs a tillage depth (`SD_depth`, inches)
+for every pass. If your data record STIR values instead, use expert
+mode:
+
+``` r
+result <- build_shmi(inputs, settings = list(dist_meth = "STIR"), expert_mode = TRUE)
+```
+
+Scores computed in expert mode are **not comparable** to the national
+SHMI scale. See
+[`?build_shmi`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
+for all settings and their official values.
+
+**Evaluation window.** By default, each unit is scored from its first to
+its last recorded event. To score a fixed period instead:
+
+``` r
+inputs <- prepare_shmi_inputs(user_file,
+                              start_date_override = "2018-01-01",
+                              end_date_override   = "2020-12-31")
+```
+
+**Missing records mean “did not happen.”** No disturbance records means
+no tillage (Inverse Disturbance = 100, as for continuous no-till); no
+crop means no cover; no amendments means no organic inputs. Record every
+tillage pass, planting, harvest, and amendment for the period being
+evaluated.
+
+------------------------------------------------------------------------
+
+## 📊 Plotting results
+
+``` r
+# One unit: gauges for each sub-index and overall SHMI
+plot_shmi_gauge(result$indicator_df, MGT_combo = "my_field_1")
+
+# Many units: overall SHMI, sorted
+plot_shmi_lollipop(result$indicator_df)
+```
 
 ------------------------------------------------------------------------
 
 ## 📂 Workflow Overview
 
-SHMI provides a structured, end‑to‑end workflow:
-
 ### **1. Template & Example Files**
 
 - Blank Template:
-  [`download_shmi_template()`](https://danielmanter-usda.github.io/SHMI/reference/download_shmi_template.html)  
+  [`download_shmi_template()`](https://danielmanter-usda.github.io/SHMI/reference/download_shmi_template.html)
 - Example Excel:
-  [`download_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/download_shmi_example.html)  
-- R‑native dataset:
-  [`data(shmi_example)`](https://danielmanter-usda.github.io/SHMI/reference/shmi_example.html)
+  [`download_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/download_shmi_example.html)
+- Installed example (no download):
+  [`get_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_example.html)
 
 ### **2. Input Preparation**
 
-- Validates required columns  
-- Expands crop windows to daily resolution  
-- Summarizes disturbance and organic inputs  
-- Harmonizes dates and management events  
 - [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.html)
+- Validates the workbook
+  ([`validate_excel_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_excel_input.html))
+- Converts crop records into species episodes and fills missing dates
+- Sets rotation bounds, or applies your evaluation window
+- Optionally converts yields and nitrogen rates to kg/ha
+- Returns an assumptions table for review
 
-### **3. Sub‑index Computation**
+### **3. Sub-index Computation**
 
-- Cover —
-  [`compute_cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.html)  
-- Diversity —
-  [`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.html)  
-- Disturbance —
-  [`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.html)  
-- Organic Inputs —
+- Cover:
+  [`compute_cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.html)
+- Diversity:
+  [`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.html)
+- Inverse Disturbance:
+  [`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.html)
+- Organic Inputs:
   [`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.html)
 
 ### **4. Final SHMI Calculation**
 
 - [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.html)
 
+### **5. Visualization**
+
+- [`plot_shmi_gauge()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_gauge.html)
+- [`plot_shmi_lollipop()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_lollipop.html)
+
 ------------------------------------------------------------------------
 
 ## 📚 Documentation
 
-Full documentation and examples:  
-👉 <https://danielmanter-usda.github.io/SHMI/>
+Full documentation and examples: 👉
+<https://danielmanter-usda.github.io/SHMI/>
 
 Includes:
 
-- Function reference  
-- Workflow overview  
-- Example data  
-- Template documentation  
-- Articles and vignettes
+- Function reference
+- The *SHMI Overview* vignette
+  ([`vignette("SHMI-overview", package = "SHMI")`](https://danielmanter-usda.github.io/SHMI/articles/SHMI-overview.md))
+- Template documentation
 
 ------------------------------------------------------------------------
 
 ## 🤝 Contributing
 
-Issues, suggestions, and pull requests are welcome:  
-👉 <https://github.com/DanielManter-USDA/SHMI/issues>
+Issues, suggestions, and pull requests are welcome: 👉
+<https://github.com/DanielManter-USDA/SHMI/issues>
 
 ------------------------------------------------------------------------
 
 ### License
 
 This software is a work of the United States Government and is not
-subject to copyright protection in the United States.  
-Foreign copyrights may apply.
+subject to copyright protection in the United States. Foreign copyrights
+may apply.
 
 Distributed under the MIT license.
 
@@ -232,42 +315,43 @@ package.*
 ## Core Workflow
 
 - [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
-  : Prepare and Validate SHMI Input Data from an Excel Workbook
+  : Read, validate, and prepare SHMI inputs from an Excel workbook
 - [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
-  : Build SHMI Scores from Prepared Inputs
+  : Compute SHMI scores from prepared inputs
 
 ## Sub-index Functions
 
 - [`compute_cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.md)
-  : Compute the SHMI Cover Sub‑index (Season‑Weighted Plant Presence)
+  : Compute the Cover sub-index
 - [`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md)
-  : Compute Rotation‑Scale Crop Diversity (Entropy‑Based Hill Numbers)
+  : Compute the Diversity sub-index
 - [`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md)
-  : Compute Inverse Disturbance Using EPA Mechanistic or STIR Methods
+  : Compute the inverse-disturbance sub-index
 - [`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)
-  : Compute the Organic Inputs Sub-index (Amendments + Animals)
+  : Compute the Organic Inputs sub-index
 
 ## Helper Functions
 
 - [`download_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/download_shmi_example.md)
-  : Download the example SHMI Excel file
+  : Download the example SHMI Excel workbook
 - [`download_shmi_template()`](https://danielmanter-usda.github.io/SHMI/reference/download_shmi_template.md)
   : Download a blank SHMI Excel template
+- [`get_shmi_example()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_example.md)
+  : Path to the example SHMI workbook
 
 ## Validation Functions
 
 - [`validate_excel_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_excel_input.md)
-  : Validate SHMI Excel Input File
+  : Validate an SHMI Excel workbook
 - [`validate_shmi_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_shmi_input.md)
-  : Validate SHMI Input Tables
+  : Validate prepared SHMI inputs
 
 ## Plotting Functions
 
 - [`plot_shmi_gauge()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_gauge.md)
-  : Plot SHMI gauge panels (Cover, Diversity, Inverse Disturbance,
-  OrgInput, Overall SHMI)
+  : Plot gauges of SHMI and its sub-indices for one management unit
 - [`plot_shmi_lollipop()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_lollipop.md)
-  : Plot SHMI values for multiple management units (lollipop chart)
+  : Plot SHMI across management units
 
 # Articles
 

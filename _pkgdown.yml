@@ -79,6 +79,7 @@ reference:
     contents:
       - download_shmi_example
       - download_shmi_template
+      - get_shmi_example
 
   - title: "Validation Functions"
     contents:

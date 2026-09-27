@@ -1,84 +1,72 @@
-# Compute the Organic Inputs Sub-index (Amendments + Animals)
+# Compute the Organic Inputs sub-index
 
-Calculates the SHMI organic-inputs indicator for each management unit
-(\`MGT_combo\`) by determining the proportion of rotation years in which
-organic amendments and animal inputs occurred. Each component is treated
-independently:
+Proportion of rotation years with organic amendments and with animals,
+weighted and scaled 0-100.
 
 ## Usage
 
 ``` r
-compute_orginput(rot_bounds, amend, animal, w_amend = 0.5, w_animal = 0.5)
+compute_orginput(
+  rot_bounds,
+  amend,
+  animal,
+  w_amend = 0.6615,
+  w_animal = 0.3385
+)
 ```
 
 ## Arguments
 
 - rot_bounds:
 
-  Rotation-year boundaries for each management unit.
+  Rotation bounds with `MGT_combo`, `rot_start_yr`, and `rot_end_yr`.
 
 - amend:
 
-  Amendment event table.
+  Amendment events with `MGT_combo`, `SA_date`, and `SA_cat`.
 
 - animal:
 
-  Animal event table.
+  Animal events with `MGT_combo` and `AD_start_date`.
 
-- w_amend:
+- w_amend, w_animal:
 
-  Weight for amendment presence (default 0.5).
-
-- w_animal:
-
-  Weight for animal presence (default 0.5).
+  Weights for amendments and animals. Defaults are the official values.
 
 ## Value
 
-A data frame with:
-
-- `MGT_combo`
-
-- `OrgInput` — organic-input score (0–100)
+A data frame with `MGT_combo` and `OrgInput` (0-100), one row per unit
+in `rot_bounds`.
 
 ## Details
 
-- **Amendment proportion** — fraction of rotation years with at least
-  one organic amendment event.
+For every calendar year from `rot_start_yr` to `rot_end_yr`, a year
+counts as having an amendment if any amendment with
+`SA_cat == "Organic"` is dated in that year, and as having animals if
+any animal period starts in that year (`AD_start_date`). Only presence
+is scored; amounts are not used. With \\p\\ the proportion of years with
+each input, \$\$OrgInput = 100 \frac{w\_{amend} p\_{amend} + w\_{animal}
+p\_{animal}}{w\_{amend} + w\_{animal}}\$\$
 
-- **Animal proportion** — fraction of rotation years with at least one
-  animal event.
+A missing record means no input: a unit with no organic amendments or
+animals scores 0.
 
-User-specified weights (`w_amend`, `w_animal`) determine the relative
-importance of amendments versus animals in the final score. Weighted
-proportions are combined and rescaled to a 0–100 SHMI-compatible index:
+## See also
 
-\$\$ \mathrm{OrgInput} = 100 \times \frac{ w\_{\mathrm{amend}} \cdot
-p\_{\mathrm{amend}} + w\_{\mathrm{animal}} \cdot p\_{\mathrm{animal}} }{
-w\_{\mathrm{amend}} + w\_{\mathrm{animal}} } \$\$
+[`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
 
-Units with no organic inputs receive a score of 0.
+## Examples
 
-\## Required Inputs
-
-\### Rotation bounds A data frame containing rotation-year boundaries:
-
-- `MGT_combo`
-
-- `rot_start_yr`
-
-- `rot_end_yr`
-
-\### Amendment events A data frame containing:
-
-- `MGT_combo`
-
-- `SA_date` — amendment date
-
-- `SA_cat` — amendment category (only `"Organic"` counted)
-
-\### Animal events A data frame containing:
-
-- `MGT_combo`
-
-- `AD_start_date` — start date of animal presence
+``` r
+rot_bounds <- data.frame(MGT_combo = "field_1",
+                         rot_start_yr = 2019, rot_end_yr = 2020)
+amend <- data.frame(MGT_combo = "field_1",
+                    SA_date = as.Date("2019-04-01"), SA_cat = "Organic")
+animal <- data.frame(MGT_combo = character(),
+                     AD_start_date = as.Date(character()))
+compute_orginput(rot_bounds, amend, animal)
+#> # A tibble: 1 × 2
+#>   MGT_combo OrgInput
+#>   <chr>        <dbl>
+#> 1 field_1       33.1
+```

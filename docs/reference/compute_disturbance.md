@@ -1,7 +1,8 @@
-# Compute Inverse Disturbance Using EPA Mechanistic or STIR Methods
+# Compute the inverse-disturbance sub-index
 
-Computes the SHMI disturbance sub-index for each management unit
-(\`MGT_combo\`) using either:
+Scores soil disturbance for each calendar year of the rotation and
+averages the years, so that 100 means no disturbance and 0 means maximum
+disturbance.
 
 ## Usage
 
@@ -10,7 +11,7 @@ compute_disturbance(
   dist,
   rot_bounds,
   dist_meth = c("EPA", "STIR"),
-  max_stir = 400,
+  max_stir = 342,
   ti_rep = c("max", "min", "mid")
 )
 ```
@@ -19,131 +20,90 @@ compute_disturbance(
 
 - dist:
 
-  Disturbance-event table (EPA or STIR inputs).
+  Disturbance passes with `MGT_combo`, `SD_date`, `SD_mixeff`, and, for
+  `"EPA"`, `SD_depth` (inches).
 
 - rot_bounds:
 
-  Rotation-year boundaries for each management unit.
+  Rotation bounds with `MGT_combo`, `rot_start_yr`, and `rot_end_yr`.
 
 - dist_meth:
 
-  Character string: \`"EPA"\` or \`"STIR"\`.
+  Disturbance method, `"EPA"` or `"STIR"`.
 
 - max_stir:
 
-  Maximum annual STIR value used for normalization (default 400).
+  Annual STIR value that corresponds to TI = 1 (`"STIR"` only).
 
 - ti_rep:
 
-  Class representative to use: \`"max"\` (default), \`"min"\`, or
-  \`"mid"\`.
+  Class representative: `"max"`, `"min"`, or `"mid"`.
 
 ## Value
 
-A data frame with:
-
-- `MGT_combo`
-
-- `InvDist` — inverse disturbance score (0–100)
+A data frame with `MGT_combo` and `InvDist` (0-100), one row per unit in
+`rot_bounds`.
 
 ## Details
 
-- \*\*EPA mechanistic soil-mixing model\*\* (profile penetration–based),
-  or
+**Methods.**
 
-- \*\*STIR disturbance intensity\*\* (daily summed mixing efficiency).
+- `"EPA"` (official): mechanistic soil-mixing model. `SD_mixeff` is the
+  mixing efficiency (a proportion, 0-1) and `SD_depth` the tillage depth
+  in inches, converted to cm and capped at 30 cm. Passes on the same day
+  are processed from shallowest to deepest, and each disturbs fraction
+  \\m\\ of the soil still undisturbed within its depth \\d\\, so
+  overlapping passes are not double-counted: \\S_k = S\_{k-1} + m_k
+  (d_k - S\_{k-1})\\. The daily value is \\S / 30\\, and daily values
+  are summed within each calendar year.
 
-Both methods produce an annual tillage-intensity (TI) value for each
-rotation year. Annual TI values are then classified into a \*\*Tier 3
-tillage-intensity scheme (Z–K)\*\* derived from the EPA Soil-Mixing
-Report.
+- `"STIR"`: `SD_mixeff` holds STIR values. They are summed within each
+  calendar year, divided by `max_stir`, and truncated to 1.
 
-\## Tier 3 Classification (Z–K)
+**Classes.** Each annual tillage intensity (TI) is placed in a Tier-3
+class (left-closed, right-open intervals):
 
-The Tier 3 scheme partitions the `[0, 1]` disturbance domain into
-nonlinear classes (Z–K). Each class has a lower and upper TI bound
-(`ti_min`, `ti_max`). Class Z is added to represent `TI = 0`. All
-classes use closed–open intervals (e.g., `[0.01, 0.04)`) to ensure each
-TI maps to exactly one class.
+|       |                 |       |                 |
+|-------|-----------------|-------|-----------------|
+| Class | TI range        | Class | TI range        |
+| Z     | `0 - 0.001`     | F     | `0.144 - 0.162` |
+| A     | `0.001 - 0.01`  | G     | `0.162 - 0.202` |
+| B     | `0.01 - 0.04`   | H     | `0.202 - 0.252` |
+| C     | `0.04 - 0.075`  | I     | `0.252 - 0.268` |
+| D     | `0.075 - 0.111` | J     | `0.268 - 0.449` |
+| E     | `0.111 - 0.144` | K     | `0.449 - 1`     |
 
-After classification, each TI is replaced by a \*\*class
-representative\*\*:
+TI is then replaced by a class representative chosen by `ti_rep`: the
+lower bound (`"min"`), midpoint (`"mid"`), or upper bound (`"max"`, the
+official choice). Class Z always uses 0. The annual score is \\100 (1 -
+TI\_{used})\\, and the rotation score is the mean over all calendar
+years from `rot_start_yr` to `rot_end_yr`.
 
-- `"min"` — lower class boundary (`ti_min`)
+**Missing records.** A missing record means no disturbance occurred (for
+example, continuous no-till): years without passes score 100, and a unit
+with no passes at all scores 100.
 
-- `"mid"` — class midpoint (`(ti_min + ti_max)/2`)
+**Checks.** Inputs are checked for the chosen method. Under `"EPA"`,
+every pass with `SD_mixeff > 0` needs `SD_depth`, `SD_mixeff` must lie
+within 0-1 (larger values look like STIR), and depths above 20 inches
+give a warning because they may have been entered in cm.
 
-- `"max"` — upper class boundary (`ti_max`)
+## See also
 
-The default representative is `"mid"`, which corresponds to the
-midpoint-based EPA Tier 3 interpretation used in the national SHMI.
+[`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md),
+[`validate_shmi_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_shmi_input.md)
 
-\## Inverse Disturbance
+## Examples
 
-The inverse-disturbance score is computed as:
-
-\$\$ T\_{t}^{inv} = 100 \times (1 - TI\_{\text{used}}) \$\$
-
-where `TI_used` is the class representative selected by `ti_rep`. This
-formulation ensures:
-
-- `TI_used = 0` → `InvDist = 100` (no disturbance)
-
-- `TI_used = 1` → `InvDist = 0` (maximum disturbance)
-
-Rotation-level disturbance is the mean of annual inverse-disturbance
-values. Units with no disturbance events receive a score of 100.
-
-\## EPA Mechanistic Method
-
-The EPA method computes mechanistic profile penetration for each tillage
-pass using mixing efficiency and tillage depth. Passes occurring on the
-same date are treated as sequential operations, producing a \*daily\* TI
-value. Daily TI values are summed to annual TI. EPA TI values are
-naturally bounded in `[0, 1]` and require no additional normalization.
-
-Required columns in \`dist\`:
-
-- `MGT_combo` — management unit identifier
-
-- `SD_date` — date of tillage pass
-
-- `SD_mixeff` — mixing efficiency (0–1)
-
-- `SD_depth` — tillage depth (in inches; converted internally)
-
-\## STIR Method
-
-The STIR method computes daily disturbance intensity as:
-
-\$\$ SDsum = \sum SD\\mixeff \$\$
-
-summed across all passes on a given date. Annual STIR is the sum of
-daily SDsum values. Because STIR is unbounded, annual STIR is normalized
-to:
-
-\$\$ TI = \frac{STIR\_{\text{raw}}}{\text{max\\stir}} \$\$
-
-and truncated to `[0, 1]` before Tier 3 classification.
-
-Required columns in \`dist\`:
-
-- `MGT_combo`
-
-- `SD_date`
-
-- `SD_mixeff`
-
-\## Rotation Bounds
-
-A data frame containing rotation-year boundaries:
-
-- `MGT_combo`
-
-- `rot_start`
-
-- `rot_end`
-
-- `rot_start_yr`
-
-- `rot_end_yr`
+``` r
+dist <- data.frame(
+  MGT_combo = "field_1",
+  SD_date   = as.Date(c("2020-04-15", "2020-05-01")),
+  SD_mixeff = c(39, 2.4)   # STIR values: disk harrow, planter
+)
+rot_bounds <- data.frame(MGT_combo = "field_1",
+                         rot_start_yr = 2020, rot_end_yr = 2021)
+compute_disturbance(dist, rot_bounds, dist_meth = "STIR")
+#>   MGT_combo InvDist
+#> 1   field_1    92.8
+```

@@ -1,10 +1,7 @@
-# Compute the SHMI Cover Sub‑index (Season‑Weighted Plant Presence)
+# Compute the Cover sub-index
 
-Computes the SHMI cover indicator for each management unit
-(\`MGT_combo\`) using crop start/end dates and rotation bounds. Cover
-represents the proportion of the rotation during which living plant
-cover is present, weighted by season to reflect differential ecological
-importance.
+Season-weighted proportion of days in the rotation with living plant
+cover, scaled 0-100.
 
 ## Usage
 
@@ -12,10 +9,10 @@ importance.
 compute_cover(
   crop,
   rot_bounds,
-  w_winter = 0.25,
-  w_spring = 0.25,
-  w_summer = 0.25,
-  w_fall = 0.25
+  w_winter = 0.1259,
+  w_spring = 0.126,
+  w_summer = 0.3755,
+  w_fall = 0.3726
 )
 ```
 
@@ -23,112 +20,70 @@ compute_cover(
 
 - crop:
 
-  A data frame containing one row per crop species with harmonized
-  start/end dates, including:
-
-  - `MGT_combo` — management unit identifier
-
-  - `CD_seq_num` — planting event identifier
-
-  - `crop_start`, `crop_end` — daily cover interval
+  Species episodes with `MGT_combo`, `CD_name`, `crop_start`, and
+  `crop_end`, as in `prepare_shmi_inputs()$crop`.
 
 - rot_bounds:
 
-  A data frame containing rotation bounds for each management unit,
-  with:
+  Rotation bounds with `MGT_combo`, `rot_start`, and `rot_end`.
 
-  - `MGT_combo`
+- w_winter, w_spring, w_summer, w_fall:
 
-  - `rot_start`
-
-  - `rot_end`
-
-- w_winter:
-
-  Weight for winter cover (default 0.250).
-
-- w_spring:
-
-  Weight for spring cover (default 0.250).
-
-- w_summer:
-
-  Weight for summer cover (default 0.250).
-
-- w_fall:
-
-  Weight for fall cover (default 0.250).
+  Season weights. Defaults are the official values.
 
 ## Value
 
-A data frame with:
-
-- `MGT_combo`
-
-- `Cover` — SHMI cover score (0–100)
+A data frame with `MGT_combo` and `Cover` (0-100), one row per unit in
+`rot_bounds`.
 
 ## Details
 
-\## Mixture‑aware cover windows
+**Plant windows.** Every row of `crop` (one row per species episode) is
+a window of living cover, except rows named `"fallow"`, `"none"`, or
+`"bare"`. Overlapping windows (mixtures, relays, intercrops) are merged,
+so each day counts once however many species are present.
 
-The input \`crop\` table contains one row per crop species. Mixtures
-therefore appear as multiple rows with identical \`CD_seq_num\` values.
-For cover scoring, mixtures must be treated as a \*single\* planting
-event. The function collapses mixtures by grouping on:
+**Seasons.** Each day is assigned to a season by calendar month: winter
+(Dec-Feb), spring (Mar-May), summer (Jun-Aug), and fall (Sep-Nov). For
+each season \\s\\, \\p_s\\ is the number of plant days divided by the
+number of days of that season in the rotation; seasons with no days in
+the rotation contribute 0.
 
-- `MGT_combo`
+**Score.** The season weights are rescaled to sum to 1, and \$\$Cover =
+100 \sum_s w_s p_s\$\$
 
-- `CD_seq_num`
+**Rotation window.** Days in the rotation run from `rot_start` to
+`rot_end`. In
+[`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
+these span the first to the last recorded event, or the window set by
+`start_date_override` and `end_date_override`, which is how a fixed
+evaluation period is imposed.
 
-and computing:
+A unit in `rot_bounds` with no plant windows (for example a fallow
+reference site) scores 0.
 
-- earliest `crop_start`
+## See also
 
-- latest `crop_end`
+[`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md),
+[`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md)
 
-This produces one cover window per planting event, regardless of mixture
-complexity.
+## Examples
 
-\## Daily plant‑presence expansion
-
-Each cover window is expanded into daily records. Each day is assigned
-to a season based on calendar month:
-
-- Winter: December–February
-
-- Spring: March–May
-
-- Summer: June–August
-
-- Fall: September–November
-
-Seasonal plant‑days are counted for each management unit.
-
-\## Rotation‑based normalization
-
-Rotation bounds (\`rot_start\`, \`rot_end\`) are expanded into daily
-records to compute the number of \*possible\* days in each season.
-Seasonal cover proportion is:
-
-\$\$ p\_{season} = \frac{\text{plant-days}}{\text{possible-days}} \$\$
-
-Seasons with zero possible days contribute zero.
-
-\## Seasonal weighting and scaling
-
-Seasonal proportions are combined using user‑specified weights:
-
-- `w_winter`
-
-- `w_spring`
-
-- `w_summer`
-
-- `w_fall`
-
-Weights are normalized to sum to 1. The final cover score is:
-
-\$\$ \text{Cover} = 100 \times \sum\_{season} w\_{season} \\ p\_{season}
-\$\$
-
-yielding a value in `[0, 100]`.
+``` r
+crop <- data.frame(
+  MGT_combo  = "field_1",
+  CD_name    = c("Corn", "Rye"),
+  crop_start = as.Date(c("2020-05-01", "2020-10-15")),
+  crop_end   = as.Date(c("2020-09-30", "2020-12-31"))
+)
+rot_bounds <- data.frame(
+  MGT_combo = "field_1",
+  rot_start = as.Date("2020-01-01"),
+  rot_end   = as.Date("2020-12-31")
+)
+compute_cover(crop, rot_bounds)
+#> # A tibble: 1 × 2
+#>   MGT_combo Cover
+#>   <chr>     <dbl>
+#> 1 field_1    77.6
+```

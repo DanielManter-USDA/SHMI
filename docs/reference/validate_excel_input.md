@@ -1,40 +1,58 @@
-# Validate SHMI Excel Input File
+# Validate an SHMI Excel workbook
 
-Validates the raw Excel file supplied to \`prepare_shmi_inputs()\`. This
-function checks for required sheets, required columns, valid date
-formats, missing or invalid \`MGT_combo\` values, malformed mixtures,
-species lookup consistency, and rotation boundary completeness. It is
-designed to fail early and explicitly before any ingestion or
-harmonization occurs.
+Checks a workbook before it is read by
+[`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md),
+which calls this function automatically.
 
 ## Usage
 
 ``` r
-validate_excel_input(path, verbose)
+validate_excel_input(path, verbose = TRUE)
 ```
 
 ## Arguments
 
 - path:
 
-  Character string. Path to the Excel file supplied by the user.
+  Path to the SHMI Excel workbook.
+
+- verbose:
+
+  Logical. Report rows removed while reading.
 
 ## Value
 
-A list with:
+A list with `ok` (logical), `errors` and `warnings` (character vectors),
+and `summary` (a tibble of row counts per sheet; empty if the check
+stopped because sheets were missing).
 
-- ok:
+## Details
 
-  Logical. TRUE if validation passed; FALSE otherwise.
+Errors (validation fails):
 
-- errors:
+- a required sheet is missing, or a required column is missing from a
+  non-empty sheet;
 
-  Character vector of critical validation failures.
+- `MGT_combo` is missing in any row, is duplicated in `Mgt_Unit`, or
+  does not appear in `Mgt_Unit`;
 
-- warnings:
+- a disturbance pass has a missing or unparseable `SD_date`;
 
-  Character vector of non-fatal issues.
+- `SD_mixeff` or `SD_depth` is non-numeric or negative.
 
-- summary:
+Warnings (validation passes):
 
-  A tibble summarizing sheet counts and row counts.
+- `SD_depth` greater than 20 inches (possibly entered in cm);
+
+- stray blank rows in `Crop_Diversity`.
+
+Checks that depend on the disturbance method (EPA or STIR) are made
+later by
+[`validate_shmi_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_shmi_input.md),
+because the method is chosen in
+[`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md).
+
+## See also
+
+[`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md),
+[`validate_shmi_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_shmi_input.md)

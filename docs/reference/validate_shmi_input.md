@@ -1,78 +1,51 @@
-# Validate SHMI Input Tables
+# Validate prepared SHMI inputs
 
-Performs structural and semantic validation of the input data list used
-by \`build_shmi()\`. This function checks for required tables, required
-columns, valid data types, missing or invalid values, duplicated keys
-where they should be unique, and rotation boundary consistency. It
-returns a structured list containing validation status, error messages,
-warnings, and a summary of key dataset properties.
-
-This validator is designed to fail early and explicitly when critical
-issues are detected (e.g., missing \`MGT_combo\`, malformed dates,
-invalid crop windows). Non-fatal issues are returned as warnings. A
-summary of field counts, years, species richness, mixture counts, and
-fallow presence is included for diagnostic transparency.
+Checks the list returned by
+[`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
+before scoring.
+[`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
+calls this function automatically, passing the disturbance method in
+use.
 
 ## Usage
 
 ``` r
-validate_shmi_input(shmi_inputs)
+validate_shmi_input(shmi_inputs, dist_meth = NULL)
 ```
 
 ## Arguments
 
 - shmi_inputs:
 
-  A named list of SHMI input tables, typically produced by
-  \`prepare_shmi_inputs()\`. Must contain at least:
+  A list returned by
+  [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md),
+  containing at least `mgt`, `crop`, `rot_bounds`, `dist`, `amend`, and
+  `animal`.
 
-  mgt
+- dist_meth:
 
-  :   Management table with \`MGT_combo\` and metadata columns.
-
-  crop_harmonized
-
-  :   Tibble of harmonized crop records with \`MGT_combo\`, \`CD_name\`,
-      \`CD_seq_num\`, \`crop_start\`, \`crop_end\`.
-
-  rot_bounds
-
-  :   Tibble defining rotation start and end dates for each
-      \`MGT_combo\`, with \`MGT_combo\`, \`rot_start\`, \`rot_end\`.
-
-  dist
-
-  :   Daily disturbance table with \`MGT_combo\`, \`date\`, and
-      disturbance attributes.
-
-  amend
-
-  :   Amendment events with \`MGT_combo\` and \`SA_date\`.
-
-  animal
-
-  :   Animal events with \`MGT_combo\`, \`AD_start_date\`,
-      \`AD_end_date\`.
+  Optional disturbance method, `"EPA"` or `"STIR"`. When supplied,
+  method-specific disturbance checks are run.
 
 ## Value
 
-A list with:
+A list with `ok` (logical), `errors` and `warnings` (character vectors),
+and `summary` (a tibble with the numbers of fields, years, species, and
+mixtures, and whether fallow is present).
 
-- ok:
+## Details
 
-  Logical. \`TRUE\` if validation passed with no errors; \`FALSE\`
-  otherwise.
+Errors: a required table is missing; `MGT_combo` is missing or `NA`;
+required crop columns are missing; dates are not of class `Date`; a
+crop, rotation, or animal period ends before it starts; or disturbance
+inputs do not suit `dist_meth`. For `"EPA"`, every pass with
+`SD_mixeff > 0` needs `SD_depth` and `SD_mixeff` must lie within 0-1.
 
-- errors:
+Warnings: for `"STIR"`, all non-zero `SD_mixeff` values are 1 or less,
+which suggests EPA mixing proportions were entered instead of STIR
+values.
 
-  Character vector of critical validation failures. If non-empty,
-  \`build_shmi()\` should stop execution.
+## See also
 
-- warnings:
-
-  Character vector of non-fatal issues.
-
-- summary:
-
-  A tibble summarizing key dataset properties (fields, years, species,
-  mixtures, fallow presence).
+[`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md),
+[`validate_excel_input()`](https://danielmanter-usda.github.io/SHMI/reference/validate_excel_input.md)

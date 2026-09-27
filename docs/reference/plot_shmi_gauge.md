@@ -1,9 +1,9 @@
-# Plot SHMI gauge panels (Cover, Diversity, Inverse Disturbance, OrgInput, Overall SHMI)
+# Plot gauges of SHMI and its sub-indices for one management unit
 
-Creates a five horizontal gauge-style plot for SHMI and each sub-index.
-Each panel shows a 0–100 scale divided into five qualitative score bins
-("very low" → "very high") with a pointer and numeric label for the SHMI
-component.
+Draws five vertical gauges, for Cover, Diversity, Inverse Disturbance,
+Organic Inputs, and overall SHMI. Each gauge shows the 0-100 scale in
+five bands ("very low" to "very high") with a pointer at the unit's
+score.
 
 ## Usage
 
@@ -15,19 +15,33 @@ plot_shmi_gauge(shmi, MGT_combo = NULL, row = 1)
 
 - shmi:
 
-  A data frame containing SHMI component scores with columns: -
-  \`MGT_combo\` - \`SHMI\` - \`Cover\` - \`Diversity\` - \`InvDist\` -
-  \`OrgInput\`
+  A data frame of scores with `SHMI`, `Cover`, `Diversity`, `InvDist`,
+  and `OrgInput`, and `MGT_combo` if units are selected by name, such as
+  `build_shmi()$indicator_df`.
 
 - MGT_combo:
 
-  Optional. Character value specifying which management unit to plot. If
-  supplied, this overrides \`row\`.
+  Optional management unit to plot. Overrides `row`.
 
 - row:
 
-  Integer row number to plot if \`MGT_combo\` is not provided.
+  Row of `shmi` to plot when `MGT_combo` is not given.
 
 ## Value
 
-A 1×5 panel of ggplot gauge charts.
+Draws the plot and invisibly returns the arranged grob from
+[`gridExtra::grid.arrange()`](https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html).
+
+## See also
+
+[`plot_shmi_lollipop()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_lollipop.md),
+[`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
+
+## Examples
+
+``` r
+scores <- data.frame(MGT_combo = "field_1", SHMI = 62.3, Cover = 71.2,
+                     Diversity = 45.0, InvDist = 88.9, OrgInput = 33.1)
+plot_shmi_gauge(scores)
+
+```

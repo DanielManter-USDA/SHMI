@@ -2,54 +2,44 @@
 % Please edit documentation in R/get_template.R
 \name{download_shmi_example}
 \alias{download_shmi_example}
-\title{Download the example SHMI Excel file}
+\title{Download the example SHMI Excel workbook}
 \usage{
 download_shmi_example(path = ".", overwrite = TRUE)
 }
 \arguments{
-\item{path}{Directory where the example file should be saved.
-Defaults to the current working directory (`"."`).}
+\item{path}{Directory in which to save \code{SHMI_example.xlsx}. Defaults to the
+working directory.}
 
-\item{overwrite}{Logical. Overwrite the file if it already exists?}
+\item{overwrite}{Logical. Overwrite an existing file?}
 }
 \value{
-The path to the saved file (invisibly).
+The path of the saved file, invisibly.
 }
 \description{
-Saves a fully populated example SHMI Excel workbook to a user-specified
-directory. This file demonstrates the correct SHMI input structure and
-contains realistic management data for testing the complete SHMI workflow.
+Saves a completed example SHMI workbook, \code{SHMI_example.xlsx}, to a
+directory.
 }
 \details{
-The example file is stored internally in `inst/extdata/` and includes valid
-entries for all required sheets (crop diversity, disturbance, organic inputs,
-and management units). It is intended for:
-
-* testing the SHMI workflow end-to-end
-* verifying installation and dependencies
-* serving as a reference for how user-supplied data should be formatted
-
-Unlike the blank template provided by [`download_shmi_template()`], this
-example file contains real data and can be passed directly to
-[`prepare_shmi_inputs()`] without modification.
+The example contains valid entries for every sheet and can be passed
+straight to \code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}}. Use it to test an installation, to
+try the full workflow, or as a reference for formatting your own data.
+To use the installed copy without saving a file, see
+\code{\link[=get_shmi_example]{get_shmi_example()}}.
 }
 \examples{
 \dontrun{
-# Save example file to your working directory
 my_file <- download_shmi_example()
-
-# Run the full SHMI workflow
-inputs <- prepare_shmi_inputs(my_file)
-result <- build_shmi(inputs)
+inputs  <- prepare_shmi_inputs(my_file)
+result  <- build_shmi(inputs)
 head(result$indicator_df)
 }
 
 }
 \seealso{
-[download_shmi_template()], [get_shmi_example()],
-  [prepare_shmi_inputs()], [build_shmi()]
+\code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}}, \code{\link[=build_shmi]{build_shmi()}}
 
 Other SHMI helper functions:
-\code{\link[=download_shmi_template]{download_shmi_template()}}
+\code{\link[=download_shmi_template]{download_shmi_template()}},
+\code{\link[=get_shmi_example]{get_shmi_example()}}
 }
 \concept{SHMI helper functions}

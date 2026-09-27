@@ -2,125 +2,96 @@
 % Please edit documentation in R/build_shmi.R
 \name{build_shmi}
 \alias{build_shmi}
-\title{Build SHMI Scores from Prepared Inputs}
+\title{Compute SHMI scores from prepared inputs}
 \usage{
 build_shmi(shmi_inputs, settings = NULL, expert_mode = FALSE)
 }
 \arguments{
-\item{shmi_inputs}{A list returned by \code{prepare_shmi_inputs()} containing
-harmonized rotation‑scale inputs (see Details).}
+\item{shmi_inputs}{A list returned by \code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}}.}
 
-\item{settings}{Optional named list of SHMI settings. Ignored unless
-\code{expert_mode = TRUE}.}
+\item{settings}{Optional named list of settings (see \emph{Settings and expert
+mode}). Ignored unless \code{expert_mode = TRUE}.}
 
-\item{expert_mode}{Logical; if \code{TRUE}, user‑supplied settings override
-official defaults.}
-
-\item{dist_meth}{Disturbance method: \code{"EPA"} or \code{"STIR"}.}
+\item{expert_mode}{Logical. If \code{TRUE}, elements of \code{settings} override the
+official national settings.}
 }
 \value{
 A list with:
-  \itemize{
-    \item \code{indicator_df} — data frame with:
-      \code{MGT_combo}, \code{SHMI}, \code{Cover}, \code{Diversity},
-      \code{InvDist}, \code{OrgInput}, and available metadata.
-    \item \code{settings_used} — settings actually applied
-    \item \code{expert_mode} — logical flag
-    \item \code{shmi_version} — version string
-    \item \code{timestamp} — computation time
-  }
+\itemize{
+\item \code{indicator_df}: one row per management unit with \code{MGT_combo}, the
+management metadata that is present (\code{MGT_study}, \code{MGT_farm},
+\code{MGT_field}, \code{MGT_trt}), \code{SHMI}, \code{Cover}, \code{Diversity}, \code{InvDist}, and
+\code{OrgInput}.
+\item \code{settings_used}: the full list of settings applied.
+\item \code{expert_mode}: logical flag.
+\item \code{shmi_version}: version of the SHMI package used.
+\item \code{timestamp}: time of computation.
+}
 }
 \description{
 Computes the Soil Health Management Index (SHMI) for each management unit
-(`MGT_combo`) using harmonized rotation‑scale inputs produced by
-\code{prepare_shmi_inputs()}. SHMI is a weighted composite of four
-sub‑indices:
+(\code{MGT_combo}) from the rotation-scale inputs returned by
+\code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}}. SHMI is a weighted mean of four sub-indices, each
+scaled 0-100:
 }
 \details{
 \itemize{
-  \item \strong{Cover} — season‑weighted plant presence
-  \item \strong{Diversity} — rotation‑scale crop diversity (Hill numbers)
-  \item \strong{Inverse disturbance} — EPA mechanistic or STIR method
-  \item \strong{Organic inputs} — amendments + animal integration
+\item \strong{Cover}: season-weighted proportion of days with living plants
+(\code{\link[=compute_cover]{compute_cover()}}).
+\item \strong{Diversity}: rotation-scale crop diversity (\code{\link[=compute_diversity]{compute_diversity()}}).
+\item \strong{InvDist}: inverse soil disturbance (\code{\link[=compute_disturbance]{compute_disturbance()}}).
+\item \strong{OrgInput}: organic amendments and animal integration
+(\code{\link[=compute_orginput]{compute_orginput()}}).
+}
+}
+\section{Settings and expert mode}{
+
+With \code{expert_mode = FALSE} (the default, "locked mode") the official
+national settings below are always used and \code{settings} is ignored. With
+\code{expert_mode = TRUE}, each element of \code{settings} replaces the official
+value; elements not supplied keep their official value. Expert-mode scores
+are not comparable to the national SHMI scale.\tabular{lll}{
+   Setting \tab Official value \tab Used by \cr
+   \code{w_winter}, \code{w_spring}, \code{w_summer}, \code{w_fall} \tab 0.1259, 0.1260, 0.3755, 0.3726 \tab \code{\link[=compute_cover]{compute_cover()}} \cr
+   \code{hill}, \code{max_div} \tab 1, 10 \tab \code{\link[=compute_diversity]{compute_diversity()}} \cr
+   \code{dist_meth}, \code{max_stir}, \code{ti_rep} \tab \code{"EPA"}, 342, \code{"max"} \tab \code{\link[=compute_disturbance]{compute_disturbance()}} \cr
+   \code{w_amend}, \code{w_animal} \tab 0.6615, 0.3385 \tab \code{\link[=compute_orginput]{compute_orginput()}} \cr
+   \code{w_cover}, \code{w_diversity}, \code{w_invdist}, \code{w_orginput} \tab 0.4481, 0.0904, 0.1431, 0.3184 \tab SHMI \cr
 }
 
-By default, SHMI is computed using the official national settings
-(“locked mode”). In expert mode, users may override any setting, but the
-resulting SHMI values are no longer comparable to the national SHMI scale.
 
+The four pillar weights are rescaled to sum to 1 and combined as
+\deqn{SHMI = w_{cover} Cover + w_{diversity} Diversity + w_{invdist} InvDist + w_{orginput} OrgInput}
 
-## Required inputs
-
-The function expects a list returned by \code{prepare_shmi_inputs()} with:
-
-\itemize{
-  \item \code{rot_bounds} — rotation start/end dates and rotation years
-  \item \code{crop} — harmonized crop windows (one row per species)
-  \item \code{dist} — disturbance events (EPA/STIR inputs)
-  \item \code{amend} — amendment events
-  \item \code{animal} — animal integration events
-  \item \code{mgt} — management metadata (study, farm, field, treatment)
+The official disturbance method, \code{"EPA"}, requires a tillage depth
+(\code{SD_depth}) for every pass. Data without depths can be scored in expert
+mode with \code{settings = list(dist_meth = "STIR")}.
 }
 
+\section{Missing records}{
 
-## Disturbance method
-
-Disturbance can be computed using:
-
-\itemize{
-  \item \code{"EPA"} — mechanistic soil‑mixing model (profile penetration)
-  \item \code{"STIR"} — daily summed mixing efficiency (SD_mixeff)
+Every management unit in \code{shmi_inputs$mgt} receives a score. A missing
+record means the practice did not happen: a unit with no crops scores
+Cover = 0 and Diversity = 0, no disturbance scores InvDist = 100, and no
+organic inputs scores OrgInput = 0. Units with no dated records at all are
+removed earlier, by \code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}}.
 }
 
-Both methods classify annual tillage intensity using the modified Tier‑3
-Z–K scheme and compute inverse disturbance on a 0–100 scale.
+\examples{
+inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 
+# Official national settings
+result <- build_shmi(inputs)
+result$indicator_df
 
-## Settings and expert mode
-
-In locked mode (\code{expert_mode = FALSE}), SHMI uses the official national
-settings:
-
-\itemize{
-  \item seasonal cover weights
-  \item Hill‑number order and maximum diversity
-  \item STIR normalization constant
-  \item amendment/animal weights
-  \item pillar weights for SHMI aggregation
+# Expert mode: STIR disturbance, for data without tillage depths
+\dontrun{
+result_stir <- build_shmi(inputs, settings = list(dist_meth = "STIR"),
+                          expert_mode = TRUE)
 }
 
-In expert mode, user‑supplied settings override defaults. Missing settings
-are filled from the official values.
-
-
-## SHMI computation workflow
-
-\enumerate{
-  \item \strong{Settings}: locked mode vs expert mode.
-
-  \item \strong{Input validation}: structural checks on all required inputs.
-
-  \item \strong{Pillar computation}:
-    \itemize{
-      \item Cover — \code{compute_cover()}
-      \item Diversity — \code{compute_diversity()}
-      \item Inverse disturbance — \code{compute_disturbance()}
-      \item Organic inputs — \code{compute_orginput()}
-    }
-
-  \item \strong{Weighted combination}:
-    Pillar scores are normalized so weights sum to 1, then combined:
-
-    \deqn{
-      SHMI =
-        w_{cover} \cdot Cover +
-        w_{diversity} \cdot Diversity +
-        w_{invdist} \cdot InvDist +
-        w_{orginput} \cdot OrgInput
-    }
-
-  \item \strong{Output assembly}:
-    Returns a tidy data frame of SHMI scores and metadata describing the
-    settings used, SHMI version, and computation timestamp.
 }
+\seealso{
+\code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}}, \code{\link[=validate_shmi_input]{validate_shmi_input()}},
+\code{\link[=plot_shmi_gauge]{plot_shmi_gauge()}}, \code{\link[=plot_shmi_lollipop]{plot_shmi_lollipop()}}
 }

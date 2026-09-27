@@ -1,124 +1,72 @@
-#' Compute Inverse Disturbance Using EPA Mechanistic or STIR Methods
+#' Compute the inverse-disturbance sub-index
 #'
-#' Computes the SHMI disturbance sub-index for each management unit
-#' (`MGT_combo`) using either:
+#' Scores soil disturbance for each calendar year of the rotation and
+#' averages the years, so that 100 means no disturbance and 0 means maximum
+#' disturbance.
 #'
-#' \itemize{
-#'   \item **EPA mechanistic soil-mixing model** (profile penetration–based), or
-#'   \item **STIR disturbance intensity** (daily summed mixing efficiency).
-#' }
+#' @details
+#' **Methods.**
+#' * `"EPA"` (official): mechanistic soil-mixing model. `SD_mixeff` is the
+#'   mixing efficiency (a proportion, 0-1) and `SD_depth` the tillage depth
+#'   in inches, converted to cm and capped at 30 cm. Passes on the same day
+#'   are processed from shallowest to deepest, and each disturbs fraction
+#'   \eqn{m} of the soil still undisturbed within its depth \eqn{d}, so
+#'   overlapping passes are not double-counted:
+#'   \eqn{S_k = S_{k-1} + m_k (d_k - S_{k-1})}. The daily value is
+#'   \eqn{S / 30}, and daily values are summed within each calendar year.
+#' * `"STIR"`: `SD_mixeff` holds STIR values. They are summed within each
+#'   calendar year, divided by `max_stir`, and truncated to 1.
 #'
-#' Both methods produce an annual tillage-intensity (TI) value for each
-#' rotation year. Annual TI values are then classified into a **Tier 3
-#' tillage-intensity scheme (Z–K)** derived from the EPA Soil-Mixing Report.
+#' **Classes.** Each annual tillage intensity (TI) is placed in a Tier-3
+#' class (left-closed, right-open intervals):
 #'
+#' | Class | TI range | Class | TI range |
+#' |---|---|---|---|
+#' | Z | `0 - 0.001` | F | `0.144 - 0.162` |
+#' | A | `0.001 - 0.01` | G | `0.162 - 0.202` |
+#' | B | `0.01 - 0.04` | H | `0.202 - 0.252` |
+#' | C | `0.04 - 0.075` | I | `0.252 - 0.268` |
+#' | D | `0.075 - 0.111` | J | `0.268 - 0.449` |
+#' | E | `0.111 - 0.144` | K | `0.449 - 1` |
 #'
-#' ## Tier 3 Classification (Z–K)
+#' TI is then replaced by a class representative chosen by `ti_rep`: the
+#' lower bound (`"min"`), midpoint (`"mid"`), or upper bound (`"max"`, the
+#' official choice). Class Z always uses 0. The annual score is
+#' \eqn{100 (1 - TI_{used})}, and the rotation score is the mean over all
+#' calendar years from `rot_start_yr` to `rot_end_yr`.
 #'
-#' The Tier 3 scheme partitions the \code{[0, 1]} disturbance domain into
-#' nonlinear classes (Z–K). Each class has a lower and upper TI bound
-#' (\code{ti_min}, \code{ti_max}). Class Z is added to represent
-#' \code{TI = 0}. All classes use closed–open intervals
-#' (e.g., \code{[0.01, 0.04)}) to ensure each TI maps to exactly one class.
+#' **Missing records.** A missing record means no disturbance occurred (for
+#' example, continuous no-till): years without passes score 100, and a unit
+#' with no passes at all scores 100.
 #'
-#' After classification, each TI is replaced by a **class representative**:
+#' **Checks.** Inputs are checked for the chosen method. Under `"EPA"`, every
+#' pass with `SD_mixeff > 0` needs `SD_depth`, `SD_mixeff` must lie within
+#' 0-1 (larger values look like STIR), and depths above 20 inches give a
+#' warning because they may have been entered in cm.
 #'
-#' \itemize{
-#'   \item \code{"min"} — lower class boundary (\code{ti_min})
-#'   \item \code{"mid"} — class midpoint (\code{(ti_min + ti_max)/2})
-#'   \item \code{"max"} — upper class boundary (\code{ti_max})
-#' }
+#' @param dist Disturbance passes with `MGT_combo`, `SD_date`, `SD_mixeff`,
+#'   and, for `"EPA"`, `SD_depth` (inches).
+#' @param rot_bounds Rotation bounds with `MGT_combo`, `rot_start_yr`, and
+#'   `rot_end_yr`.
+#' @param dist_meth Disturbance method, `"EPA"` or `"STIR"`.
+#' @param max_stir Annual STIR value that corresponds to TI = 1 (`"STIR"`
+#'   only).
+#' @param ti_rep Class representative: `"max"`, `"min"`, or `"mid"`.
 #'
-#' The default representative is \code{"mid"}, which corresponds to the
-#' midpoint-based EPA Tier 3 interpretation used in the national SHMI.
+#' @return A data frame with `MGT_combo` and `InvDist` (0-100), one row per
+#'   unit in `rot_bounds`.
 #'
+#' @seealso [build_shmi()], [validate_shmi_input()]
 #'
-#' ## Inverse Disturbance
-#'
-#' The inverse-disturbance score is computed as:
-#'
-#' \deqn{
-#'   T_{t}^{inv} = 100 \times (1 - TI_{\text{used}})
-#' }
-#'
-#' where \code{TI_used} is the class representative selected by
-#' \code{ti_rep}. This formulation ensures:
-#'
-#' \itemize{
-#'   \item \code{TI_used = 0} → \code{InvDist = 100} (no disturbance)
-#'   \item \code{TI_used = 1} → \code{InvDist = 0} (maximum disturbance)
-#' }
-#'
-#' Rotation-level disturbance is the mean of annual inverse-disturbance values.
-#' Units with no disturbance events receive a score of 100.
-#'
-#'
-#' ## EPA Mechanistic Method
-#'
-#' The EPA method computes mechanistic profile penetration for each tillage
-#' pass using mixing efficiency and tillage depth. Passes occurring on the same
-#' date are treated as sequential operations, producing a *daily* TI value.
-#' Daily TI values are summed to annual TI. EPA TI values are naturally bounded
-#' in \code{[0, 1]} and require no additional normalization.
-#'
-#' Required columns in `dist`:
-#'
-#' \itemize{
-#'   \item \code{MGT_combo} — management unit identifier
-#'   \item \code{SD_date} — date of tillage pass
-#'   \item \code{SD_mixeff} — mixing efficiency (0–1)
-#'   \item \code{SD_depth} — tillage depth (in inches; converted internally)
-#' }
-#'
-#'
-#' ## STIR Method
-#'
-#' The STIR method computes daily disturbance intensity as:
-#'
-#' \deqn{ SDsum = \sum SD\_mixeff }
-#'
-#' summed across all passes on a given date. Annual STIR is the sum of daily
-#' SDsum values. Because STIR is unbounded, annual STIR is normalized to:
-#'
-#' \deqn{
-#'   TI = \frac{STIR_{\text{raw}}}{\text{max\_stir}}
-#' }
-#'
-#' and truncated to \code{[0, 1]} before Tier 3 classification.
-#'
-#' Required columns in `dist`:
-#'
-#' \itemize{
-#'   \item \code{MGT_combo}
-#'   \item \code{SD_date}
-#'   \item \code{SD_mixeff}
-#' }
-#'
-#'
-#' ## Rotation Bounds
-#'
-#' A data frame containing rotation-year boundaries:
-#'
-#' \itemize{
-#'   \item \code{MGT_combo}
-#'   \item \code{rot_start}
-#'   \item \code{rot_end}
-#'   \item \code{rot_start_yr}
-#'   \item \code{rot_end_yr}
-#' }
-#'
-#'
-#' @param dist Disturbance-event table (EPA or STIR inputs).
-#' @param rot_bounds Rotation-year boundaries for each management unit.
-#' @param dist_meth Character string: `"EPA"` or `"STIR"`.
-#' @param max_stir Maximum annual STIR value used for normalization (default 342).
-#' @param ti_rep Class representative to use: `"max"` (default), `"min"`, or `"mid"`.
-#'
-#' @return A data frame with:
-#' \itemize{
-#'   \item \code{MGT_combo}
-#'   \item \code{InvDist} — inverse disturbance score (0–100)
-#' }
+#' @examples
+#' dist <- data.frame(
+#'   MGT_combo = "field_1",
+#'   SD_date   = as.Date(c("2020-04-15", "2020-05-01")),
+#'   SD_mixeff = c(39, 2.4)   # STIR values: disk harrow, planter
+#' )
+#' rot_bounds <- data.frame(MGT_combo = "field_1",
+#'                          rot_start_yr = 2020, rot_end_yr = 2021)
+#' compute_disturbance(dist, rot_bounds, dist_meth = "STIR")
 #'
 #' @export
 compute_disturbance <- function(dist,
@@ -130,8 +78,13 @@ compute_disturbance <- function(dist,
   dist_meth <- match.arg(dist_meth)
   ti_rep    <- match.arg(ti_rep)
 
+  chk <- .check_dist_method(dist, dist_meth)
+  if (length(chk$errors) > 0) {
+    stop(paste(chk$errors, collapse = "\n"), call. = FALSE)
+  }
+
   # ------------------------------------------------------------
-  # REQUIRED CHECK: STIR needs SD_depth
+  # REQUIRED CHECK: EPA needs SD_depth
   # ------------------------------------------------------------
   if (dist_meth == "EPA") {
 
@@ -160,7 +113,7 @@ compute_disturbance <- function(dist,
     dplyr::select(MGT_combo, year)
 
   # -------------------------------------------------------------------------
-  # 2. Tier‑3 class table (left‑closed, right‑open)
+  # 2. Tier-3 class table (left-closed, right-open)
   # -------------------------------------------------------------------------
   ti_classes <- tibble::tribble(
     ~class, ~ti_min, ~ti_max,
@@ -182,14 +135,14 @@ compute_disturbance <- function(dist,
       ti_mid = dplyr::if_else(class == "Z", 0, ti_mid)
     )
 
-  rep_col <- dplyr::case_when(
-    ti_rep == "mid" ~ ti_classes$ti_mid,
-    ti_rep == "min" ~ ti_classes$ti_min,
-    ti_rep == "max" ~ ti_classes$ti_max
+  rep_col <- switch(ti_rep,
+                    mid = ti_classes$ti_mid,
+                    min = ti_classes$ti_min,
+                    max = ti_classes$ti_max
   )
 
   # -------------------------------------------------------------------------
-  # Helper: classify TI_raw using left‑closed, right‑open intervals
+  # Helper: classify TI_raw using left-closed, right-open intervals
   # -------------------------------------------------------------------------
   classify_TI <- function(TI_raw) {
     idx <- which(TI_raw >= ti_classes$ti_min & TI_raw < ti_classes$ti_max)
@@ -200,7 +153,7 @@ compute_disturbance <- function(dist,
       # fallback: nearest midpoint
       return(which.min(abs(TI_raw - ti_classes$ti_mid)))
     }
-    # multiple matches → pick the correct interval by left‑closed rule
+    # multiple matches -> pick the correct interval by left-closed rule
     return(idx[length(idx)])  # highest interval that matches
   }
 
@@ -211,6 +164,44 @@ compute_disturbance <- function(dist,
   # -------------------------------------------------------------------------
   if (dist_meth == "EPA") {
 
+    if (any(dist$SD_mixeff < 0 | dist$SD_mixeff > 1, na.rm = TRUE)) {
+      stop("dist_meth = 'EPA' expects SD_mixeff in [0, 1]; values > 1 look like STIR. ",
+           "Use dist_meth = 'STIR' or convert to mixing efficiencies.", call. = FALSE)
+    }
+
+    bad <- dist %>%
+      dplyr::filter(!is.na(SD_mixeff), SD_mixeff > 0, is.na(SD_depth))
+
+    if (nrow(bad) > 0) {
+      cli::cli_abort(c(
+        "dist_meth = 'EPA' requires SD_depth for every disturbance pass.",
+        "x" = "{nrow(bad)} pass{?es} ha{?s/ve} SD_mixeff but no SD_depth.",
+        "i" = "First affected: {.val {utils::head(unique(paste(bad$MGT_combo, bad$SD_date)), 5)}}"
+      ))
+    }
+    if (!is.numeric(dist$SD_depth)) {
+      cli::cli_abort("SD_depth must be numeric for EPA disturbance calculations.")
+    }
+
+    # Plausibility check on depth units (template expects inches)
+    max_plausible_in <- 20   # ~51 cm; deeper than normal tillage
+
+    if (any(dist$SD_depth < 0, na.rm = TRUE)) {
+      cli::cli_abort("SD_depth contains negative values; depths must be >= 0 inches.")
+    }
+
+    deep <- dist %>%
+      dplyr::filter(!is.na(SD_depth), SD_depth > max_plausible_in)
+
+    if (nrow(deep) > 0) {
+      cli::cli_warn(c(
+        "{nrow(deep)} disturbance pass{?es} ha{?s/ve} SD_depth > {max_plausible_in} inches.",
+        "!" = "SD_depth is expected in inches; values this large may have been entered in cm.",
+        "i" = "Depths are capped at 30 cm (~11.8 in), so unit errors are otherwise absorbed silently.",
+        "i" = "First affected: {.val {utils::head(unique(paste(deep$MGT_combo, deep$SD_date, deep$SD_depth)), 5)}}"
+      ))
+    }
+
     dist_epa <- dist %>%
       dplyr::mutate(
         SD_depth_cm = SD_depth * 2.54,
@@ -219,16 +210,17 @@ compute_disturbance <- function(dist,
       ) %>%
       dplyr::filter(!is.na(SD_mixeff), !is.na(SD_depth_cm))
 
+    epa_day <- function(me, depth) {
+      S <- 0
+      for (i in seq_along(me)) S <- S + me[i] * max(depth[i] - S, 0)
+      S
+    }
+
     daily <- dist_epa %>%
-      dplyr::arrange(MGT_combo, year, SD_date, SD_depth_cm, SD_mixeff) %>%
+      dplyr::arrange(MGT_combo, SD_date, SD_depth_cm) %>%
       dplyr::group_by(MGT_combo, year, SD_date) %>%
-      dplyr::mutate(
-        ME_times_depth = SD_mixeff * SD_depth_cm,
-        cum_ME         = cumsum(dplyr::lag(ME_times_depth, default = 0)),
-        T_t            = SD_mixeff * pmax(SD_depth_cm - cum_ME, 0),
-        T_t_norm       = T_t / 30
-      ) %>%
-      dplyr::summarize(T_t_daily = sum(T_t_norm, na.rm = TRUE), .groups = "drop")
+      dplyr::summarize(T_t_daily = epa_day(SD_mixeff, SD_depth_cm) / 30,
+                       .groups = "drop")
 
     annual <- daily %>%
       dplyr::group_by(MGT_combo, year) %>%

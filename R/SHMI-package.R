@@ -1,76 +1,45 @@
 #' SHMI: Soil Health Management Index
 #'
-#' The **SHMI** package provides a complete, reproducible workflow for computing
-#' the Soil Health Management Index (SHMI) from standardized Excel workbooks.
-#' SHMI is a composite indicator integrating four management sub-indices:
+#' Computes the Soil Health Management Index (SHMI) from management records
+#' entered in a standard Excel workbook. SHMI is a 0-100 composite of four
+#' sub-indices:
 #'
-#' \itemize{
-#'   \item \strong{Cover} — seasonal plant presence
-#'   \item \strong{Diversity} — rotation-scale crop diversity (Hill numbers)
-#'   \item \strong{Inverse Disturbance} — mechanistic mixing-efficiency × depth metric
-#'   \item \strong{Organic Inputs} — amendments and animal presence
-#' }
-#'
-#' The package includes:
-#'
-#' \itemize{
-#'   \item robust input validation and harmonization
-#'   \item biologically realistic crop-window processing
-#'   \item fast vectorized daily-grid construction
-#'   \item mechanistic disturbance modeling
-#'   \item rotation-scale aggregation
-#'   \item official national SHMI settings (locked mode)
-#'   \item expert-mode overrides for research and scenario analysis
-#' }
+#' * **Cover**: season-weighted proportion of days with living plants.
+#' * **Diversity**: rotation-scale crop diversity.
+#' * **Inverse disturbance**: soil disturbance from tillage, by the EPA
+#'   soil-mixing model or STIR.
+#' * **Organic inputs**: organic amendments and animal integration.
 #'
 #' @section Workflow:
+#' 1. [download_shmi_template()] provides a blank workbook, and
+#'    [download_shmi_example()] a completed one; [get_shmi_example()] gives
+#'    the path of the installed example.
+#' 2. [prepare_shmi_inputs()] reads and validates the workbook, converts crop
+#'    records into species episodes, and records every assumption it makes.
+#' 3. [build_shmi()] computes the four sub-indices and SHMI.
+#' 4. [plot_shmi_gauge()] and [plot_shmi_lollipop()] display the results.
 #'
-#' A complete SHMI workflow consists of:
+#' The sub-indices can also be computed directly with [compute_cover()],
+#' [compute_diversity()], [compute_disturbance()], and [compute_orginput()].
 #'
-#' \enumerate{
-#'   \item \strong{Prepare inputs}
-#'     \code{\link{prepare_shmi_inputs}()}
-#'     Reads and validates the Excel workbook, harmonizes crop windows,
-#'     constructs rotation bounds, and generates daily grids.
-#'
-#'   \item \strong{Compute SHMI}
-#'     \code{\link{build_shmi}()}
-#'     Computes all four sub-indices and combines them into a final SHMI score.
-#'
-#'   \item \strong{Interpret results}
-#'     The returned object includes sub-indices scores, final SHMI values,
-#'     settings used, and a timestamp for reproducibility.
-#' }
+#' @section Design principles:
+#' * **Missing records mean "did not happen".** No disturbance record means
+#'   no disturbance (InvDist = 100); no crop means no cover; no amendment
+#'   means no organic input.
+#' * **The evaluation window is set by the data or by overrides.** Rotation
+#'   bounds span the first to the last recorded event unless
+#'   `start_date_override` / `end_date_override` are given to
+#'   [prepare_shmi_inputs()].
+#' * **Assumptions are reported, not hidden.** Every imputed date and every
+#'   value that could not be converted is listed in
+#'   `prepare_shmi_inputs()$assumptions`.
 #'
 #' @section Settings:
+#' By default, [build_shmi()] uses the official national settings ("locked
+#' mode"). With `expert_mode = TRUE`, weights and parameters can be changed,
+#' but the resulting scores are not comparable to the national SHMI scale.
+#' Each result records the settings used, the package version, and a
+#' timestamp.
 #'
-#' By default, SHMI is computed using the official national settings
-#' (locked mode).
-#' Setting \code{expert_mode = TRUE} allows users to override weights and
-#' parameters, but resulting SHMI values are not comparable to the national
-#' SHMI scale.
-#'
-#' @section Versioning and Reproducibility:
-#'
-#' All SHMI outputs include:
-#' \itemize{
-#'   \item \code{shmi_version} — version of the SHMI algorithm
-#'   \item \code{timestamp} — computation time
-#'   \item \code{settings_used} — full list of settings applied
-#' }
-#'
-#' @section Key Functions:
-#'
-#' \itemize{
-#'   \item \code{\link{prepare_shmi_inputs}} — read, validate, harmonize inputs
-#'   \item \code{\link{build_shmi}} — compute SHMI scores
-#'   \item \code{\link{compute_cover}} — cover sub-index
-#'   \item \code{\link{compute_diversity}} — diversity sub-index
-#'   \item \code{\link{compute_disturbance}} — inverse disturbance sub-index
-#'   \item \code{\link{compute_orginput}} — organic inputs sub-index
-#' }
-#'
-#' @name SHMI
-#' @aliases SHMI-package
 #' @keywords internal
-NULL
+"_PACKAGE"

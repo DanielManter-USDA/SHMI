@@ -1,73 +1,39 @@
-#' Compute the Organic Inputs Sub-index (Amendments + Animals)
+#' Compute the Organic Inputs sub-index
 #'
-#' Calculates the SHMI organic-inputs indicator for each management unit
-#' (`MGT_combo`) by determining the proportion of rotation years in which
-#' organic amendments and animal inputs occurred. Each component is treated
-#' independently:
+#' Proportion of rotation years with organic amendments and with animals,
+#' weighted and scaled 0-100.
 #'
-#' \itemize{
-#'   \item \strong{Amendment proportion} — fraction of rotation years with at
-#'         least one organic amendment event.
-#'   \item \strong{Animal proportion} — fraction of rotation years with at
-#'         least one animal event.
-#' }
+#' @details
+#' For every calendar year from `rot_start_yr` to `rot_end_yr`, a year counts
+#' as having an amendment if any amendment with `SA_cat == "Organic"` is
+#' dated in that year, and as having animals if any animal period starts in
+#' that year (`AD_start_date`). Only presence is scored; amounts are not
+#' used. With \eqn{p} the proportion of years with each input,
+#' \deqn{OrgInput = 100 \frac{w_{amend} p_{amend} + w_{animal} p_{animal}}{w_{amend} + w_{animal}}}
 #'
-#' User-specified weights (\code{w_amend}, \code{w_animal}) determine the
-#' relative importance of amendments versus animals in the final score.
-#' Weighted proportions are combined and rescaled to a 0–100 SHMI-compatible
-#' index:
+#' A missing record means no input: a unit with no organic amendments or
+#' animals scores 0.
 #'
-#' \deqn{
-#'   \mathrm{OrgInput} =
-#'   100 \times
-#'   \frac{
-#'     w_{\mathrm{amend}} \cdot p_{\mathrm{amend}} +
-#'     w_{\mathrm{animal}} \cdot p_{\mathrm{animal}}
-#'   }{
-#'     w_{\mathrm{amend}} + w_{\mathrm{animal}}
-#'   }
-#' }
+#' @param rot_bounds Rotation bounds with `MGT_combo`, `rot_start_yr`, and
+#'   `rot_end_yr`.
+#' @param amend Amendment events with `MGT_combo`, `SA_date`, and `SA_cat`.
+#' @param animal Animal events with `MGT_combo` and `AD_start_date`.
+#' @param w_amend,w_animal Weights for amendments and animals. Defaults are
+#'   the official values.
 #'
-#' Units with no organic inputs receive a score of 0.
+#' @return A data frame with `MGT_combo` and `OrgInput` (0-100), one row per
+#'   unit in `rot_bounds`.
 #'
+#' @seealso [build_shmi()]
 #'
-#' ## Required Inputs
-#'
-#' ### Rotation bounds
-#' A data frame containing rotation-year boundaries:
-#' \itemize{
-#'   \item \code{MGT_combo}
-#'   \item \code{rot_start_yr}
-#'   \item \code{rot_end_yr}
-#' }
-#'
-#' ### Amendment events
-#' A data frame containing:
-#' \itemize{
-#'   \item \code{MGT_combo}
-#'   \item \code{SA_date} — amendment date
-#'   \item \code{SA_cat} — amendment category (only \code{"Organic"} counted)
-#' }
-#'
-#' ### Animal events
-#' A data frame containing:
-#' \itemize{
-#'   \item \code{MGT_combo}
-#'   \item \code{AD_start_date} — start date of animal presence
-#' }
-#'
-#'
-#' @param rot_bounds Rotation-year boundaries for each management unit.
-#' @param amend Amendment event table.
-#' @param animal Animal event table.
-#' @param w_amend Weight for amendment presence (default 0.6615).
-#' @param w_animal Weight for animal presence (default 0.3385).
-#'
-#' @return A data frame with:
-#' \itemize{
-#'   \item \code{MGT_combo}
-#'   \item \code{OrgInput} — organic-input score (0–100)
-#' }
+#' @examples
+#' rot_bounds <- data.frame(MGT_combo = "field_1",
+#'                          rot_start_yr = 2019, rot_end_yr = 2020)
+#' amend <- data.frame(MGT_combo = "field_1",
+#'                     SA_date = as.Date("2019-04-01"), SA_cat = "Organic")
+#' animal <- data.frame(MGT_combo = character(),
+#'                      AD_start_date = as.Date(character()))
+#' compute_orginput(rot_bounds, amend, animal)
 #'
 #' @export
 compute_orginput <- function(rot_bounds,
@@ -113,7 +79,7 @@ compute_orginput <- function(rot_bounds,
       .groups = "drop"
     )
 
-  # 6. Weighted combination + 0–100 scaling
+  # 6. Weighted combination + 0-100 scaling
   org_final <- org_props %>%
     mutate(
       raw_score = w_amend * p_amend + w_animal * p_animal,

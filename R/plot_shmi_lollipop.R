@@ -1,14 +1,20 @@
-#' Plot SHMI values for multiple management units (lollipop chart)
+#' Plot SHMI across management units
 #'
-#' @description
-#' When more than one MGT_combo is present, this function plots only the
-#' overall SHMI values using a clean horizontal lollipop chart.
+#' Horizontal lollipop chart of overall SHMI, one line per management unit,
+#' sorted by score.
 #'
-#' @param shmi A data frame containing at least:
-#'   - `MGT_combo`
-#'   - `SHMI`
+#' @param shmi A data frame with `MGT_combo` and `SHMI`, such as
+#'   `build_shmi()$indicator_df`.
 #'
-#' @return A ggplot lollipop chart.
+#' @return A ggplot object.
+#'
+#' @seealso [plot_shmi_gauge()], [build_shmi()]
+#'
+#' @examples
+#' scores <- data.frame(MGT_combo = c("field_1", "field_2", "field_3"),
+#'                      SHMI = c(62.3, 48.1, 75.6))
+#' plot_shmi_lollipop(scores)
+#'
 #' @export
 plot_shmi_lollipop <- function(shmi) {
 

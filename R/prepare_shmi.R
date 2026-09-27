@@ -1,146 +1,97 @@
-#' Prepare and Validate SHMI Input Data from an Excel Workbook
+#' Read, validate, and prepare SHMI inputs from an Excel workbook
 #'
-#' Reads, validates, harmonizes, and expands all input sheets required to
-#' compute the Soil Health Management Index (SHMI). This function is the
-#' official entry point for SHMI data preparation and produces a standardized
-#' list of rotation‑scale objects used directly by \code{build_shmi()}.
+#' Reads a completed SHMI workbook, validates it, converts crop records into
+#' species episodes, and returns the rotation-scale tables used by
+#' [build_shmi()], together with a table of every assumption made along the
+#' way.
 #'
-#' ## Overview
+#' @section Workbook:
+#' The workbook follows the SHMI template (see [download_shmi_template()]).
+#' Sheets `Mgt_Unit`, `Crop_Diversity`, `Soil_Disturbance`,
+#' `Soil_Amendments`, and `Animal_Diversity` are read, each with column names
+#' on the fourth row. The disturbance, amendment, and animal sheets may be
+#' empty. The workbook is first checked by [validate_excel_input()], and
+#' execution stops with a list of errors if it fails.
 #'
-#' The function performs:
-#' \itemize{
-#'   \item robust Excel ingestion with sheet‑level validation
-#'   \item management‑unit filtering
-#'   \item biological validation of crop chronology (annual/perennial rules)
-#'   \item mixture‑aware harmonization of crop windows
-#'   \item construction of rotation bounds (start/end dates and rotation years)
-#'   \item assembly of disturbance, amendment, and animal event tables
-#'   \item optional extraction of yield and nitrogen‑rate data
-#'   \item override‑aware clipping of all event types
-#' }
+#' @section Crop episodes:
+#' Crop rows become species episodes: one row per species per continuous
+#' period of presence. Mixtures, relays, and intercrops are simply
+#' overlapping episodes; `CD_seq_num` and `CD_mix` are not used. A plant date
+#' starts an episode. Non-perennials end at harvest (a termination date is
+#' also accepted; if both are given, the earlier is used). Perennials end
+#' only at termination, and harvest rows without a plant date are attached to
+#' the standing crop as cuttings. Missing dates are filled as follows:
+#' * a crop with no plant date starts at the end of the most recent earlier
+#'   crop, or at the rotation start if nothing ended earlier (records cut off
+#'   at the start of a calendar year);
+#' * a crop with no end date ends at the next recorded planting, or at the
+#'   rotation end if there is none (records cut off at the end of a calendar
+#'   year).
 #'
-#' The result is a clean, rotation‑scale dataset suitable for SHMI pillar
-#' computation: cover, diversity, inverse disturbance, and organic inputs.
+#' Every such imputation and data-quality check is recorded in
+#' `assumptions`.
 #'
+#' @section Rotation window and overrides:
+#' Rotation bounds run from the first to the last recorded event of any
+#' type. To evaluate a fixed period, set `start_date_override` and/or
+#' `end_date_override`: events outside the window are removed, crop and
+#' animal periods are clipped to it, and the rotation bounds are recomputed.
+#' With `end_at_sample_date = TRUE`, each unit is instead cut off at its
+#' `MGT_sample_date` (from the `Mgt_Unit` sheet).
 #'
-#' ## Required workbook structure
-#'
-#' The Excel file must contain the standard SHMI sheets:
-#'
-#' \itemize{
-#'   \item \code{Mgt_Unit}
-#'   \item \code{Crop_Diversity}
-#'   \item \code{Soil_Disturbance}
-#'   \item \code{Amendment_Diversity}
-#'   \item \code{Animal_Diversity}
-#' }
-#'
-#' Sheets may be empty; empty sheets are safely ignored.
-#'
-#'
-#' ## Date overrides
-#'
-#' If \code{start_date_override} or \code{end_date_override} are supplied,
-#' all event types (crop, disturbance, amendment, animal, yield, N‑rate)
-#' occurring outside the override window are removed, and rotation bounds are
-#' clipped accordingly.
-#'
-#'
-#' ## Crop harmonization
-#'
-#' Crop windows are validated for biological realism:
-#'
-#' \itemize{
-#'   \item annual crops must terminate within the same year
-#'   \item perennials may span years but must follow valid chronology
-#'   \item mixtures are collapsed to event‑level windows (min start, max end)
-#' }
-#'
-#' The returned \code{crop} table contains one row per species with harmonized
-#' start/end dates suitable for cover and diversity scoring.
-#'
-#'
-#' ## Disturbance, amendments, and animals
-#'
-#' Disturbance events are returned in EPA/STIR‑ready format:
-#'
-#' \itemize{
-#'   \item \code{SD_date}
-#'   \item \code{SD_mixeff}
-#'   \item \code{SD_depth}
-#' }
-#'
-#' Amendment and animal events are clipped by overrides and returned in
-#' rotation‑scale format for \code{compute_orginput()}.
-#'
-#'
-#' ## Optional yield and nitrogen‑rate extraction
-#'
-#' If enabled:
-#'
-#' \itemize{
-#'   \item Yield is extracted per crop event, unit‑standardized to kg/ha,
-#'         and clipped by overrides.
-#'   \item Nitrogen rate is extracted from amendment events, converted to
-#'         kg N/ha, summarized per \code{MGT_combo × year}, and clipped by
-#'         overrides.
-#' }
-#'
-#' Missing values are retained as \code{NA}.
-#'
-#'
-#' ## Front‑end validation
-#'
-#' The function automatically runs \code{validate_excel_input()} to check:
-#'
-#' \itemize{
-#'   \item required sheets and columns
-#'   \item valid date formats
-#'   \item consistent \code{MGT_combo} values
-#'   \item malformed entries
-#' }
-#'
-#' If validation fails, execution stops with clear, actionable error messages.
-#'
+#' @section Yield and nitrogen rate:
+#' With `calc_yield = TRUE`, each harvest row with a yield is converted to
+#' kg/ha. Bushels are converted with a standard test weight for the crop
+#' (results at market moisture); other units are kept unconverted and
+#' reported. With `calc_n_rate = TRUE`, `SA_N` is converted to kg N/ha using
+#' `SA_units` and summed by unit and year; years whose N cannot be converted
+#' are `NA`, not zero. Unconverted values are listed in `assumptions`.
 #'
 #' @param path Path to the SHMI Excel workbook.
+#' @param exclude Optional character vector of `MGT_combo` values to leave
+#'   out.
+#' @param verbose Logical. Print progress and a summary of assumptions.
+#' @param start_date_override,end_date_override Optional start and end of the
+#'   evaluation window (a `Date` or a string such as `"2018-01-01"`).
+#' @param end_at_sample_date Logical. Cut each unit's records off at its
+#'   `MGT_sample_date`.
+#' @param max_rot_range Maximum plausible rotation length in years; longer
+#'   spans stop with an error, since they usually indicate a mistyped date.
+#' @param calc_yield Logical. Also return converted yields.
+#' @param calc_n_rate Logical. Also return annual nitrogen rates.
 #'
-#' @param exclude Optional character vector of \code{MGT_combo} identifiers to
-#'   exclude from processing.
+#' @return A named list:
+#' * `rot_bounds`: rotation start and end dates and years for each unit.
+#' * `mgt`: management-unit metadata for units with at least one dated
+#'   record.
+#' * `crop`: species episodes (`MGT_combo`, `episode_id`, `CD_cat`,
+#'   `CD_name`, `crop_start`, `crop_end`, `start_imputed`, `end_imputed`).
+#' * `dist`, `amend`, `animal`: disturbance, amendment, and animal events
+#'   within the rotation window.
+#' * `yield`: one row per harvest with a yield (`CD_yield`, `CD_yield_units`,
+#'   `yield_kg_ha`, `yield_status`, `lb_per_bu`), or `NULL`.
+#' * `n_rate`: one row per unit and year (`N_kg_ha_yr`, `n_events`,
+#'   `n_unconverted`), or `NULL`.
+#' * `assumptions`: one row per imputation or data check, with `MGT_combo`,
+#'   `source` (`"crop"`, `"yield"`, or `"n_rate"`), `name`, `date_start`,
+#'   `date_end`, `level` (`"assumption"` or `"check"`), `type`, and
+#'   `message`.
 #'
-#' @param verbose Logical; if \code{TRUE}, prints progress messages.
+#' @seealso [build_shmi()], [validate_excel_input()],
+#'   [download_shmi_template()], [get_shmi_example()]
 #'
-#' @param start_date_override Optional \code{Date} or date‑coercible value.
+#' @examples
+#' inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #'
-#' @param end_date_override Optional \code{Date} or date‑coercible value.
+#' # What was assumed, and what should be reviewed?
+#' table(inputs$assumptions$type)
+#' subset(inputs$assumptions, level == "check")
 #'
-#' @param calc_yield Logical; if \code{TRUE}, extract and standardize yield.
-#'
-#' @param calc_n_rate Logical; if \code{TRUE}, extract and standardize N‑rate.
-#'
-#'
-#' @return A named list containing:
-#' \describe{
-#'   \item{\code{rot_bounds}}{Rotation start/end dates and rotation years.}
-#'   \item{\code{crop}}{Mixture‑aware crop windows (one row per species).}
-#'   \item{\code{dist}}{Disturbance event table (EPA/STIR‑ready).}
-#'   \item{\code{amend}}{Amendment event table.}
-#'   \item{\code{animal}}{Animal event table.}
-#'   \item{\code{mgt}}{Management‑unit metadata.}
-#'   \item{\code{yield}}{Optional crop‑event‑level yield table (kg/ha).}
-#'   \item{\code{n_rate}}{Optional year‑level nitrogen‑rate table (kg N/ha).}
-#' }
-#'
-#' @section Error Handling:
-#' The function stops with informative errors if:
-#' \itemize{
-#'   \item required sheets or columns are missing
-#'   \item crop chronology is biologically impossible
-#'   \item date overrides produce empty rotations
-#' }
-#'
-#' @seealso
-#'   \code{\link{build_shmi}} for computing SHMI scores from prepared inputs.
+#' # Evaluate a fixed period
+#' inputs_2022_23 <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE,
+#'                                       start_date_override = "2022-01-01",
+#'                                       end_date_override   = "2023-12-31")
+#' inputs_2022_23$rot_bounds
 #'
 #' @export
 prepare_shmi_inputs <- function(path,
@@ -161,7 +112,7 @@ prepare_shmi_inputs <- function(path,
   val <- validate_excel_input(path, verbose)
 
   if (!val$ok) {
-    message("❌ Excel input validation failed.\n")
+    message("Excel input validation failed.\n")
     message("Errors:\n", paste0(" - ", val$errors, collapse = "\n"))
     stop("Fix the errors above and re-run prepare_shmi_inputs().")
   }
@@ -346,7 +297,7 @@ prepare_shmi_inputs <- function(path,
       "Detected implausible rotation length.",
       "x" = paste0(
         "MGT_combo ", bad$MGT_combo,
-        " spans ", bad$rot_start_yr, "–", bad$rot_end_yr,
+        " spans ", bad$rot_start_yr, "-", bad$rot_end_yr,
         " (", bad$year_range, " years), exceeding max_rot_range = ", max_rot_range, "."
       ),
       "i" = "Check for typos in crop, disturbance, amendment, or animal dates."
@@ -354,167 +305,16 @@ prepare_shmi_inputs <- function(path,
   }
 
   # ------------------------------------------------------------
-  # 4. Infer next planting (for crop_end logic)
-  # ------------------------------------------------------------
-  safe_min_date <- function(x) {
-    x2 <- x[!is.na(x)]
-    if (length(x2) == 0) return(as.Date(NA))
-    as.Date(min(x2))
-  }
-
-  safe_max_date <- function(x) {
-    if (all(is.na(x))) return(NA_Date_)
-    as.Date(max(x, na.rm = TRUE))
-  }
-
-  # get one row for each crop species
-  crop <- crop %>%
-    group_by(MGT_combo, CD_seq_num, CD_cat, CD_name) %>%
-    summarize(
-      CD_plant_date  = safe_min_date(CD_plant_date),
-      CD_harv_date   = safe_max_date(CD_harv_date),
-      CD_term_date   = safe_max_date(CD_term_date),
-      CD_yield       = mean(CD_yield, na.rm = TRUE),
-      CD_yield_units = first(CD_yield_units),
-      .groups = "drop"
-    ) %>%
-    mutate(
-      # annual vs perennial end
-      raw_crop_end = case_when(
-        CD_cat %in% c("annual", "Annual", "cash", "Cash") ~
-          coalesce(CD_term_date, CD_harv_date),
-
-        CD_cat %in% c("perennial", "Perennial", "woody perennial") ~
-          coalesce(CD_term_date, CD_harv_date, CD_plant_date),
-
-        TRUE ~
-          coalesce(CD_term_date, CD_harv_date, CD_plant_date)
-      )
-    )
-
-  # infer CD_seq_num
-  crop <- crop %>%
-    arrange(MGT_combo, CD_plant_date) %>%   # chronological order
-    group_by(MGT_combo) %>%
-    mutate(
-      # If plant date is missing, use raw_crop_end as a proxy start
-      crop_start_eff = coalesce(CD_plant_date, raw_crop_end),
-
-      # Biological overlap: crop starts before previous crop ends
-      overlaps_prev = crop_start_eff <= lag(raw_crop_end),
-
-      # A new sequence begins only when there is NO overlap
-      seq_break = case_when(
-        row_number() == 1 ~ TRUE,          # first crop always starts seq 1
-        overlaps_prev      ~ FALSE,         # overlap → same sequence
-        TRUE               ~ TRUE           # no overlap → new sequence
-      ),
-
-      # Assign sequence numbers
-      CD_seq_num = cumsum(seq_break)
-    ) %>%
-    ungroup() %>%
-    select(-crop_start_eff, -overlaps_prev, -seq_break)
-
-  seq_dates <- crop %>%
-    group_by(MGT_combo, CD_seq_num) %>%
-    summarize(
-      seq_plant = safe_min_date(CD_plant_date),
-      .groups = "drop"
-    ) %>%
-    arrange(MGT_combo, CD_seq_num) %>%
-    group_by(MGT_combo) %>%
-    mutate(next_seq_start = lead(seq_plant)) %>%
-    ungroup()
-
-  crop <- crop %>%
-    left_join(seq_dates, by = c("MGT_combo", "CD_seq_num")) %>%
-    mutate(
-      crop_end = case_when(
-        CD_cat == "Perennial" ~ next_seq_start,
-        TRUE ~ raw_crop_end
-      )
-    )
-
-  seq_info <- crop %>%
-    group_by(MGT_combo, CD_seq_num) %>%
-    summarize(
-      seq_any_plant = any(!is.na(CD_plant_date)),
-      seq_min_plant = safe_min_date(CD_plant_date),
-      seq_max_harv  = safe_max_date(CD_harv_date),
-      seq_max_term  = safe_max_date(CD_term_date),
-      .groups = "drop"
-    ) %>%
-    arrange(MGT_combo, CD_seq_num) %>%
-    group_by(MGT_combo) %>%
-    mutate(
-      prev_seq_end = lag(pmax(seq_max_harv, seq_max_term, na.rm = TRUE))
-    ) %>%
-    ungroup()
-
-  # ------------------------------------------------------------
-  # 5. Category harmonization (Annual / Perennial)
-  # ------------------------------------------------------------
-  crop <- crop %>%
-    left_join(seq_info,  by = c("MGT_combo", "CD_seq_num")) %>%
-    dplyr::mutate(
-      CD_cat = dplyr::case_when(
-        CD_cat %in% c("annual", "cash", "cover", "fallow", "Cash", "Cover", "Fallow") ~ "Annual",
-        CD_cat %in% c("perennial", "woody perennial") ~ "Perennial",
-        TRUE ~ CD_cat
-      )
-    )
-
-  # ------------------------------------------------------------
-  # 6. Infer crop_start and crop_end
+  # 4. Build species-episode crop windows
+  #    One row per species per continuous period of presence. Mixtures,
+  #    relays, and intercrops are overlapping episodes; CD_seq_num and
+  #    CD_mix are not used. Every imputation is logged in `assumptions`.
   # ------------------------------------------------------------
   cli::cli_progress_step("Calculating crop start/end dates...")
 
-  crop_windows <- crop %>%
-    left_join(rot_bounds, by = "MGT_combo") %>%
-    group_by(MGT_combo, CD_seq_num, CD_cat, CD_name) %>%
-    mutate(
-      # crop-level planted-into-previous
-      crop_planted_into_prev = (
-        !is.na(CD_plant_date) &
-          !is.na(prev_seq_end) &
-          CD_plant_date < prev_seq_end
-      ),
-
-      crop_start = case_when(
-        CD_seq_num == min(CD_seq_num) & !is.na(CD_plant_date) ~ CD_plant_date,
-        CD_seq_num == min(CD_seq_num) ~ rot_start,
-        !is.na(CD_plant_date) ~ CD_plant_date,
-        TRUE ~ coalesce(prev_seq_end, rot_start)
-      ),
-
-      max_harv_name = CD_harv_date,
-      max_term_name = CD_term_date,
-
-      annual_end = coalesce(
-        max_term_name,
-        max_harv_name,
-        if_else(crop_planted_into_prev, NA_Date_, next_seq_start),
-        as.Date(rot_end)
-      ),
-
-      perennial_end = coalesce(
-        max_term_name,
-        if_else(crop_planted_into_prev, NA_Date_, next_seq_start),
-        as.Date(rot_end)
-      ),
-
-      crop_end = case_when(
-        CD_cat == "Annual"    ~ annual_end,
-        CD_cat == "Perennial" ~ perennial_end,
-        TRUE                  ~ perennial_end
-      ),
-
-      crop_end = if_else(crop_end < crop_start, crop_start, crop_end)
-    ) %>%
-    ungroup() %>%
-    select(MGT_combo, CD_seq_num, CD_cat, CD_name,
-           crop_start, crop_end, CD_yield, CD_yield_units)
+  cw <- .build_crop_windows(crop, rot_bounds)
+  crop_windows <- cw$windows
+  assumptions  <- cw$assumptions
 
   # ------------------------------------------------------------
   # 7. Apply date overrides
@@ -622,20 +422,37 @@ prepare_shmi_inputs <- function(path,
   # ------------------------------------------------------------
   if (calc_yield) {
     cli::cli_progress_step("Computing crop yields...")
-    yield <- .prepare_yield(crop_windows)
+    yield_out   <- .prepare_yield(crop, rot_bounds)
+    yield       <- yield_out$yield
+    assumptions <- dplyr::bind_rows(assumptions, yield_out$assumptions)
   } else {
     yield <- NULL
   }
 
   if (calc_n_rate) {
     cli::cli_progress_step("Computing N rates...")
-    n_rate <- .prepare_n_rate(amend)
+    n_out       <- .prepare_n_rate(amend)
+    n_rate      <- n_out$n_rate
+    assumptions <- dplyr::bind_rows(assumptions, n_out$assumptions)
   } else {
     n_rate <- NULL
   }
 
+  # Keep assumptions only for units that remain after overrides/exclusions
+  assumptions <- assumptions %>%
+    dplyr::filter(MGT_combo %in% mgt_combos)
+
   cli::cli_progress_done()
   cli::cli_progress_cleanup()
+
+  if (verbose && nrow(assumptions) > 0) {
+    n_chk <- sum(assumptions$level == "check")
+    message(
+      "\n", nrow(assumptions), " assumptions/checks recorded in ",
+      "`$assumptions` (", n_chk, " flagged for review). ",
+      "See table(result$assumptions$type)."
+    )
+  }
 
   # ------------------------------------------------------------
   # 7. Return updated inputs list
@@ -643,12 +460,13 @@ prepare_shmi_inputs <- function(path,
   inputs <- list(
     rot_bounds = rot_bounds,
     mgt        = mgt,
-    crop       = crop_windows %>% select(-CD_yield, -CD_yield_units),
+    crop       = crop_windows,
     dist       = dist,
     amend      = amend,
     animal     = animal,
-    yield      = yield,
-    n_rate     = n_rate
+    yield       = yield,
+    n_rate      = n_rate,
+    assumptions = assumptions
   )
 
   return(inputs)

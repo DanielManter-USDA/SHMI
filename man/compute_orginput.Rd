@@ -2,83 +2,56 @@
 % Please edit documentation in R/orginputs.R
 \name{compute_orginput}
 \alias{compute_orginput}
-\title{Compute the Organic Inputs Sub-index (Amendments + Animals)}
+\title{Compute the Organic Inputs sub-index}
 \usage{
-compute_orginput(rot_bounds, amend, animal, w_amend = 0.5, w_animal = 0.5)
+compute_orginput(
+  rot_bounds,
+  amend,
+  animal,
+  w_amend = 0.6615,
+  w_animal = 0.3385
+)
 }
 \arguments{
-\item{rot_bounds}{Rotation-year boundaries for each management unit.}
+\item{rot_bounds}{Rotation bounds with \code{MGT_combo}, \code{rot_start_yr}, and
+\code{rot_end_yr}.}
 
-\item{amend}{Amendment event table.}
+\item{amend}{Amendment events with \code{MGT_combo}, \code{SA_date}, and \code{SA_cat}.}
 
-\item{animal}{Animal event table.}
+\item{animal}{Animal events with \code{MGT_combo} and \code{AD_start_date}.}
 
-\item{w_amend}{Weight for amendment presence (default 0.5).}
-
-\item{w_animal}{Weight for animal presence (default 0.5).}
+\item{w_amend, w_animal}{Weights for amendments and animals. Defaults are
+the official values.}
 }
 \value{
-A data frame with:
-\itemize{
-  \item \code{MGT_combo}
-  \item \code{OrgInput} — organic-input score (0–100)
-}
+A data frame with \code{MGT_combo} and \code{OrgInput} (0-100), one row per
+unit in \code{rot_bounds}.
 }
 \description{
-Calculates the SHMI organic-inputs indicator for each management unit
-(`MGT_combo`) by determining the proportion of rotation years in which
-organic amendments and animal inputs occurred. Each component is treated
-independently:
+Proportion of rotation years with organic amendments and with animals,
+weighted and scaled 0-100.
 }
 \details{
-\itemize{
-  \item \strong{Amendment proportion} — fraction of rotation years with at
-        least one organic amendment event.
-  \item \strong{Animal proportion} — fraction of rotation years with at
-        least one animal event.
+For every calendar year from \code{rot_start_yr} to \code{rot_end_yr}, a year counts
+as having an amendment if any amendment with \code{SA_cat == "Organic"} is
+dated in that year, and as having animals if any animal period starts in
+that year (\code{AD_start_date}). Only presence is scored; amounts are not
+used. With \eqn{p} the proportion of years with each input,
+\deqn{OrgInput = 100 \frac{w_{amend} p_{amend} + w_{animal} p_{animal}}{w_{amend} + w_{animal}}}
+
+A missing record means no input: a unit with no organic amendments or
+animals scores 0.
 }
+\examples{
+rot_bounds <- data.frame(MGT_combo = "field_1",
+                         rot_start_yr = 2019, rot_end_yr = 2020)
+amend <- data.frame(MGT_combo = "field_1",
+                    SA_date = as.Date("2019-04-01"), SA_cat = "Organic")
+animal <- data.frame(MGT_combo = character(),
+                     AD_start_date = as.Date(character()))
+compute_orginput(rot_bounds, amend, animal)
 
-User-specified weights (\code{w_amend}, \code{w_animal}) determine the
-relative importance of amendments versus animals in the final score.
-Weighted proportions are combined and rescaled to a 0–100 SHMI-compatible
-index:
-
-\deqn{
-  \mathrm{OrgInput} =
-  100 \times
-  \frac{
-    w_{\mathrm{amend}} \cdot p_{\mathrm{amend}} +
-    w_{\mathrm{animal}} \cdot p_{\mathrm{animal}}
-  }{
-    w_{\mathrm{amend}} + w_{\mathrm{animal}}
-  }
 }
-
-Units with no organic inputs receive a score of 0.
-
-
-## Required Inputs
-
-### Rotation bounds
-A data frame containing rotation-year boundaries:
-\itemize{
-  \item \code{MGT_combo}
-  \item \code{rot_start_yr}
-  \item \code{rot_end_yr}
-}
-
-### Amendment events
-A data frame containing:
-\itemize{
-  \item \code{MGT_combo}
-  \item \code{SA_date} — amendment date
-  \item \code{SA_cat} — amendment category (only \code{"Organic"} counted)
-}
-
-### Animal events
-A data frame containing:
-\itemize{
-  \item \code{MGT_combo}
-  \item \code{AD_start_date} — start date of animal presence
-}
+\seealso{
+\code{\link[=build_shmi]{build_shmi()}}
 }

@@ -2,123 +2,73 @@
 % Please edit documentation in R/cover.R
 \name{compute_cover}
 \alias{compute_cover}
-\title{Compute the SHMI Cover Sub‑index (Season‑Weighted Plant Presence)}
+\title{Compute the Cover sub-index}
 \usage{
 compute_cover(
   crop,
   rot_bounds,
-  w_winter = 0.25,
-  w_spring = 0.25,
-  w_summer = 0.25,
-  w_fall = 0.25
+  w_winter = 0.1259,
+  w_spring = 0.126,
+  w_summer = 0.3755,
+  w_fall = 0.3726
 )
 }
 \arguments{
-\item{crop}{A data frame containing one row per crop species with harmonized
-start/end dates, including:
-\itemize{
-  \item \code{MGT_combo} — management unit identifier
-  \item \code{CD_seq_num} — planting event identifier
-  \item \code{crop_start}, \code{crop_end} — daily cover interval
-}}
+\item{crop}{Species episodes with \code{MGT_combo}, \code{CD_name}, \code{crop_start},
+and \code{crop_end}, as in \code{prepare_shmi_inputs()$crop}.}
 
-\item{rot_bounds}{A data frame containing rotation bounds for each
-management unit, with:
-\itemize{
-  \item \code{MGT_combo}
-  \item \code{rot_start}
-  \item \code{rot_end}
-}}
+\item{rot_bounds}{Rotation bounds with \code{MGT_combo}, \code{rot_start}, and
+\code{rot_end}.}
 
-\item{w_winter}{Weight for winter cover (default 0.250).}
-
-\item{w_spring}{Weight for spring cover (default 0.250).}
-
-\item{w_summer}{Weight for summer cover (default 0.250).}
-
-\item{w_fall}{Weight for fall cover   (default 0.250).}
+\item{w_winter, w_spring, w_summer, w_fall}{Season weights. Defaults are the
+official values.}
 }
 \value{
-A data frame with:
-  \itemize{
-    \item \code{MGT_combo}
-    \item \code{Cover} — SHMI cover score (0–100)
-  }
+A data frame with \code{MGT_combo} and \code{Cover} (0-100), one row per
+unit in \code{rot_bounds}.
 }
 \description{
-Computes the SHMI cover indicator for each management unit (`MGT_combo`)
-using crop start/end dates and rotation bounds. Cover represents the
-proportion of the rotation during which living plant cover is present,
-weighted by season to reflect differential ecological importance.
+Season-weighted proportion of days in the rotation with living plant
+cover, scaled 0-100.
 }
 \details{
-## Mixture‑aware cover windows
+\strong{Plant windows.} Every row of \code{crop} (one row per species episode) is a
+window of living cover, except rows named \code{"fallow"}, \code{"none"}, or
+\code{"bare"}. Overlapping windows (mixtures, relays, intercrops) are merged, so
+each day counts once however many species are present.
 
-The input `crop` table contains one row per crop species. Mixtures therefore
-appear as multiple rows with identical `CD_seq_num` values. For cover
-scoring, mixtures must be treated as a *single* planting event. The function
-collapses mixtures by grouping on:
+\strong{Seasons.} Each day is assigned to a season by calendar month: winter
+(Dec-Feb), spring (Mar-May), summer (Jun-Aug), and fall (Sep-Nov). For each
+season \eqn{s}, \eqn{p_s} is the number of plant days divided by the number
+of days of that season in the rotation; seasons with no days in the
+rotation contribute 0.
 
-\itemize{
-  \item \code{MGT_combo}
-  \item \code{CD_seq_num}
+\strong{Score.} The season weights are rescaled to sum to 1, and
+\deqn{Cover = 100 \sum_s w_s p_s}
+
+\strong{Rotation window.} Days in the rotation run from \code{rot_start} to
+\code{rot_end}. In \code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}} these span the first to the last
+recorded event, or the window set by \code{start_date_override} and
+\code{end_date_override}, which is how a fixed evaluation period is imposed.
+
+A unit in \code{rot_bounds} with no plant windows (for example a fallow
+reference site) scores 0.
 }
+\examples{
+crop <- data.frame(
+  MGT_combo  = "field_1",
+  CD_name    = c("Corn", "Rye"),
+  crop_start = as.Date(c("2020-05-01", "2020-10-15")),
+  crop_end   = as.Date(c("2020-09-30", "2020-12-31"))
+)
+rot_bounds <- data.frame(
+  MGT_combo = "field_1",
+  rot_start = as.Date("2020-01-01"),
+  rot_end   = as.Date("2020-12-31")
+)
+compute_cover(crop, rot_bounds)
 
-and computing:
-
-\itemize{
-  \item earliest \code{crop_start}
-  \item latest   \code{crop_end}
 }
-
-This produces one cover window per planting event, regardless of mixture
-complexity.
-
-
-## Daily plant‑presence expansion
-
-Each cover window is expanded into daily records. Each day is assigned to a
-season based on calendar month:
-
-\itemize{
-  \item Winter: December–February
-  \item Spring: March–May
-  \item Summer: June–August
-  \item Fall:   September–November
-}
-
-Seasonal plant‑days are counted for each management unit.
-
-
-## Rotation‑based normalization
-
-Rotation bounds (`rot_start`, `rot_end`) are expanded into daily records to
-compute the number of *possible* days in each season. Seasonal cover
-proportion is:
-
-\deqn{
-  p_{season} = \frac{\text{plant-days}}{\text{possible-days}}
-}
-
-Seasons with zero possible days contribute zero.
-
-
-## Seasonal weighting and scaling
-
-Seasonal proportions are combined using user‑specified weights:
-
-\itemize{
-  \item \code{w_winter}
-  \item \code{w_spring}
-  \item \code{w_summer}
-  \item \code{w_fall}
-}
-
-Weights are normalized to sum to 1. The final cover score is:
-
-\deqn{
-  \text{Cover} = 100 \times \sum_{season} w_{season} \, p_{season}
-}
-
-yielding a value in \code{[0, 100]}.
+\seealso{
+\code{\link[=build_shmi]{build_shmi()}}, \code{\link[=compute_diversity]{compute_diversity()}}
 }

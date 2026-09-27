@@ -1,120 +1,77 @@
-#' Build SHMI Scores from Prepared Inputs
+#' Compute SHMI scores from prepared inputs
 #'
 #' Computes the Soil Health Management Index (SHMI) for each management unit
-#' (`MGT_combo`) using harmonized rotation‑scale inputs produced by
-#' \code{prepare_shmi_inputs()}. SHMI is a weighted composite of four
-#' sub‑indices:
+#' (`MGT_combo`) from the rotation-scale inputs returned by
+#' [prepare_shmi_inputs()]. SHMI is a weighted mean of four sub-indices, each
+#' scaled 0-100:
 #'
-#' \itemize{
-#'   \item \strong{Cover} — season‑weighted plant presence
-#'   \item \strong{Diversity} — rotation‑scale crop diversity (Hill numbers)
-#'   \item \strong{Inverse disturbance} — EPA mechanistic or STIR method
-#'   \item \strong{Organic inputs} — amendments + animal integration
-#' }
+#' * **Cover**: season-weighted proportion of days with living plants
+#'   ([compute_cover()]).
+#' * **Diversity**: rotation-scale crop diversity ([compute_diversity()]).
+#' * **InvDist**: inverse soil disturbance ([compute_disturbance()]).
+#' * **OrgInput**: organic amendments and animal integration
+#'   ([compute_orginput()]).
 #'
-#' By default, SHMI is computed using the official national settings
-#' (“locked mode”). In expert mode, users may override any setting, but the
-#' resulting SHMI values are no longer comparable to the national SHMI scale.
+#' @section Settings and expert mode:
+#' With `expert_mode = FALSE` (the default, "locked mode") the official
+#' national settings below are always used and `settings` is ignored. With
+#' `expert_mode = TRUE`, each element of `settings` replaces the official
+#' value; elements not supplied keep their official value. Expert-mode scores
+#' are not comparable to the national SHMI scale.
 #'
+#' | Setting | Official value | Used by |
+#' |---|---|---|
+#' | `w_winter`, `w_spring`, `w_summer`, `w_fall` | 0.1259, 0.1260, 0.3755, 0.3726 | [compute_cover()] |
+#' | `hill`, `max_div` | 1, 10 | [compute_diversity()] |
+#' | `dist_meth`, `max_stir`, `ti_rep` | `"EPA"`, 342, `"max"` | [compute_disturbance()] |
+#' | `w_amend`, `w_animal` | 0.6615, 0.3385 | [compute_orginput()] |
+#' | `w_cover`, `w_diversity`, `w_invdist`, `w_orginput` | 0.4481, 0.0904, 0.1431, 0.3184 | SHMI |
 #'
-#' ## Required inputs
+#' The four pillar weights are rescaled to sum to 1 and combined as
+#' \deqn{SHMI = w_{cover} Cover + w_{diversity} Diversity + w_{invdist} InvDist + w_{orginput} OrgInput}
 #'
-#' The function expects a list returned by \code{prepare_shmi_inputs()} with:
+#' The official disturbance method, `"EPA"`, requires a tillage depth
+#' (`SD_depth`) for every pass. Data without depths can be scored in expert
+#' mode with `settings = list(dist_meth = "STIR")`.
 #'
-#' \itemize{
-#'   \item \code{rot_bounds} — rotation start/end dates and rotation years
-#'   \item \code{crop} — harmonized crop windows (one row per species)
-#'   \item \code{dist} — disturbance events (EPA/STIR inputs)
-#'   \item \code{amend} — amendment events
-#'   \item \code{animal} — animal integration events
-#'   \item \code{mgt} — management metadata (study, farm, field, treatment)
-#' }
+#' @section Missing records:
+#' Every management unit in `shmi_inputs$mgt` receives a score. A missing
+#' record means the practice did not happen: a unit with no crops scores
+#' Cover = 0 and Diversity = 0, no disturbance scores InvDist = 100, and no
+#' organic inputs scores OrgInput = 0. Units with no dated records at all are
+#' removed earlier, by [prepare_shmi_inputs()].
 #'
-#'
-#' ## Disturbance method
-#'
-#' Disturbance can be computed using:
-#'
-#' \itemize{
-#'   \item \code{"EPA"} — mechanistic soil‑mixing model (profile penetration)
-#'   \item \code{"STIR"} — daily summed mixing efficiency (SD_mixeff)
-#' }
-#'
-#' Both methods classify annual tillage intensity using the modified Tier‑3
-#' Z–K scheme and compute inverse disturbance on a 0–100 scale.
-#'
-#'
-#' ## Settings and expert mode
-#'
-#' In locked mode (\code{expert_mode = FALSE}), SHMI uses the official national
-#' settings:
-#'
-#' \itemize{
-#'   \item seasonal cover weights
-#'   \item Hill‑number order and maximum diversity
-#'   \item STIR normalization constant
-#'   \item amendment/animal weights
-#'   \item pillar weights for SHMI aggregation
-#' }
-#'
-#' In expert mode, user‑supplied settings override defaults. Missing settings
-#' are filled from the official values.
-#'
-#'
-#' ## SHMI computation workflow
-#'
-#' \enumerate{
-#'   \item \strong{Settings}: locked mode vs expert mode.
-#'
-#'   \item \strong{Input validation}: structural checks on all required inputs.
-#'
-#'   \item \strong{Pillar computation}:
-#'     \itemize{
-#'       \item Cover — \code{compute_cover()}
-#'       \item Diversity — \code{compute_diversity()}
-#'       \item Inverse disturbance — \code{compute_disturbance()}
-#'       \item Organic inputs — \code{compute_orginput()}
-#'     }
-#'
-#'   \item \strong{Weighted combination}:
-#'     Pillar scores are normalized so weights sum to 1, then combined:
-#'
-#'     \deqn{
-#'       SHMI =
-#'         w_{cover} \cdot Cover +
-#'         w_{diversity} \cdot Diversity +
-#'         w_{invdist} \cdot InvDist +
-#'         w_{orginput} \cdot OrgInput
-#'     }
-#'
-#'   \item \strong{Output assembly}:
-#'     Returns a tidy data frame of SHMI scores and metadata describing the
-#'     settings used, SHMI version, and computation timestamp.
-#' }
-#'
-#'
-#' @param shmi_inputs A list returned by \code{prepare_shmi_inputs()} containing
-#'   harmonized rotation‑scale inputs (see Details).
-#'
-#' @param dist_meth Disturbance method: \code{"EPA"} or \code{"STIR"}.
-#'
-#' @param settings Optional named list of SHMI settings. Ignored unless
-#'   \code{expert_mode = TRUE}.
-#'
-#' @param expert_mode Logical; if \code{TRUE}, user‑supplied settings override
-#'   official defaults.
-#'
+#' @param shmi_inputs A list returned by [prepare_shmi_inputs()].
+#' @param settings Optional named list of settings (see *Settings and expert
+#'   mode*). Ignored unless `expert_mode = TRUE`.
+#' @param expert_mode Logical. If `TRUE`, elements of `settings` override the
+#'   official national settings.
 #'
 #' @return A list with:
-#'   \itemize{
-#'     \item \code{indicator_df} — data frame with:
-#'       \code{MGT_combo}, \code{SHMI}, \code{Cover}, \code{Diversity},
-#'       \code{InvDist}, \code{OrgInput}, and available metadata.
-#'     \item \code{settings_used} — settings actually applied
-#'     \item \code{expert_mode} — logical flag
-#'     \item \code{shmi_version} — version string
-#'     \item \code{timestamp} — computation time
-#'   }
+#' * `indicator_df`: one row per management unit with `MGT_combo`, the
+#'   management metadata that is present (`MGT_study`, `MGT_farm`,
+#'   `MGT_field`, `MGT_trt`), `SHMI`, `Cover`, `Diversity`, `InvDist`, and
+#'   `OrgInput`.
+#' * `settings_used`: the full list of settings applied.
+#' * `expert_mode`: logical flag.
+#' * `shmi_version`: version of the SHMI package used.
+#' * `timestamp`: time of computation.
+#'
+#' @seealso [prepare_shmi_inputs()], [validate_shmi_input()],
+#'   [plot_shmi_gauge()], [plot_shmi_lollipop()]
+#'
+#' @examples
+#' inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
+#'
+#' # Official national settings
+#' result <- build_shmi(inputs)
+#' result$indicator_df
+#'
+#' # Expert mode: STIR disturbance, for data without tillage depths
+#' \dontrun{
+#' result_stir <- build_shmi(inputs, settings = list(dist_meth = "STIR"),
+#'                           expert_mode = TRUE)
+#' }
 #'
 #' @export
 build_shmi <- function(shmi_inputs,
@@ -122,14 +79,6 @@ build_shmi <- function(shmi_inputs,
                        expert_mode = FALSE) {
 
   cli::cli_progress_step("Validating inputs...")
-
-  val <- validate_shmi_input(shmi_inputs)
-  # If validation fails: stop immediately
-  if (!val$ok) {
-    message("❌ SHMI input validation failed.\n")
-    message("Errors:\n", paste0(" - ", val$errors, collapse = "\n"))
-    stop("Fix the errors above and re-run build_shmi().")
-  }
 
   # --------------------------------------------------------------------------
   # 1. Official national SHMI settings (locked mode)
@@ -178,6 +127,17 @@ build_shmi <- function(shmi_inputs,
       "to the national SHMI scale."
     )
     settings <- utils::modifyList(official, settings)
+  }
+
+  val <- validate_shmi_input(shmi_inputs, dist_meth = settings$dist_meth)
+
+  if (!val$ok) {
+    message("SHMI input validation failed.\n")
+    message("Errors:\n", paste0(" - ", val$errors, collapse = "\n"))
+    stop("Fix the errors above and re-run build_shmi().", call. = FALSE)
+  }
+  if (length(val$warnings) > 0) {
+    message("\nWarnings:\n", paste0(" - ", val$warnings, collapse = "\n"))
   }
 
   # --------------------------------------------------------------------------
@@ -259,7 +219,7 @@ build_shmi <- function(shmi_inputs,
     mutate(Diversity = replace_na(Diversity, 0))
 
   invdist   <- all_sites %>% left_join(invdist,   by = "MGT_combo") %>%
-    mutate(InvDist   = replace_na(InvDist,   0))
+    mutate(InvDist   = replace_na(InvDist,   100))
 
   orginput  <- all_sites %>% left_join(orginput,  by = "MGT_combo") %>%
     mutate(OrgInput  = replace_na(OrgInput,  0))
@@ -308,7 +268,7 @@ build_shmi <- function(shmi_inputs,
     indicator_df = indicator_df,
     settings_used = settings,
     expert_mode   = expert_mode,
-    shmi_version  = "1.0.3",
+    shmi_version  = as.character(utils::packageVersion("SHMI")),
     timestamp     = Sys.time()
   )
 }

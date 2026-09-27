@@ -1,7 +1,7 @@
 Package: SHMI
 Type: Package
 Title: Soil Health Management Index (SHMI)
-Version: 1.0.3
+Version: 1.1.0
 Authors@R: 
     c(
       person("Daniel", "Manter", 
@@ -19,15 +19,16 @@ Description: Implements the Soil Health Management Index (SHMI), a
     support reproducible workflows for research, monitoring, and reporting.
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
 URL: https://danielmanter-usda.github.io/SHMI/, https://github.com/DanielManter-USDA/SHMI
 BugReports: https://github.com/DanielManter-USDA/SHMI/issues
 Suggests: 
+    callr,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
+Depends: R (>= 4.1.0)
 Imports:
     cli,
     dplyr,
@@ -37,8 +38,9 @@ Imports:
     lubridate,
     purrr,
     readxl,
-    scales,
-    stringr,
+    stats,
     tibble,
-    tidyr
+    tidyr,
+    utils
 Config/roxygen2/version: 8.0.0
+Roxygen: list(markdown = TRUE)

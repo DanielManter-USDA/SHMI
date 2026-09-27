@@ -1,10 +1,15 @@
+#' Read one sheet of an SHMI workbook (internal)
+#'
+#' Returns a zero-row tibble with `required_cols` if the sheet is missing or
+#' empty, stops if a non-empty sheet lacks a required column, and drops rows
+#' with no `MGT_combo`.
 #' @keywords internal
 #' @noRd
 .safe_read <- function(path, sheet, required_cols, skip = 0, verbose = FALSE, ...) {
 
   # If sheet doesn't exist
   if (!sheet %in% readxl::excel_sheets(path)) {
-    return(tibble::tibble(!!!setNames(
+    return(tibble::tibble(!!!stats::setNames(
       replicate(length(required_cols), logical(), simplify = FALSE),
       required_cols
     )))
@@ -17,7 +22,7 @@
 
   # If empty, return zero-row tibble with correct columns
   if (nrow(df) == 0) {
-    return(tibble::tibble(!!!setNames(
+    return(tibble::tibble(!!!stats::setNames(
       replicate(length(required_cols), logical(), simplify = FALSE),
       required_cols
     )))
@@ -45,6 +50,11 @@
   df
 }
 
+#' Parse SHMI date values (internal)
+#'
+#' Accepts `Date`, `POSIXct`, Excel serial numbers, and character dates in
+#' year-month-day, month/day/year, or day/month/year order. Anything else
+#' becomes `NA`.
 #' @keywords internal
 #' @noRd
 .parse_shmi_date <- function(x) {
@@ -100,6 +110,7 @@
   )
 }
 
+#' Stop if a data frame lacks required columns (internal)
 #' @keywords internal
 #' @noRd
 require_cols <- function(df, cols, sheet) {

@@ -2,26 +2,45 @@
 % Please edit documentation in R/validate_excel_input.R
 \name{validate_excel_input}
 \alias{validate_excel_input}
-\title{Validate SHMI Excel Input File}
+\title{Validate an SHMI Excel workbook}
 \usage{
-validate_excel_input(path, verbose)
+validate_excel_input(path, verbose = TRUE)
 }
 \arguments{
-\item{path}{Character string. Path to the Excel file supplied by the user.}
+\item{path}{Path to the SHMI Excel workbook.}
+
+\item{verbose}{Logical. Report rows removed while reading.}
 }
 \value{
-A list with:
-\describe{
-  \item{ok}{Logical. TRUE if validation passed; FALSE otherwise.}
-  \item{errors}{Character vector of critical validation failures.}
-  \item{warnings}{Character vector of non-fatal issues.}
-  \item{summary}{A tibble summarizing sheet counts and row counts.}
-}
+A list with \code{ok} (logical), \code{errors} and \code{warnings} (character
+vectors), and \code{summary} (a tibble of row counts per sheet; empty if the
+check stopped because sheets were missing).
 }
 \description{
-Validates the raw Excel file supplied to `prepare_shmi_inputs()`. This
-function checks for required sheets, required columns, valid date formats,
-missing or invalid `MGT_combo` values, malformed mixtures, species lookup
-consistency, and rotation boundary completeness. It is designed to fail early
-and explicitly before any ingestion or harmonization occurs.
+Checks a workbook before it is read by \code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}}, which
+calls this function automatically.
+}
+\details{
+Errors (validation fails):
+\itemize{
+\item a required sheet is missing, or a required column is missing from a
+non-empty sheet;
+\item \code{MGT_combo} is missing in any row, is duplicated in \code{Mgt_Unit}, or does
+not appear in \code{Mgt_Unit};
+\item a disturbance pass has a missing or unparseable \code{SD_date};
+\item \code{SD_mixeff} or \code{SD_depth} is non-numeric or negative.
+}
+
+Warnings (validation passes):
+\itemize{
+\item \code{SD_depth} greater than 20 inches (possibly entered in cm);
+\item stray blank rows in \code{Crop_Diversity}.
+}
+
+Checks that depend on the disturbance method (EPA or STIR) are made later
+by \code{\link[=validate_shmi_input]{validate_shmi_input()}}, because the method is chosen in
+\code{\link[=build_shmi]{build_shmi()}}.
+}
+\seealso{
+\code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}}, \code{\link[=validate_shmi_input]{validate_shmi_input()}}
 }

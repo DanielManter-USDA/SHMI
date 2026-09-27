@@ -7,187 +7,300 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-## Introduction
-
-The Soil Health Management Index (SHMI) provides a quantitative, rotation‑scale assessment of soil‑health management practices. It integrates four biologically grounded sub‑indices:
-
-- **Cover/Roots** — seasonal plant presence  
-- **Crop Diversity** — rotation‑scale crop diversity (Hill numbers)  
-- **Inverse Disturbance** — mechanistic mixing‑efficiency × depth metric  
-- **Organic Inputs** — organic amendments and animal presence  
-
-This vignette walks through the **standard SHMI workflow** using the official Excel template.
-
----
-
-# **1. Preparing Inputs**
-
-SHMI begins with a standardized Excel workbook containing the following sheets:
-
-- `Mgt_Unit`  
-- `Crop_Diversity`  
-- `Soil_Disturbance`  
-- `Amendment_Diversity`  
-- `Animal_Diversity`  
-
-Download the blank template:
-
-```{r, eval = FALSE}
-library(SHMI)
-
-# Save the template to a specific file path
-template_file <- "SHMI_template.xlsx"
-download_shmi_template(path = template_file)
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-Then:
-1. Open **SHMI_template.xlsx** in Excel  
-2. Enter your management data into each sheet  
-3. Save the completed file (e.g., `"my_SHMI_inputs.xlsx"`)
+## Introduction
 
-Prepare the inputs:
+The Soil Health Management Index (SHMI) turns a record of field management
+into a single 0-100 score. It combines four sub-indices, each also scored
+0-100:
 
-```{r, eval = FALSE}
-inputs <- prepare_shmi_inputs("my_SHMI_inputs.xlsx")
+- **Cover**: the season-weighted share of days with living plants.
+- **Diversity**: how many crop species were grown, and how evenly, over the
+  rotation.
+- **Inverse disturbance (InvDist)**: how little the soil was tilled; 100
+  means no disturbance.
+- **Organic inputs (OrgInput)**: how often organic amendments were applied
+  and animals were present.
+
+This vignette walks through the standard workflow: fill in the Excel
+workbook, prepare the inputs, compute SHMI, and review the results.
+
+```{r load}
+library(SHMI)
+```
+
+## 1. Get a workbook
+
+SHMI reads a standard Excel workbook. Start from the blank template, or from
+a completed example to see how entries should look:
+
+```{r template, eval = FALSE}
+download_shmi_template("SHMI_template.xlsx")  # blank
+download_shmi_example()                       # completed example
+```
+
+The completed example is also installed with the package, and
+`get_shmi_example()` returns its path. The rest of this vignette uses it: eight
+management units from a long-term experiment (2020-2024), with continuous
+corn and a rotation under several nitrogen and manure treatments.
+
+The workbook has one sheet per kind of record, each with column names on the
+fourth row:
+
+| Sheet | Records |
+|---|---|
+| `Mgt_Unit` | Management units (`MGT_combo`), with study, farm, field, and treatment |
+| `Crop_Diversity` | Crops: name, category, and plant, harvest, and termination dates |
+| `Soil_Disturbance` | Tillage and other soil-disturbing passes |
+| `Soil_Amendments` | Amendments, including organic inputs |
+| `Animal_Diversity` | Periods with grazing or other animals |
+
+The disturbance, amendment, and animal sheets may be left empty. Each crop is
+entered by name with its dates; mixtures are entered as one row per species.
+Sequence numbers (`CD_seq_num`) and mixture flags (`CD_mix`) are not needed.
+
+## 2. Prepare the inputs
+
+```{r prepare, eval = FALSE}
+inputs <- prepare_shmi_inputs("my_SHMI_inputs.xlsx")   # your own workbook
+```
+
+With the installed example:
+
+```{r prepare-example, message = FALSE}
+inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
+names(inputs)
+head(inputs$crop)
 ```
 
 `prepare_shmi_inputs()`:
 
-- validates required sheets and columns  
-- harmonizes crop windows  
-- constructs rotation bounds  
-- builds daily grids  
-- computes daily disturbance  
-- assembles amendment and animal events  
+1. **Validates the workbook** with `validate_excel_input()` and stops with a
+   list of problems if, for example, a required sheet or column is missing,
+   a unit is not listed in `Mgt_Unit`, or a disturbance pass has no date.
+2. **Builds crop episodes**: one row per species per continuous period of
+   presence. Mixtures, relays, and intercrops are simply overlapping
+   episodes. Harvest rows without a plant date are attached to a standing
+   perennial as cuttings.
+3. **Fills in missing dates**, following fixed rules. A crop with no plant
+   date starts where the previous crop ended, or at the start of the record.
+   A crop with no end date ends at the next planting, or at the end of the
+   record.
+4. **Sets the rotation window** from the first to the last recorded event.
 
-The returned object is a named list containing:
+It returns a list:
 
-- `rot_bounds`  
-- `crop_harmonized`  
-- `daily`  
-- `daily_dist`  
-- `amend`  
-- `animal`  
-- metadata  
+| Element | Contents |
+|---|---|
+| `rot_bounds` | Rotation start and end for each unit |
+| `mgt` | Management-unit details |
+| `crop` | Species episodes, with `crop_start` and `crop_end` |
+| `dist`, `amend`, `animal` | Disturbance, amendment, and animal events |
+| `yield`, `n_rate` | Yields and nitrogen rates, if requested |
+| `assumptions` | Every date that was filled in, and every value to review |
 
-These feed directly into `build_shmi()`.
+### Reviewing assumptions
 
----
+Management records are rarely complete, particularly at the start and end of
+a record kept by calendar year. Rather than filling gaps silently,
+`prepare_shmi_inputs()` records each assumption:
 
-# **2. Computing SHMI**
+```{r assumptions}
+table(inputs$assumptions$type)
 
-Once inputs are prepared:
+# Items flagged for review, such as a perennial species entered as an annual
+subset(inputs$assumptions, level == "check")
+```
 
-```{r, eval = FALSE}
+Rows with `level == "assumption"` are routine gap-filling. Rows with
+`level == "check"` usually point to a data-entry issue worth correcting in
+the workbook. `?prepare_shmi_inputs` describes each type.
+
+### Choosing the evaluation window
+
+By default the rotation runs from the first to the last recorded event for
+each unit. To score a fixed period instead, give start and end dates; events
+outside the window are dropped, and crops and grazing periods are clipped to
+it:
+
+```{r window, message = FALSE}
+inputs_2022_23 <- prepare_shmi_inputs(
+  get_shmi_example(), verbose = FALSE,
+  start_date_override = "2022-01-01",
+  end_date_override   = "2023-12-31"
+)
+inputs_2022_23$rot_bounds
+```
+
+Other options include `exclude` (leave out some units), `end_at_sample_date`
+(stop each unit at its soil sampling date), and `calc_yield` / `calc_n_rate`
+(also return yields in kg/ha and annual nitrogen rates).
+
+## 3. Compute SHMI
+
+```{r build, message = FALSE}
 result <- build_shmi(inputs)
 result$indicator_df
 ```
 
-The output includes:
+`indicator_df` has one row per management unit, with `SHMI`, `Cover`,
+`Diversity`, `InvDist`, and `OrgInput`, plus the unit's study, farm, field,
+and treatment. The result also records `settings_used`, `expert_mode`,
+`shmi_version`, and a `timestamp`, so every score can be traced to how it was
+computed.
 
-- **Cover**  
-- **Diversity**  
-- **InvDist**  
-- **OrgInputs**  
-- **SHMI**
+By default, `build_shmi()` uses the official national settings. These include
+the **EPA** soil-mixing model for disturbance, which needs a tillage depth
+(`SD_depth`, in inches) for every pass. If your data record STIR values
+instead of depths, use expert mode (next section) with
+`dist_meth = "STIR"`.
 
-Plus metadata:
+## 4. Expert mode
 
-- `settings_used`  
-- `expert_mode`  
-- `timestamp`  
-- `shmi_version`  
+For research or scenario analysis, any setting can be changed. Settings you
+do not supply keep their official values:
 
----
-
-# **3. Expert Mode**
-
-By default, SHMI uses the official national settings (locked mode).  
-To explore scenarios or conduct research, you may override settings:
-
-```{r, eval = FALSE}
-custom <- list(
-  # cover/roots
-  w_winter = 0.25,
-  w_spring = 0.25,
-  w_summer = 0.25,
-  w_fall   = 0.25,
-
-  # crop diversity
-  hill    = 2,
-  max_div = 16,
-
-  # inverse disturbance
-  dist_meth = "EPA",
-  max_stir  = 400,
-  ti_rep    = "max",
-    
-  # organic inputs
-  w_amend   = 0.5,
-  w_animals = 0.5,
-  
-  # SHMI index weights
-  w_cover     = 0.25,
-  w_diversity = 0.25,
-  w_invdist   = 0.25,
-  w_orginput  = 0.25
+```{r expert, eval = FALSE}
+# Score disturbance with STIR instead of the EPA model
+result_stir <- build_shmi(
+  inputs,
+  settings    = list(dist_meth = "STIR"),
+  expert_mode = TRUE
 )
 
-shmi_exp <- build_shmi(inputs, settings = custom, expert_mode = TRUE)
+# Equal weights throughout
+custom <- list(
+  w_winter = 0.25, w_spring = 0.25, w_summer = 0.25, w_fall = 0.25,  # cover
+  hill = 2, max_div = 16,                                            # diversity
+  dist_meth = "STIR", max_stir = 400, ti_rep = "mid",                # disturbance
+  w_amend = 0.5, w_animal = 0.5,                                     # organic inputs
+  w_cover = 0.25, w_diversity = 0.25, w_invdist = 0.25,              # SHMI weights
+  w_orginput = 0.25
+)
+result_custom <- build_shmi(inputs, settings = custom, expert_mode = TRUE)
 ```
 
-When `expert_mode = TRUE`, SHMI values are **not comparable** to the national scale.
+Setting names must match exactly; `?build_shmi` lists them with their
+official values. Scores computed in expert mode are **not comparable** to the
+national SHMI scale.
 
----
+## 5. How missing records are scored
 
-# **4. Sub‑Index Details**
+SHMI treats a missing record as a practice that did not happen:
 
-You may compute sub‑indices individually:
+- **No disturbance records** means no tillage, so InvDist = 100. This is how
+  continuous no-till is represented.
+- **No crop on a given day** means no cover that day. A fallow reference site
+  scores Cover = 0 and Diversity = 0.
+- **No amendment or animal records** means no organic inputs, so
+  OrgInput = 0.
 
-### Cover
-```{r, eval = FALSE}
-compute_cover(inputs$daily, inputs$rot_bounds)
-```
+Record every tillage pass, planting, harvest, and amendment for the period
+being evaluated, so that gaps in the records are not mistaken for practices.
 
-### Diversity
-```{r, eval = FALSE}
-compute_diversity(inputs$crop_harmonized, inputs$daily)
-```
+## 6. The sub-indices one at a time
 
-### Inverse Disturbance
-```{r, eval = FALSE}
-compute_disturbance(inputs$daily_dist, inputs$rot_bounds)
-```
+Each sub-index can be computed directly from the prepared inputs:
 
-### Organic Inputs
-```{r, eval = FALSE}
+```{r subindex-inputs}
+compute_cover(inputs$crop, inputs$rot_bounds)
+compute_diversity(inputs$crop)
+compute_disturbance(inputs$dist, inputs$rot_bounds, dist_meth = "EPA")
 compute_orginput(inputs$rot_bounds, inputs$amend, inputs$animal)
 ```
 
----
+The functions also accept small tables built by hand, which is a quick way
+to see how each one responds to a change in management. Here is one field
+over two years: corn followed by a cereal rye cover crop, then soybean.
 
-# **5. Interpreting SHMI**
+```{r toy-data}
+crop <- data.frame(
+  MGT_combo  = "field_1",
+  CD_name    = c("Corn", "Rye", "Soybean"),
+  crop_start = as.Date(c("2019-05-01", "2019-10-15", "2020-05-10")),
+  crop_end   = as.Date(c("2019-09-30", "2020-04-20", "2020-09-25"))
+)
+rot_bounds <- data.frame(
+  MGT_combo    = "field_1",
+  rot_start    = as.Date("2019-01-01"),
+  rot_end      = as.Date("2020-12-31"),
+  rot_start_yr = 2019,
+  rot_end_yr   = 2020
+)
+```
 
-The final SHMI score reflects:
+**Cover** is the season-weighted share of days with a living crop. The rye
+covers most of the winter and spring:
 
-- year‑round cover  
-- crop diversity  
-- reduced soil disturbance  
-- organic inputs  
+```{r toy-cover}
+compute_cover(crop, rot_bounds)
+```
 
-Higher SHMI values indicate management systems that are more supportive of soil health.
+**Diversity** uses the number of days each species was present. Three
+species, present for unequal lengths of time:
 
----
+```{r toy-diversity}
+compute_diversity(crop)
+```
 
-# Conclusion
+**Inverse disturbance** here uses STIR values, a disk harrow before corn and
+a planter pass each year. The 2019 total is much larger, so 2019 scores
+lower than 2020, and the rotation score is the mean of the two years:
 
-The SHMI package provides a fast, reproducible, and biologically grounded framework for quantifying soil‑health management across diverse systems.
+```{r toy-disturbance}
+dist <- data.frame(
+  MGT_combo = "field_1",
+  SD_date   = as.Date(c("2019-04-20", "2019-05-01", "2020-05-10")),
+  SD_mixeff = c(39, 2.4, 2.4)
+)
+compute_disturbance(dist, rot_bounds, dist_meth = "STIR")
+```
 
-For more details:
+**Organic inputs**: manure applied in one of the two years, and no animals:
 
-- `?prepare_shmi_inputs`  
-- `?build_shmi`  
-- `?compute_cover`  
-- `?compute_diversity`  
-- `?compute_disturbance`  
-- `?compute_orginput`
+```{r toy-orginput}
+amend  <- data.frame(MGT_combo = "field_1",
+                     SA_date = as.Date("2019-04-01"), SA_cat = "Organic")
+animal <- data.frame(MGT_combo = character(),
+                     AD_start_date = as.Date(character()))
+compute_orginput(rot_bounds, amend, animal)
+```
+
+## 7. Plotting results
+
+One unit, with a gauge for each sub-index and for overall SHMI:
+
+```{r plot-gauge, fig.width = 8, fig.height = 4}
+plot_shmi_gauge(result$indicator_df, row = 1)
+```
+
+Many units, overall SHMI sorted by score:
+
+```{r plot-lollipop, fig.width = 7, fig.height = 4}
+plot_shmi_lollipop(result$indicator_df)
+```
+
+Select a unit by name with `MGT_combo = "..."` instead of `row`.
+
+## 8. Interpreting SHMI
+
+Higher scores indicate management that is more supportive of soil health:
+more of the year under living cover, a more diverse rotation, less soil
+disturbance, and more frequent organic inputs.
+
+When comparing units, keep the weights in mind. Under the official settings,
+Cover carries about 45 percent of the weight and Organic Inputs about 32
+percent. A unit with no organic inputs therefore cannot score above about
+68, even with perfect cover, diversity, and no tillage. Looking at the four
+sub-indices alongside SHMI shows which practices drive a unit's score.
+
+## Further reading
+
+- `?prepare_shmi_inputs`: workbook structure, crop-date rules, the
+  assumptions table, and overrides.
+- `?build_shmi`: official settings and expert mode.
+- `?compute_cover`, `?compute_diversity`, `?compute_disturbance`,
+  `?compute_orginput`: how each sub-index is calculated.

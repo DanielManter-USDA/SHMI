@@ -2,49 +2,37 @@
 % Please edit documentation in R/validate_shmi_input.R
 \name{validate_shmi_input}
 \alias{validate_shmi_input}
-\title{Validate SHMI Input Tables}
+\title{Validate prepared SHMI inputs}
 \usage{
-validate_shmi_input(shmi_inputs)
+validate_shmi_input(shmi_inputs, dist_meth = NULL)
 }
 \arguments{
-\item{shmi_inputs}{A named list of SHMI input tables, typically produced by
-`prepare_shmi_inputs()`. Must contain at least:
-\describe{
-  \item{mgt}{Management table with `MGT_combo` and metadata columns.}
-  \item{crop_harmonized}{Tibble of harmonized crop records with
-    `MGT_combo`, `CD_name`, `CD_seq_num`, `crop_start`, `crop_end`.}
-  \item{rot_bounds}{Tibble defining rotation start and end dates for each
-    `MGT_combo`, with `MGT_combo`, `rot_start`, `rot_end`.}
-  \item{dist}{Daily disturbance table with `MGT_combo`, `date`,
-    and disturbance attributes.}
-  \item{amend}{Amendment events with `MGT_combo` and `SA_date`.}
-  \item{animal}{Animal events with `MGT_combo`, `AD_start_date`,
-    `AD_end_date`.}
-}}
+\item{shmi_inputs}{A list returned by \code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}}, containing
+at least \code{mgt}, \code{crop}, \code{rot_bounds}, \code{dist}, \code{amend}, and \code{animal}.}
+
+\item{dist_meth}{Optional disturbance method, \code{"EPA"} or \code{"STIR"}. When
+supplied, method-specific disturbance checks are run.}
 }
 \value{
-A list with:
-\describe{
-  \item{ok}{Logical. `TRUE` if validation passed with no errors; `FALSE`
-    otherwise.}
-  \item{errors}{Character vector of critical validation failures. If non-empty,
-    `build_shmi()` should stop execution.}
-  \item{warnings}{Character vector of non-fatal issues.}
-  \item{summary}{A tibble summarizing key dataset properties (fields, years,
-    species, mixtures, fallow presence).}
-}
+A list with \code{ok} (logical), \code{errors} and \code{warnings} (character
+vectors), and \code{summary} (a tibble with the numbers of fields, years,
+species, and mixtures, and whether fallow is present).
 }
 \description{
-Performs structural and semantic validation of the input data list used by
-`build_shmi()`. This function checks for required tables, required columns,
-valid data types, missing or invalid values, duplicated keys where they
-should be unique, and rotation boundary consistency. It returns a structured
-list containing validation status, error messages, warnings, and a summary
-of key dataset properties.
+Checks the list returned by \code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}} before scoring.
+\code{\link[=build_shmi]{build_shmi()}} calls this function automatically, passing the disturbance
+method in use.
+}
+\details{
+Errors: a required table is missing; \code{MGT_combo} is missing or \code{NA};
+required crop columns are missing; dates are not of class \code{Date}; a crop,
+rotation, or animal period ends before it starts; or disturbance inputs do
+not suit \code{dist_meth}. For \code{"EPA"}, every pass with \code{SD_mixeff > 0} needs
+\code{SD_depth} and \code{SD_mixeff} must lie within 0-1.
 
-This validator is designed to fail early and explicitly when critical issues
-are detected (e.g., missing `MGT_combo`, malformed dates, invalid crop
-windows). Non-fatal issues are returned as warnings. A summary of field
-counts, years, species richness, mixture counts, and fallow presence is
-included for diagnostic transparency.
+Warnings: for \code{"STIR"}, all non-zero \code{SD_mixeff} values are 1 or less,
+which suggests EPA mixing proportions were entered instead of STIR values.
+}
+\seealso{
+\code{\link[=build_shmi]{build_shmi()}}, \code{\link[=validate_excel_input]{validate_excel_input()}}
 }

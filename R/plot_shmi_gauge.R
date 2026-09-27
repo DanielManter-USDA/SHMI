@@ -1,25 +1,25 @@
-#' Plot SHMI gauge panels (Cover, Diversity, Inverse Disturbance, OrgInput, Overall SHMI)
+#' Plot gauges of SHMI and its sub-indices for one management unit
 #'
-#' @description
-#' Creates a five horizontal gauge-style plot for SHMI and each sub-index.
-#' Each panel shows a 0–100 scale divided into five qualitative score bins
-#' ("very low" → "very high") with a pointer and numeric label for the
-#' SHMI component.
+#' Draws five vertical gauges, for Cover, Diversity, Inverse Disturbance,
+#' Organic Inputs, and overall SHMI. Each gauge shows the 0-100 scale in five
+#' bands ("very low" to "very high") with a pointer at the unit's score.
 #'
-#' @param shmi A data frame containing SHMI component scores with columns:
-#'   - `MGT_combo`
-#'   - `SHMI`
-#'   - `Cover`
-#'   - `Diversity`
-#'   - `InvDist`
-#'   - `OrgInput`
+#' @param shmi A data frame of scores with `SHMI`, `Cover`, `Diversity`,
+#'   `InvDist`, and `OrgInput`, and `MGT_combo` if units are selected by name,
+#'   such as `build_shmi()$indicator_df`.
+#' @param MGT_combo Optional management unit to plot. Overrides `row`.
+#' @param row Row of `shmi` to plot when `MGT_combo` is not given.
 #'
-#' @param MGT_combo Optional. Character value specifying which management
-#'   unit to plot. If supplied, this overrides `row`.
+#' @return Draws the plot and invisibly returns the arranged grob from
+#'   [gridExtra::grid.arrange()].
 #'
-#' @param row Integer row number to plot if `MGT_combo` is not provided.
+#' @seealso [plot_shmi_lollipop()], [build_shmi()]
 #'
-#' @return A 1×5 panel of ggplot gauge charts.
+#' @examples
+#' scores <- data.frame(MGT_combo = "field_1", SHMI = 62.3, Cover = 71.2,
+#'                      Diversity = 45.0, InvDist = 88.9, OrgInput = 33.1)
+#' plot_shmi_gauge(scores)
+#'
 #' @export
 plot_shmi_gauge <- function(shmi,
                             MGT_combo = NULL,
@@ -77,7 +77,7 @@ plot_shmi_gauge <- function(shmi,
     ordered = TRUE
   )
 
-  # Background bar (5 × 20 = 100)
+  # Background bar (5 x 20 = 100)
   bar_df <- data.frame(points = rep(20, 5), scores = scores)
 
   base_plot <- function() {
@@ -102,12 +102,7 @@ plot_shmi_gauge <- function(shmi,
   # ---- Helper to build each panel ----
   panel <- function(value, xlab) {
     base_plot() +
-      ggplot2::geom_point(
-        inherit.aes = FALSE,
-        data = x,
-        ggplot2::aes(x = 0.5, y = value),
-        shape = "\u25BA", size = 10, colour = "black"
-      ) +
+      .gauge_pointer(x, value) +
       ggplot2::geom_label(
         inherit.aes = FALSE,
         data = x,
@@ -132,12 +127,7 @@ plot_shmi_gauge <- function(shmi,
       ggplot2::aes(label = scores, x = 1.6, y = seq(10, 90, by = 20)),
       size = 5, angle = 90
     ) +
-    ggplot2::geom_point(
-      inherit.aes = FALSE,
-      data = x,
-      ggplot2::aes(x = 0.5, y = SHMI),
-      shape = "\u25BA", size = 10, colour = "black"
-    ) +
+    .gauge_pointer(x, x$SHMI) +
     ggplot2::geom_label(
       inherit.aes = FALSE,
       data = x,
@@ -150,6 +140,21 @@ plot_shmi_gauge <- function(shmi,
       fill = "grey80", color = "grey80"
     ))
 
-  # ---- Arrange 1×5 ----
+  # ---- Arrange 1x5 ----
   gridExtra::grid.arrange(p1, p2, p3, p4, p5, nrow = 1)
+}
+
+
+# Right-pointing arrow marking a score on a gauge. Drawn as a segment with a
+# closed arrowhead rather than a Unicode symbol, which fails on graphics
+# devices without Unicode support (for example the pdf device used by
+# R CMD check).
+.gauge_pointer <- function(data, value) {
+  ggplot2::geom_segment(
+    inherit.aes = FALSE,
+    data = data,
+    ggplot2::aes(x = 0.15, xend = 0.5, y = value, yend = value),
+    arrow = ggplot2::arrow(type = "closed", length = ggplot2::unit(0.35, "cm")),
+    linewidth = 1.2, colour = "black"
+  )
 }

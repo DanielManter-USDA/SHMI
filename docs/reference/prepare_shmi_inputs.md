@@ -18,7 +18,8 @@ prepare_shmi_inputs(
   max_rot_range = 200,
   calc_yield = FALSE,
   calc_n_rate = FALSE,
-  rotation_window = c("calendar", "events")
+  rotation_window = c("calendar", "events"),
+  tillage_end = c("auto", "STIR", "EPA", "none")
 )
 ```
 
@@ -62,6 +63,13 @@ prepare_shmi_inputs(
 
   `"calendar"` (default) or `"events"` (SHMI \<= 1.1.0 behaviour); see
   *Rotation window and overrides*.
+
+- tillage_end:
+
+  Scale for the intensive-tillage end rule: `"auto"` (default; EPA when
+  every disturbance pass has a depth and mixing efficiencies are \<= 1,
+  otherwise STIR), `"STIR"`, `"EPA"`, or `"none"` to switch the rule
+  off. See *Crops without an end date*.
 
 ## Value
 
@@ -127,6 +135,18 @@ filled as follows:
 Every such imputation and data-quality check is recorded in
 `assumptions`.
 
+## Crops without an end date
+
+A crop with no harvest or termination record is first given an imputed
+end: the next recorded planting or, if none, the end of the evaluation
+window. It then ends earlier if intensive tillage is recorded after its
+planting: the first day whose passes sum to STIR \>= 80, or whose EPA
+tillage intensity (mixed depth / 30 cm) is \>= 0.252. Both thresholds
+are the lower bound of the conventional-tillage class (TI 0.252). Each
+such change is logged as `end_intensive_tillage`. Crops that still run
+to the end of the window although lighter disturbance is recorded are
+flagged (`end_window_light_tillage`).
+
 ## Rotation window and overrides
 
 The rotation window is the denominator of every sub-index, so it must
@@ -173,22 +193,22 @@ converted are `NA`, not zero. Unconverted values are listed in
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [339ms]
+#> ✔ Validating inputs... [319ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [300ms]
+#> ✔ Reading Excel file... [318ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [27ms]
+#> ✔ Calculating rotation lengths... [28ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [139ms]
+#> ✔ Calculating crop start/end dates... [158ms]
 #> 
 #> ℹ Applying overrides...
 #> ✔ Applying overrides... [13ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [30ms]
+#> ✔ Re-calculating rotation lengths... [38ms]
 #> 
 
 # What was assumed, and what should be reviewed?
@@ -204,22 +224,22 @@ inputs_2022_23 <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE,
                                       start_date_override = "2022-01-01",
                                       end_date_override   = "2023-12-31")
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [321ms]
+#> ✔ Validating inputs... [309ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [338ms]
+#> ✔ Reading Excel file... [300ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [30ms]
+#> ✔ Calculating rotation lengths... [27ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [135ms]
+#> ✔ Calculating crop start/end dates... [152ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [26ms]
+#> ✔ Applying overrides... [23ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [29ms]
+#> ✔ Re-calculating rotation lengths... [39ms]
 #> 
 inputs_2022_23$rot_bounds
 #> # A tibble: 8 × 5

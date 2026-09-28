@@ -71,19 +71,3 @@ test_that("annual episodes longer than 400 days are flagged; winter annuals are 
   long <- res$assumptions$name[res$assumptions$type == "annual_long_episode"]
   expect_equal(long, "Rye")
 })
-
-test_that("imputed annual ends after a recorded disturbance are flagged", {
-  windows <- tibble::tibble(
-    MGT_combo = c("u1", "u1", "u1"), CD_name = c("Rye", "Alfalfa", "Corn"),
-    CD_cat = c("Annual", "Perennial", "Annual"),
-    crop_start = as.Date(c("2016-10-05", "2016-04-01", "2016-05-01")),
-    crop_end   = as.Date(c("2017-12-31", "2017-12-31", "2016-10-01")),
-    end_imputed = c(TRUE, TRUE, FALSE))
-  dist <- tibble::tibble(MGT_combo = "u1",
-                         SD_date = as.Date(c("2017-05-01", "2016-07-01")))
-  out <- SHMI:::.check_imputed_end_disturbance(windows, dist)
-  expect_equal(out$name, "Rye")                      # perennial and non-imputed skipped
-  expect_match(out$message, "2017-05-01")
-  expect_equal(out$level, "check")
-  expect_equal(nrow(SHMI:::.check_imputed_end_disturbance(windows, dist[0, ])), 0)
-})

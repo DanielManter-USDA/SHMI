@@ -111,22 +111,22 @@ are removed earlier, by
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [597ms]
+#> ✔ Validating inputs... [643ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [321ms]
+#> ✔ Reading Excel file... [375ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [48ms]
+#> ✔ Calculating rotation lengths... [51ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [145ms]
+#> ✔ Calculating crop start/end dates... [176ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [15ms]
+#> ✔ Applying overrides... [14ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [32ms]
+#> ✔ Re-calculating rotation lengths... [44ms]
 #> 
 
 # Official national settings
@@ -135,16 +135,16 @@ result <- build_shmi(inputs)
 #> ✔ Validating inputs... [15ms]
 #> 
 #> ℹ Computing cover...
-#> ✔ Computing cover... [84ms]
+#> ✔ Computing cover... [90ms]
 #> 
 #> ℹ Computing diversity...
-#> ✔ Computing diversity... [50ms]
+#> ✔ Computing diversity... [43ms]
 #> 
 #> ℹ Computing disturbance...
-#> ✔ Computing disturbance... [42ms]
+#> ✔ Computing disturbance... [43ms]
 #> 
 #> ℹ Computing organic inputs...
-#> ✔ Computing organic inputs... [20ms]
+#> ✔ Computing organic inputs... [17ms]
 #> 
 #> ℹ Combining indices...
 #> ✔ Combining indices... [31ms]

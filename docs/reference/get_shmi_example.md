@@ -38,41 +38,41 @@ Other SHMI helper functions:
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [337ms]
+#> ✔ Validating inputs... [330ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [314ms]
+#> ✔ Reading Excel file... [308ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [28ms]
+#> ✔ Calculating rotation lengths... [27ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [145ms]
+#> ✔ Calculating crop start/end dates... [151ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [20ms]
+#> ✔ Applying overrides... [13ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [45ms]
+#> ✔ Re-calculating rotation lengths... [41ms]
 #> 
 result <- build_shmi(inputs)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [18ms]
+#> ✔ Validating inputs... [13ms]
 #> 
 #> ℹ Computing cover...
-#> ✔ Computing cover... [94ms]
+#> ✔ Computing cover... [89ms]
 #> 
 #> ℹ Computing diversity...
-#> ✔ Computing diversity... [39ms]
+#> ✔ Computing diversity... [51ms]
 #> 
 #> ℹ Computing disturbance...
-#> ✔ Computing disturbance... [41ms]
+#> ✔ Computing disturbance... [46ms]
 #> 
 #> ℹ Computing organic inputs...
-#> ✔ Computing organic inputs... [17ms]
+#> ✔ Computing organic inputs... [16ms]
 #> 
 #> ℹ Combining indices...
-#> ✔ Combining indices... [35ms]
+#> ✔ Combining indices... [30ms]
 #> 
 #> 
 #> 

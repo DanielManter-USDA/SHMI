@@ -367,40 +367,121 @@
         tolower(trimws(x)))
 }
 
-# Crop episodes whose end was imputed although soil disturbance is recorded
-# between their start and the imputed end (a termination may be missing).
-# Perennial stands are skipped: their harvest operations are recorded as
-# disturbances. Returns an assumptions table (possibly empty).
-.check_imputed_end_disturbance <- function(windows, dist) {
-  empty <- .add_assumption_text(tibble::tibble(
+# Empty assumptions table with the standard columns
+.empty_assumptions <- function() {
+  .add_assumption_text(tibble::tibble(
     MGT_combo = character(), source = character(), name = character(),
     date_start = as.Date(character()), date_end = as.Date(character()),
     type = character()))
-  if (is.null(dist) || nrow(dist) == 0) return(empty)
+}
 
+# Intensive-tillage end (scoring rule). A crop whose end date was imputed
+# (no harvest or termination record) ends on the first day after planting
+# whose tillage is intensive, if that comes before the imputed end:
+#   STIR : the day's passes sum to >= stir_min (default 80)
+#   EPA  : the day's tillage intensity T_t >= ti_min (default 0.252)
+# Both thresholds are the boundary of the conventional-tillage TI class
+# (TI 0.252; annual STIR 80 with max_stir = 317.5). Returns the updated
+# windows and one assumption row per changed episode.
+.end_at_intensive_tillage <- function(windows, dist, method,
+                                      stir_min = 80, ti_min = 0.252) {
+  out <- list(windows = windows, assumptions = .empty_assumptions())
+  if (method == "none" || is.null(dist) || nrow(dist) == 0 || nrow(windows) == 0) return(out)
+
+  thr <- if (method == "STIR") stir_min else ti_min
+  intense <- .daily_tillage(dist, method) %>%
+    dplyr::filter(intensity >= thr) %>%
+    dplyr::select(MGT_combo, till_date = SD_date, intensity)
+  if (nrow(intense) == 0) return(out)
+
+  hits <- windows %>%
+    dplyr::mutate(.row = dplyr::row_number()) %>%
+    dplyr::filter(end_imputed) %>%
+    dplyr::select(.row, MGT_combo, CD_name, crop_start, crop_end) %>%
+    dplyr::inner_join(intense, by = "MGT_combo", relationship = "many-to-many") %>%
+    dplyr::filter(till_date > crop_start, till_date < crop_end) %>%
+    dplyr::group_by(.row, MGT_combo, CD_name, crop_start, crop_end) %>%
+    dplyr::summarise(new_end = min(till_date),
+                     day_intensity = intensity[which.min(till_date)], .groups = "drop")
+  if (nrow(hits) == 0) return(out)
+
+  windows$crop_end[hits$.row] <- hits$new_end
+  unit <- if (method == "STIR") "STIR" else "T_t"
+  out$windows <- windows
+  out$assumptions <- hits %>%
+    dplyr::transmute(MGT_combo, source = "crop", name = CD_name,
+                     date_start = crop_start, date_end = new_end,
+                     type = "end_intensive_tillage", day_intensity, old_end = crop_end) %>%
+    .add_assumption_text(keep = c("day_intensity", "old_end")) %>%
+    dplyr::mutate(message = paste0(message, " Imputed end ", format(old_end),
+                                   " replaced; that day's intensity: ",
+                                   signif(day_intensity, 3), " ", unit, ".")) %>%
+    dplyr::select(-day_intensity, -old_end)
+  out
+}
+
+# Check: crops that still run to the end of the evaluation window although
+# lighter (non-intensive) soil disturbance is recorded after planting.
+.check_light_tillage_end <- function(windows, dist, rot_bounds) {
+  if (is.null(dist) || nrow(dist) == 0 || nrow(windows) == 0) return(.empty_assumptions())
   w <- windows %>%
-    dplyr::filter(end_imputed, CD_cat != "Perennial") %>%
-    dplyr::select(MGT_combo, CD_name, crop_start, crop_end)
-  if (nrow(w) == 0) return(empty)
-
+    dplyr::filter(end_imputed) %>%
+    dplyr::inner_join(dplyr::select(rot_bounds, MGT_combo, rot_end), by = "MGT_combo") %>%
+    dplyr::filter(crop_end >= rot_end)
+  if (nrow(w) == 0) return(.empty_assumptions())
   hits <- w %>%
-    dplyr::inner_join(dist %>% dplyr::filter(!is.na(SD_date)) %>%
-                        dplyr::select(MGT_combo, SD_date),
+    dplyr::inner_join(dist %>% dplyr::filter(!is.na(SD_date)) %>% dplyr::select(MGT_combo, SD_date),
                       by = "MGT_combo", relationship = "many-to-many") %>%
-    dplyr::filter(SD_date > crop_start, SD_date < crop_end) %>%
+    dplyr::filter(SD_date > crop_start, SD_date <= crop_end) %>%
     dplyr::group_by(MGT_combo, CD_name, crop_start, crop_end) %>%
     dplyr::summarise(first_dist = min(SD_date), .groups = "drop")
-  if (nrow(hits) == 0) return(empty)
-
+  if (nrow(hits) == 0) return(.empty_assumptions())
   hits %>%
-    dplyr::transmute(MGT_combo, source = "crop", name = CD_name,
-                     date_start = crop_start, date_end = crop_end,
-                     type = "end_imputed_after_disturbance",
-                     first_dist) %>%
+    dplyr::transmute(MGT_combo, source = "crop", name = CD_name, date_start = crop_start,
+                     date_end = crop_end, type = "end_window_light_tillage", first_dist) %>%
     .add_assumption_text(keep = "first_dist") %>%
     dplyr::mutate(message = paste0(message, " First disturbance after planting: ",
-                                   format(first_dist, "%Y-%m-%d"), ".")) %>%
+                                   format(first_dist), ".")) %>%
     dplyr::select(-first_dist)
+}
+
+# Check: annual crops whose planting date was imputed, listing the soil
+# disturbance dates between the imputed start and the crop's end, any of
+# which may be the missing planting. Changes no windows.
+.check_imputed_start <- function(windows, dist, max_list = 4) {
+  if (is.null(dist) || nrow(dist) == 0 || nrow(windows) == 0) return(.empty_assumptions())
+  w <- windows %>% dplyr::filter(start_imputed, CD_cat == "Annual")
+  if (nrow(w) == 0) return(.empty_assumptions())
+  daily <- dist %>%
+    dplyr::filter(!is.na(SD_date), !is.na(SD_mixeff)) %>%
+    dplyr::group_by(MGT_combo, SD_date) %>%
+    dplyr::summarise(day_sum = sum(SD_mixeff), .groups = "drop")
+  hits <- w %>%
+    dplyr::inner_join(daily, by = "MGT_combo", relationship = "many-to-many") %>%
+    dplyr::filter(SD_date > crop_start, SD_date < crop_end) %>%
+    dplyr::arrange(SD_date) %>%
+    dplyr::group_by(MGT_combo, CD_name, crop_start, crop_end) %>%
+    dplyr::summarise(cands = paste(utils::head(paste0(format(SD_date), " (", signif(day_sum, 3), ")"),
+                                               max_list), collapse = ", "),
+                     n = dplyr::n(), .groups = "drop")
+  if (nrow(hits) == 0) return(.empty_assumptions())
+  hits %>%
+    dplyr::transmute(MGT_combo, source = "crop", name = CD_name, date_start = crop_start,
+                     date_end = crop_end, type = "start_imputed_candidates", cands, n) %>%
+    .add_assumption_text(keep = c("cands", "n")) %>%
+    dplyr::mutate(message = paste0(message, " Disturbance dates (day total SD_mixeff): ", cands,
+                                   ifelse(n > max_list, ", ...", ""), ".")) %>%
+    dplyr::select(-cands, -n)
+}
+
+# Check: units with management records but no crop records (scored as bare soil)
+.check_no_crops <- function(rot_bounds, windows) {
+  none <- setdiff(unique(rot_bounds$MGT_combo), unique(windows$MGT_combo))
+  if (!length(none)) return(.empty_assumptions())
+  rb <- rot_bounds[match(none, rot_bounds$MGT_combo), ]
+  .add_assumption_text(tibble::tibble(MGT_combo = none, source = "crop", name = NA_character_,
+                                      date_start = as.Date(rb$rot_start), date_end = as.Date(rb$rot_end),
+                                      type = "no_crop_records"))
 }
 
 # Days covered by the union of a set of date intervals (overlaps count once)
@@ -432,7 +513,10 @@
   unknown_category          = "check",
   placeholder_name          = "check",
   annual_long_episode       = "check",
-  end_imputed_after_disturbance = "check",
+  end_intensive_tillage     = "assumption",
+  end_window_light_tillage  = "check",
+  start_imputed_candidates  = "check",
+  no_crop_records           = "check",
   end_before_start          = "check",
   row_no_dates              = "check",
   yield_bushels_not_converted = "check",
@@ -489,10 +573,19 @@
     "Annual crop episode is longer than 400 days. Usually a missing",
     "harvest/termination date, or a stand kept for more than one growing",
     "season that should be coded perennial."),
-  end_imputed_after_disturbance = paste(
-    "End date was imputed, but soil disturbance is recorded before it. If",
-    "that operation ended the crop (e.g. fall tillage), add a termination",
-    "date; in-season cultivation needs no change."),
+  end_intensive_tillage = paste(
+    "No harvest or termination; crop ended at the first intensive tillage",
+    "after planting (day's STIR >= 80, or EPA tillage intensity >= 0.252)."),
+  end_window_light_tillage = paste(
+    "No harvest or termination; crop runs to the end of the evaluation window",
+    "although soil disturbance (below intensive tillage) is recorded after",
+    "planting. If that operation ended the crop, add a termination date."),
+  start_imputed_candidates = paste(
+    "Planting date imputed. If one of the listed disturbance dates was the",
+    "planting, enter it as CD_plant_date."),
+  no_crop_records = paste(
+    "Unit has management records but no crop records; it is scored as bare",
+    "soil. Add crops, or confirm the unit was fallow."),
   end_before_start = "End date was before start date; window set to a single day. Check dates.",
   row_no_dates = "Row has no plant, harvest, or termination date and was ignored.",
   yield_bushels_not_converted = paste(

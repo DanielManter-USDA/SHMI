@@ -77,7 +77,8 @@ way.</p>
 <span>  max_rot_range <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>  calc_yield <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  calc_n_rate <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  rotation_window <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"calendar"</span>, <span class="st">"events"</span><span class="op">)</span></span>
+<span>  rotation_window <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"calendar"</span>, <span class="st">"events"</span><span class="op">)</span>,</span>
+<span>  tillage_end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"STIR"</span>, <span class="st">"EPA"</span>, <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -124,6 +125,13 @@ spans stop with an error, since they usually indicate a mistyped date.</p></dd>
 <dt id="arg-rotation-window">rotation_window<a class="anchor" aria-label="anchor" href="#arg-rotation-window"></a></dt>
 <dd><p><code>"calendar"</code> (default) or <code>"events"</code> (SHMI
 &lt;= 1.1.0 behaviour); see <em>Rotation window and overrides</em>.</p></dd>
+
+
+<dt id="arg-tillage-end">tillage_end<a class="anchor" aria-label="anchor" href="#arg-tillage-end"></a></dt>
+<dd><p>Scale for the intensive-tillage end rule: <code>"auto"</code>
+(default; EPA when every disturbance pass has a depth and mixing
+efficiencies are &lt;= 1, otherwise STIR), <code>"STIR"</code>, <code>"EPA"</code>, or <code>"none"</code>
+to switch the rule off. See <em>Crops without an end date</em>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -179,6 +187,20 @@ year).</p></li>
 <code>assumptions</code>.</p>
     </div>
     <div class="section level2">
+    <h2 id="crops-without-an-end-date">Crops without an end date<a class="anchor" aria-label="anchor" href="#crops-without-an-end-date"></a></h2>
+
+
+<p>A crop with no harvest or termination record is first given an imputed
+end: the next recorded planting or, if none, the end of the evaluation
+window. It then ends earlier if intensive tillage is recorded after its
+planting: the first day whose passes sum to STIR &gt;= 80, or whose EPA
+tillage intensity (mixed depth / 30 cm) is &gt;= 0.252. Both thresholds are
+the lower bound of the conventional-tillage class (TI 0.252). Each such
+change is logged as <code>end_intensive_tillage</code>. Crops that still run to the
+end of the window although lighter disturbance is recorded are flagged
+(<code>end_window_light_tillage</code>).</p>
+    </div>
+    <div class="section level2">
     <h2 id="rotation-window-and-overrides">Rotation window and overrides<a class="anchor" aria-label="anchor" href="#rotation-window-and-overrides"></a></h2>
 
 
@@ -224,22 +246,22 @@ are <code>NA</code>, not zero. Unconverted values are listed in <code>assumption
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu">prepare_shmi_inputs</span><span class="op">(</span><span class="fu"><a href="get_shmi_example.html">get_shmi_example</a></span><span class="op">(</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Validating inputs...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Validating inputs... <span style="color: #B2B2B2;">[339ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Validating inputs... <span style="color: #B2B2B2;">[319ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reading Excel file...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Reading Excel file... <span style="color: #B2B2B2;">[300ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Reading Excel file... <span style="color: #B2B2B2;">[318ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Calculating rotation lengths...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating rotation lengths... <span style="color: #B2B2B2;">[27ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating rotation lengths... <span style="color: #B2B2B2;">[28ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Calculating crop start/end dates...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating crop start/end dates... <span style="color: #B2B2B2;">[139ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating crop start/end dates... <span style="color: #B2B2B2;">[158ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Applying overrides...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Applying overrides... <span style="color: #B2B2B2;">[13ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Re-calculating rotation lengths...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Re-calculating rotation lengths... <span style="color: #B2B2B2;">[30ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Re-calculating rotation lengths... <span style="color: #B2B2B2;">[38ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># What was assumed, and what should be reviewed?</span></span></span>
@@ -255,22 +277,22 @@ are <code>NA</code>, not zero. Unconverted values are listed in <code>assumption
 <span class="r-in"><span>                                      start_date_override <span class="op">=</span> <span class="st">"2022-01-01"</span>,</span></span>
 <span class="r-in"><span>                                      end_date_override   <span class="op">=</span> <span class="st">"2023-12-31"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Validating inputs...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Validating inputs... <span style="color: #B2B2B2;">[321ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Validating inputs... <span style="color: #B2B2B2;">[309ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reading Excel file...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Reading Excel file... <span style="color: #B2B2B2;">[338ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Reading Excel file... <span style="color: #B2B2B2;">[300ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Calculating rotation lengths...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating rotation lengths... <span style="color: #B2B2B2;">[30ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating rotation lengths... <span style="color: #B2B2B2;">[27ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Calculating crop start/end dates...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating crop start/end dates... <span style="color: #B2B2B2;">[135ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating crop start/end dates... <span style="color: #B2B2B2;">[152ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Applying overrides...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Applying overrides... <span style="color: #B2B2B2;">[26ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Applying overrides... <span style="color: #B2B2B2;">[23ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Re-calculating rotation lengths...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Re-calculating rotation lengths... <span style="color: #B2B2B2;">[29ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Re-calculating rotation lengths... <span style="color: #B2B2B2;">[39ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="va">inputs_2022_23</span><span class="op">$</span><span class="va">rot_bounds</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 8 × 5</span></span>

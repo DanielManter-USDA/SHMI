@@ -22,12 +22,12 @@
 #'
 #' | Class | TI range | Class | TI range |
 #' |---|---|---|---|
-#' | Z | `0 - 0.001`     | F | `0.144 - 0.162` |
-#' | A | `0.001 - 0.01`  | G | `0.162 - 0.202` |
-#' | B | `0.01 - 0.04`   | H | `0.202 - 0.252` |
-#' | C | `0.04 - 0.075`  | I | `0.252 - 0.268` |
+#' | Z | `0 - 0.001` | F | `0.144 - 0.162` |
+#' | A | `0.001 - 0.01` | G | `0.162 - 0.202` |
+#' | B | `0.01 - 0.04` | H | `0.202 - 0.252` |
+#' | C | `0.04 - 0.075` | I | `0.252 - 0.268` |
 #' | D | `0.075 - 0.111` | J | `0.268 - 0.449` |
-#' | E | `0.111 - 0.144` | K | `0.449 - 1`     |
+#' | E | `0.111 - 0.144` | K | `0.449 - 1` |
 #'
 #' Annual TI is capped at 1 before classification (under `"EPA"` the sum of
 #' daily values can exceed 1), so class K covers 0.449-1 inclusive.
@@ -213,16 +213,11 @@ compute_disturbance <- function(dist,
       ) %>%
       dplyr::filter(!is.na(SD_mixeff), !is.na(SD_depth_cm))
 
-    epa_day <- function(me, depth) {
-      S <- 0
-      for (i in seq_along(me)) S <- S + me[i] * max(depth[i] - S, 0)
-      S
-    }
 
     daily <- dist_epa %>%
       dplyr::arrange(MGT_combo, SD_date, SD_depth_cm) %>%
       dplyr::group_by(MGT_combo, year, SD_date) %>%
-      dplyr::summarize(T_t_daily = epa_day(SD_mixeff, SD_depth_cm) / 30,
+      dplyr::summarize(T_t_daily = .epa_day(SD_mixeff, SD_depth_cm) / 30,
                        .groups = "drop")
 
     annual <- daily %>%
@@ -278,4 +273,57 @@ compute_disturbance <- function(dist,
              dplyr::left_join(rot, by = "MGT_combo") %>%
              dplyr::mutate(InvDist = tidyr::replace_na(InvDist, 100)))
   }
+}
+
+
+# ------------------------------------------------------------------------------
+# Internal helpers shared with prepare_shmi_inputs()
+# ------------------------------------------------------------------------------
+
+# EPA mixed depth for one day: passes ordered shallow to deep, each mixing a
+# fraction `me` of the soil between the depth already mixed and its own depth.
+# Returns cm (depths already capped at 30 cm).
+.epa_day <- function(me, depth) {
+  S <- 0
+  for (i in seq_along(me)) S <- S + me[i] * max(depth[i] - S, 0)
+  S
+}
+
+# Daily tillage intensity per unit, on the scale of the chosen method:
+#   STIR : sum of STIR values of the day's passes
+#   EPA  : daily tillage intensity T_t = mixed depth / 30 cm (as in
+#          compute_disturbance()); depths in inches, capped at 30 cm
+.daily_tillage <- function(dist, method = c("STIR", "EPA")) {
+  method <- match.arg(method)
+  d <- dist[!is.na(dist$SD_date) & !is.na(dist$SD_mixeff), , drop = FALSE]
+  if (nrow(d) == 0) {
+    return(tibble::tibble(MGT_combo = character(), SD_date = as.Date(character()),
+                          intensity = numeric()))
+  }
+  if (method == "STIR") {
+    d %>%
+      dplyr::group_by(MGT_combo, SD_date) %>%
+      dplyr::summarise(intensity = sum(SD_mixeff), .groups = "drop")
+  } else {
+    d %>%
+      dplyr::filter(!is.na(SD_depth)) %>%
+      dplyr::mutate(depth_cm = pmin(SD_depth * 2.54, 30)) %>%
+      dplyr::arrange(MGT_combo, SD_date, depth_cm) %>%
+      dplyr::group_by(MGT_combo, SD_date) %>%
+      dplyr::summarise(intensity = .epa_day(SD_mixeff, depth_cm) / 30, .groups = "drop")
+  }
+}
+
+# Which scale to use for the intensive-tillage rule. "auto": EPA when every
+# pass with a mixing efficiency has a depth and all efficiencies are <= 1;
+# otherwise STIR.
+.tillage_method <- function(dist, tillage_end = c("auto", "STIR", "EPA", "none")) {
+  tillage_end <- match.arg(tillage_end)
+  if (tillage_end != "auto") return(tillage_end)
+  if (is.null(dist) || nrow(dist) == 0) return("none")
+  me <- dist$SD_mixeff[!is.na(dist$SD_mixeff)]
+  if (!length(me)) return("none")
+  has_depth <- "SD_depth" %in% names(dist) &&
+    all(!is.na(dist$SD_depth[!is.na(dist$SD_mixeff) & dist$SD_mixeff > 0]))
+  if (all(me <= 1) && has_depth) "EPA" else "STIR"
 }

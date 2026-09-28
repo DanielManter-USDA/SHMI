@@ -31,6 +31,17 @@
 #' Every such imputation and data-quality check is recorded in
 #' `assumptions`.
 #'
+#' @section Crops without an end date:
+#' A crop with no harvest or termination record is first given an imputed
+#' end: the next recorded planting or, if none, the end of the evaluation
+#' window. It then ends earlier if intensive tillage is recorded after its
+#' planting: the first day whose passes sum to STIR >= 80, or whose EPA
+#' tillage intensity (mixed depth / 30 cm) is >= 0.252. Both thresholds are
+#' the lower bound of the conventional-tillage class (TI 0.252). Each such
+#' change is logged as `end_intensive_tillage`. Crops that still run to the
+#' end of the window although lighter disturbance is recorded are flagged
+#' (`end_window_light_tillage`).
+#'
 #' @section Rotation window and overrides:
 #' The rotation window is the denominator of every sub-index, so it must not
 #' depend on management. With `rotation_window = "calendar"` (default from
@@ -72,6 +83,10 @@
 #'   `MGT_sample_date`.
 #' @param rotation_window `"calendar"` (default) or `"events"` (SHMI
 #'   <= 1.1.0 behaviour); see *Rotation window and overrides*.
+#' @param tillage_end Scale for the intensive-tillage end rule: `"auto"`
+#'   (default; EPA when every disturbance pass has a depth and mixing
+#'   efficiencies are <= 1, otherwise STIR), `"STIR"`, `"EPA"`, or `"none"`
+#'   to switch the rule off. See *Crops without an end date*.
 #' @param max_rot_range Maximum plausible rotation length in years; longer
 #'   spans stop with an error, since they usually indicate a mistyped date.
 #' @param calc_yield Logical. Also return converted yields.
@@ -124,9 +139,11 @@ prepare_shmi_inputs <- function(path,
                                 max_rot_range = 200,
                                 calc_yield  = FALSE,
                                 calc_n_rate = FALSE,
-                                rotation_window = c("calendar", "events")) {
+                                rotation_window = c("calendar", "events"),
+                                tillage_end = c("auto", "STIR", "EPA", "none")) {
 
   rotation_window <- match.arg(rotation_window)
+  tillage_end     <- match.arg(tillage_end)
 
   # ------------------------------------------------------------
   # 1. Validate inputs
@@ -361,6 +378,12 @@ prepare_shmi_inputs <- function(path,
   crop_windows <- cw$windows
   assumptions  <- cw$assumptions
 
+  # Intensive-tillage end for crops without a harvest or termination record
+  tillage_method <- .tillage_method(dist, tillage_end)
+  te <- .end_at_intensive_tillage(crop_windows, dist, tillage_method)
+  crop_windows <- te$windows
+  assumptions  <- dplyr::bind_rows(assumptions, te$assumptions)
+
   # ------------------------------------------------------------
   # 7. Apply date overrides
   # ------------------------------------------------------------
@@ -497,13 +520,16 @@ prepare_shmi_inputs <- function(path,
     filter(MGT_combo %in% mgt_combos)
 
   # ------------------------------------------------------------
-  # Data check: annual crops whose imputed end runs past a recorded
-  # disturbance (a harvest or termination date may be missing).
-  # Changes no windows; logged in `assumptions` only.
+  # Data checks on the final windows (change no scores):
+  #   crops still running to the window end despite lighter tillage,
+  #   annual crops with an imputed planting date (candidate dates listed),
+  #   units with management records but no crops
   # ------------------------------------------------------------
   assumptions <- dplyr::bind_rows(
     assumptions,
-    .check_imputed_end_disturbance(crop_windows, dist)
+    .check_light_tillage_end(crop_windows, dist, rot_bounds),
+    .check_imputed_start(crop_windows, dist),
+    .check_no_crops(rot_bounds, crop_windows)
   )
 
   # ------------------------------------------------------------
@@ -558,6 +584,7 @@ prepare_shmi_inputs <- function(path,
     assumptions = assumptions
   )
   attr(inputs, "rotation_window") <- rotation_window
+  attr(inputs, "tillage_end")     <- tillage_method
 
   return(inputs)
 }

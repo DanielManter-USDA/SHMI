@@ -14,7 +14,8 @@ prepare_shmi_inputs(
   max_rot_range = 200,
   calc_yield = FALSE,
   calc_n_rate = FALSE,
-  rotation_window = c("calendar", "events")
+  rotation_window = c("calendar", "events"),
+  tillage_end = c("auto", "STIR", "EPA", "none")
 )
 }
 \arguments{
@@ -40,6 +41,11 @@ spans stop with an error, since they usually indicate a mistyped date.}
 
 \item{rotation_window}{\code{"calendar"} (default) or \code{"events"} (SHMI
 <= 1.1.0 behaviour); see \emph{Rotation window and overrides}.}
+
+\item{tillage_end}{Scale for the intensive-tillage end rule: \code{"auto"}
+(default; EPA when every disturbance pass has a depth and mixing
+efficiencies are <= 1, otherwise STIR), \code{"STIR"}, \code{"EPA"}, or \code{"none"}
+to switch the rule off. See \emph{Crops without an end date}.}
 }
 \value{
 A named list:
@@ -101,6 +107,19 @@ year).
 
 Every such imputation and data-quality check is recorded in
 \code{assumptions}.
+}
+
+\section{Crops without an end date}{
+
+A crop with no harvest or termination record is first given an imputed
+end: the next recorded planting or, if none, the end of the evaluation
+window. It then ends earlier if intensive tillage is recorded after its
+planting: the first day whose passes sum to STIR >= 80, or whose EPA
+tillage intensity (mixed depth / 30 cm) is >= 0.252. Both thresholds are
+the lower bound of the conventional-tillage class (TI 0.252). Each such
+change is logged as \code{end_intensive_tillage}. Crops that still run to the
+end of the window although lighter disturbance is recorded are flagged
+(\code{end_window_light_tillage}).
 }
 
 \section{Rotation window and overrides}{

@@ -32,12 +32,27 @@
 #' `assumptions`.
 #'
 #' @section Rotation window and overrides:
-#' Rotation bounds run from the first to the last recorded event of any
-#' type. To evaluate a fixed period, set `start_date_override` and/or
+#' The rotation window is the denominator of every sub-index, so it must not
+#' depend on management. With `rotation_window = "calendar"` (default from
+#' 1.2.0) it runs from 1 January of the first year with a record to
+#' 31 December of the last. Bare periods before the first and after the last
+#' recorded event are therefore scored as bare, and all four sub-indices
+#' share the same window. `rotation_window = "events"` reproduces
+#' SHMI <= 1.1.0, where the window ran from the first to the last recorded
+#' event; that excluded leading and trailing bare periods from the Cover
+#' denominator and so inflated Cover, most strongly in winter and spring.
+#'
+#' To evaluate a fixed period, set `start_date_override` and/or
 #' `end_date_override`: events outside the window are removed, crop and
-#' animal periods are clipped to it, and the rotation bounds are recomputed.
-#' With `end_at_sample_date = TRUE`, each unit is instead cut off at its
-#' `MGT_sample_date` (from the `Mgt_Unit` sheet).
+#' animal periods are clipped to it, and the window boundaries are exactly
+#' the override dates (under `"calendar"`). A unit whose records begin after
+#' the start override is scored as having no cover, tillage, or inputs
+#' before its first record, following the missing-record rule. Because
+#' Organic Inputs and Inverse Disturbance are scored by calendar year,
+#' overrides are best placed on year boundaries; other dates trigger a
+#' message. With `end_at_sample_date = TRUE`, each unit is cut off at its
+#' `MGT_sample_date` (from the `Mgt_Unit` sheet); units without a sample
+#' date are kept uncut and reported.
 #'
 #' @section Yield and nitrogen rate:
 #' With `calc_yield = TRUE`, each harvest row with a yield is converted to
@@ -55,6 +70,8 @@
 #'   evaluation window (a `Date` or a string such as `"2018-01-01"`).
 #' @param end_at_sample_date Logical. Cut each unit's records off at its
 #'   `MGT_sample_date`.
+#' @param rotation_window `"calendar"` (default) or `"events"` (SHMI
+#'   <= 1.1.0 behaviour); see *Rotation window and overrides*.
 #' @param max_rot_range Maximum plausible rotation length in years; longer
 #'   spans stop with an error, since they usually indicate a mistyped date.
 #' @param calc_yield Logical. Also return converted yields.
@@ -102,7 +119,10 @@ prepare_shmi_inputs <- function(path,
                                 end_at_sample_date = FALSE,
                                 max_rot_range = 200,
                                 calc_yield  = FALSE,
-                                calc_n_rate = FALSE) {
+                                calc_n_rate = FALSE,
+                                rotation_window = c("calendar", "events")) {
+
+  rotation_window <- match.arg(rotation_window)
 
   # ------------------------------------------------------------
   # 1. Validate inputs
@@ -136,6 +156,17 @@ prepare_shmi_inputs <- function(path,
     }
   }
 
+  if (!is.null(start_date_override) && !is.null(end_date_override) &&
+      start_date_override > end_date_override) {
+    stop("start_date_override is after end_date_override.", call. = FALSE)
+  }
+
+  if ((!is.null(start_date_override) && format(start_date_override, "%m-%d") != "01-01") ||
+      (!is.null(end_date_override)   && format(end_date_override,   "%m-%d") != "12-31")) {
+    message("Note: date overrides not on calendar-year boundaries. Organic Inputs ",
+            "and Inverse Disturbance count partial years as whole years.")
+  }
+
   # ------------------------------------------------------------
   # 2. Read all sheets
   # ------------------------------------------------------------
@@ -152,9 +183,21 @@ prepare_shmi_inputs <- function(path,
     dplyr::filter(!(MGT_combo %in% exclude))
 
   if (end_at_sample_date) {
+    if (!"MGT_sample_date" %in% names(mgt)) {
+      stop("end_at_sample_date = TRUE requires an MGT_sample_date column in Mgt_Unit.",
+           call. = FALSE)
+    }
     mgt_dates <- mgt %>%
       select(MGT_combo, MGT_sample_date) %>%
-      mutate(MGT_sample_date = as.Date(MGT_sample_date))
+      mutate(MGT_sample_date = as.Date(unname(.parse_shmi_date(MGT_sample_date))))
+
+    no_date <- mgt_dates$MGT_combo[is.na(mgt_dates$MGT_sample_date)]
+    if (length(no_date) > 0) {
+      cli::cli_warn(c(
+        "{length(no_date)} unit{?s} ha{?s/ve} no MGT_sample_date and will not be cut off.",
+        "i" = "First affected: {.val {utils::head(no_date, 5)}}"
+      ))
+    }
   }
 
   crop <- .safe_read(
@@ -284,12 +327,10 @@ prepare_shmi_inputs <- function(path,
     )
 
   rot_bounds <- rot_bounds %>%
-    rowwise() %>%
     mutate(
       year_range = rot_end_yr - rot_start_yr,
       is_outlier = year_range > max_rot_range
-    ) %>%
-    ungroup()
+    )
 
   if (any(rot_bounds$is_outlier)) {
     bad <- rot_bounds %>% filter(is_outlier)
@@ -334,8 +375,9 @@ prepare_shmi_inputs <- function(path,
       amend <- amend %>%
         filter(SA_date >= as.Date(start_date_override))
 
+      # periods without an end date are treated as single-day events
       animal <- animal %>%
-        filter(AD_end_date >= as.Date(start_date_override)) %>%
+        filter(dplyr::coalesce(AD_end_date, AD_start_date) >= as.Date(start_date_override)) %>%
         mutate(AD_start_date = pmax(AD_start_date, as.Date(start_date_override)))
     }
 
@@ -352,7 +394,8 @@ prepare_shmi_inputs <- function(path,
 
       animal <- animal %>%
         filter(AD_start_date <= as.Date(end_date_override)) %>%
-        mutate(AD_end_date = pmin(AD_end_date, as.Date(end_date_override)))
+        mutate(AD_end_date = dplyr::if_else(is.na(AD_end_date), AD_end_date,
+                                            pmin(AD_end_date, as.Date(end_date_override))))
     }
   }
 
@@ -362,31 +405,30 @@ prepare_shmi_inputs <- function(path,
 
   if (end_at_sample_date) {
 
-    # Crop windows
+    keep_by <- function(date, cut) is.na(cut) | (!is.na(date) & date <= cut)
+    cut_at  <- function(date, cut) dplyr::if_else(is.na(cut) | is.na(date), date, pmin(date, cut))
+
     crop_windows <- crop_windows %>%
       left_join(mgt_dates, by = "MGT_combo") %>%
-      filter(crop_start <= MGT_sample_date) %>%
-      mutate(
-        crop_end = pmin(crop_end, MGT_sample_date)
-      )
+      filter(keep_by(crop_start, MGT_sample_date)) %>%
+      mutate(crop_end = cut_at(crop_end, MGT_sample_date)) %>%
+      select(-MGT_sample_date)
 
-    # Disturbance
     dist <- dist %>%
       left_join(mgt_dates, by = "MGT_combo") %>%
-      filter(SD_date <= MGT_sample_date)
+      filter(keep_by(SD_date, MGT_sample_date)) %>%
+      select(-MGT_sample_date)
 
-    # Amendments
     amend <- amend %>%
       left_join(mgt_dates, by = "MGT_combo") %>%
-      filter(SA_date <= MGT_sample_date)
+      filter(keep_by(SA_date, MGT_sample_date)) %>%
+      select(-MGT_sample_date)
 
-    # Animal
     animal <- animal %>%
       left_join(mgt_dates, by = "MGT_combo") %>%
-      filter(AD_start_date <= MGT_sample_date) %>%
-      mutate(
-        AD_end_date = pmin(AD_end_date, MGT_sample_date)
-      )
+      filter(keep_by(AD_start_date, MGT_sample_date)) %>%
+      mutate(AD_end_date = cut_at(AD_end_date, MGT_sample_date)) %>%
+      select(-MGT_sample_date)
   }
 
   cli::cli_progress_step("Re-calculating rotation lengths...")
@@ -401,17 +443,50 @@ prepare_shmi_inputs <- function(path,
   ) %>%
     filter(!is.na(date))
 
-  rot_bounds <- all_dates %>%
+  event_span <- all_dates %>%
     group_by(MGT_combo) %>%
-    summarize(
-      rot_start = min(date),
-      rot_end   = max(date),
-      .groups = "drop"
-    ) %>%
+    summarize(first_event = min(date), last_event = max(date), .groups = "drop")
+
+  if (rotation_window == "events") {
+    # SHMI <= 1.1.0: window = first to last recorded event
+    rot_bounds <- event_span %>%
+      dplyr::transmute(MGT_combo, rot_start = first_event, rot_end = last_event)
+  } else {
+    # calendar-year window, or exactly the override / sample dates
+    rot_bounds <- event_span %>%
+      mutate(
+        rot_start = if (!is.null(start_date_override)) start_date_override else
+          as.Date(paste0(lubridate::year(first_event), "-01-01")),
+        rot_end   = if (!is.null(end_date_override)) end_date_override else
+          as.Date(paste0(lubridate::year(last_event), "-12-31"))
+      )
+    if (end_at_sample_date) {
+      rot_bounds <- rot_bounds %>%
+        left_join(mgt_dates, by = "MGT_combo") %>%
+        mutate(rot_end = dplyr::if_else(is.na(MGT_sample_date), rot_end,
+                                        pmin(rot_end, MGT_sample_date))) %>%
+        select(-MGT_sample_date)
+    }
+    rot_bounds <- rot_bounds %>% select(MGT_combo, rot_start, rot_end)
+  }
+
+  rot_bounds <- rot_bounds %>%
     mutate(
       rot_start_yr = lubridate::year(rot_start),
       rot_end_yr   = lubridate::year(rot_end)
     )
+
+  # Every episode must lie inside its unit's window (guaranteed by the
+  # construction above; checked so later changes cannot break it silently)
+  outside <- crop_windows %>%
+    dplyr::inner_join(rot_bounds, by = "MGT_combo") %>%
+    dplyr::filter(crop_start < rot_start | crop_end > rot_end)
+  if (nrow(outside) > 0) {
+    cli::cli_abort(c(
+      "Internal error: {nrow(outside)} crop episode{?s} extend{?s/} beyond the rotation window.",
+      "i" = "First affected: {.val {utils::head(unique(outside$MGT_combo), 5)}}"
+    ))
+  }
 
   mgt_combos <- unique(rot_bounds$MGT_combo)
   mgt <- mgt %>%
@@ -450,7 +525,7 @@ prepare_shmi_inputs <- function(path,
     message(
       "\n", nrow(assumptions), " assumptions/checks recorded in ",
       "`$assumptions` (", n_chk, " flagged for review). ",
-      "See table(result$assumptions$type)."
+      "See table($assumptions$type)."
     )
   }
 
@@ -468,6 +543,7 @@ prepare_shmi_inputs <- function(path,
     n_rate      = n_rate,
     assumptions = assumptions
   )
+  attr(inputs, "rotation_window") <- rotation_window
 
   return(inputs)
 }

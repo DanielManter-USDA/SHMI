@@ -25,10 +25,16 @@
 #' | `hill`, `max_div` | 1, 10 | [compute_diversity()] |
 #' | `dist_meth`, `max_stir`, `ti_rep` | `"EPA"`, 342, `"max"` | [compute_disturbance()] |
 #' | `w_amend`, `w_animal` | 0.6615, 0.3385 | [compute_orginput()] |
+#' | `animal_presence` | `"span"` | [compute_orginput()] |
+#' | `clip_to_rotation` | `TRUE` | [compute_cover()], [compute_diversity()] |
 #' | `w_cover`, `w_diversity`, `w_invdist`, `w_orginput` | 0.4481, 0.0904, 0.1431, 0.3184 | SHMI |
 #'
 #' The four pillar weights are rescaled to sum to 1 and combined as
 #' \deqn{SHMI = w_{cover} Cover + w_{diversity} Diversity + w_{invdist} InvDist + w_{orginput} OrgInput}
+#'
+#' Settings are checked before use: unknown names (for example a misspelled
+#' weight) and out-of-range values stop with an error rather than being
+#' silently ignored.
 #'
 #' The official disturbance method, `"EPA"`, requires a tillage depth
 #' (`SD_depth`) for every pass. Data without depths can be scored in expert
@@ -102,6 +108,10 @@ build_shmi <- function(shmi_inputs,
     # organic amendments
     w_amend  = 0.6615,
     w_animal = 0.3385,
+    animal_presence = "start",
+
+    # evaluation window
+    clip_to_rotation = TRUE,
 
     # shmi weights
     w_cover      = 0.4481,
@@ -126,7 +136,18 @@ build_shmi <- function(shmi_inputs,
       "Expert mode enabled: SHMI scores will NOT be comparable ",
       "to the national SHMI scale."
     )
+    unknown <- setdiff(names(settings), names(official))
+    if (length(unknown) > 0) {
+      stop("Unknown setting(s): ", paste(unknown, collapse = ", "),
+           ". Valid names: ", paste(names(official), collapse = ", "), call. = FALSE)
+    }
     settings <- utils::modifyList(official, settings)
+  }
+  .check_shmi_settings(settings)
+
+  if (is.null(attr(shmi_inputs, "rotation_window"))) {
+    message("Note: shmi_inputs was prepared by SHMI < 1.2.0 (event-based rotation ",
+            "window). Re-run prepare_shmi_inputs() for the calendar-year window.")
   }
 
   val <- validate_shmi_input(shmi_inputs, dist_meth = settings$dist_meth)
@@ -143,7 +164,7 @@ build_shmi <- function(shmi_inputs,
   # --------------------------------------------------------------------------
   # 3. Check and extract inputs
   # --------------------------------------------------------------------------
-  required <- c("rot_bounds", "crop", "dist", "amend", "animal")
+  required <- c("mgt", "rot_bounds", "crop", "dist", "amend", "animal")
 
   missing <- setdiff(required, names(shmi_inputs))
   if (length(missing) > 0) {
@@ -157,6 +178,10 @@ build_shmi <- function(shmi_inputs,
   mgt             <- shmi_inputs$mgt
   rot_bounds      <- shmi_inputs$rot_bounds
   crop            <- shmi_inputs$crop
+  if (isTRUE(settings$clip_to_rotation)) {
+    # Cover and Diversity use the same window as InvDist and OrgInput
+    crop <- clip_crop_to_rotation(crop, rot_bounds)
+  }
   dist            <- shmi_inputs$dist
   amend           <- shmi_inputs$amend
   animal          <- shmi_inputs$animal
@@ -173,7 +198,8 @@ build_shmi <- function(shmi_inputs,
     w_winter    = settings$w_winter,
     w_spring    = settings$w_spring,
     w_summer    = settings$w_summer,
-    w_fall      = settings$w_fall
+    w_fall      = settings$w_fall,
+    clip_to_rotation = settings$clip_to_rotation
   )
 
   # Diversity
@@ -201,7 +227,8 @@ build_shmi <- function(shmi_inputs,
     amend       = amend,
     animal      = animal,
     w_amend     = settings$w_amend,
-    w_animal    = settings$w_animal
+    w_animal    = settings$w_animal,
+    animal_presence = settings$animal_presence
   )
 
   # --------------------------------------------------------------------------
@@ -210,6 +237,11 @@ build_shmi <- function(shmi_inputs,
   cli::cli_progress_step("Combining indices...")
 
   # Ensure all pillars contain all MGT_combo values
+  if (anyDuplicated(mgt$MGT_combo)) {
+    stop("Duplicated MGT_combo in shmi_inputs$mgt: ",
+         paste(utils::head(unique(mgt$MGT_combo[duplicated(mgt$MGT_combo)]), 5),
+               collapse = ", "), call. = FALSE)
+  }
   all_sites <- mgt %>% dplyr::distinct(MGT_combo)
 
   cover     <- all_sites %>% left_join(cover,     by = "MGT_combo") %>%
@@ -240,7 +272,7 @@ build_shmi <- function(shmi_inputs,
   indicator_df <- indicator_df %>%
     dplyr::mutate(
       SHMI = (
-          w_cover     * .data$Cover +
+        w_cover     * .data$Cover +
           w_diversity * .data$Diversity +
           w_invdist   * .data$InvDist +
           w_orginput  * .data$OrgInput
@@ -269,6 +301,48 @@ build_shmi <- function(shmi_inputs,
     settings_used = settings,
     expert_mode   = expert_mode,
     shmi_version  = as.character(utils::packageVersion("SHMI")),
+    rotation_window = if (is.null(attr(shmi_inputs, "rotation_window"))) "events" else
+      attr(shmi_inputs, "rotation_window"),
     timestamp     = Sys.time()
   )
+}
+
+
+# Validate a complete settings list (internal)
+.check_shmi_settings <- function(s) {
+  err <- character()
+  nonneg_group <- function(nms, label) {
+    v <- unlist(s[nms])
+    if (length(v) != length(nms) || !is.numeric(v) || any(!is.finite(v)) || any(v < 0)) {
+      return(paste0(label, " must be finite, non-negative numbers."))
+    }
+    if (sum(v) <= 0) return(paste0(label, " must not all be zero."))
+    NULL
+  }
+  err <- c(err,
+           nonneg_group(c("w_winter", "w_spring", "w_summer", "w_fall"), "Season weights"),
+           nonneg_group(c("w_amend", "w_animal"), "w_amend and w_animal"),
+           nonneg_group(c("w_cover", "w_diversity", "w_invdist", "w_orginput"), "Pillar weights"))
+
+  if (!(length(s$hill) == 1 && s$hill %in% c(0, 1, 2)))
+    err <- c(err, "hill must be 0, 1, or 2.")
+  if (!(length(s$max_div) == 1 && is.numeric(s$max_div) && is.finite(s$max_div) &&
+        s$max_div > if (isTRUE(s$hill == 0)) 0 else 1))
+    err <- c(err, "max_div must be > 1 (> 0 for hill = 0); log(max_div) scales entropy.")
+  if (!(length(s$dist_meth) == 1 && s$dist_meth %in% c("EPA", "STIR")))
+    err <- c(err, "dist_meth must be \"EPA\" or \"STIR\".")
+  if (!(length(s$max_stir) == 1 && is.numeric(s$max_stir) && s$max_stir > 0))
+    err <- c(err, "max_stir must be a positive number.")
+  if (!(length(s$ti_rep) == 1 && s$ti_rep %in% c("max", "min", "mid")))
+    err <- c(err, "ti_rep must be \"max\", \"min\", or \"mid\".")
+  if (!(length(s$animal_presence) == 1 && s$animal_presence %in% c("start", "span")))
+    err <- c(err, "animal_presence must be \"start\" or \"span\".")
+  if (!(length(s$clip_to_rotation) == 1 && is.logical(s$clip_to_rotation) &&
+        !is.na(s$clip_to_rotation)))
+    err <- c(err, "clip_to_rotation must be TRUE or FALSE.")
+
+  if (length(err) > 0) {
+    stop("Invalid SHMI settings:\n", paste0(" - ", err, collapse = "\n"), call. = FALSE)
+  }
+  invisible(TRUE)
 }

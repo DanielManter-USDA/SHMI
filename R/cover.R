@@ -23,6 +23,12 @@
 #' recorded event, or the window set by `start_date_override` and
 #' `end_date_override`, which is how a fixed evaluation period is imposed.
 #'
+#' Only plant days inside `rot_start`-`rot_end` count
+#' when `clip_to_rotation = TRUE` (the default from 1.2.0). SHMI <= 1.1.0
+#' counted every day of an episode, including days outside the rotation,
+#' against the rotation's season lengths, so a season's proportion could
+#' exceed 1 when episodes extended past the evaluation window.
+#'
 #' A unit in `rot_bounds` with no plant windows (for example a fallow
 #' reference site) scores 0.
 #'
@@ -32,11 +38,13 @@
 #'   `rot_end`.
 #' @param w_winter,w_spring,w_summer,w_fall Season weights. Defaults are the
 #'   official values.
+#' @param clip_to_rotation Logical; see *Rotation window*. `FALSE` reproduces
+#'   SHMI <= 1.1.0.
 #'
 #' @return A data frame with `MGT_combo` and `Cover` (0-100), one row per
 #'   unit in `rot_bounds`.
 #'
-#' @seealso [build_shmi()], [compute_diversity()]
+#' @seealso [compute_cover_components()], [build_shmi()], [compute_diversity()]
 #'
 #' @examples
 #' crop <- data.frame(
@@ -59,118 +67,19 @@ compute_cover <- function(
     w_winter = 0.1259,
     w_spring = 0.1260,
     w_summer = 0.3755,
-    w_fall   = 0.3726
+    w_fall   = 0.3726,
+    clip_to_rotation = TRUE
 ) {
-
-  # -------------------------------------------------------------------------
-  # 1. Plant windows: all non-fallow species episodes
-  #    Fallow episodes contribute no plant-days; they only matter for
-  #    rotation bounds, which are already set in prepare_shmi_inputs().
-  # -------------------------------------------------------------------------
-  plant_windows <- crop %>%
-    dplyr::filter(!tolower(CD_name) %in% c("fallow", "none", "bare"),
-                  !is.na(crop_start), !is.na(crop_end)) %>%
-    dplyr::select(MGT_combo, crop_start, crop_end)
-
-  # -------------------------------------------------------------------------
-  # 2-4. Union of overlapping windows, daily expansion, plant-days per season
-  #    Mixtures, relays, and intercrops overlap; each covered day counts once.
-  #    If there are no plant windows at all, every unit gets zero plant-days
-  #    via the join in step 6 (skipping avoids min()/max() on empty input).
-  # -------------------------------------------------------------------------
-  if (nrow(plant_windows) == 0) {
-
-    season_counts <- tibble::tibble(
-      MGT_combo  = character(),
-      season     = character(),
-      plant_days = integer()
-    )
-
-  } else {
-
-    merged <- plant_windows %>%
-      dplyr::arrange(MGT_combo, crop_start, crop_end) %>%
-      dplyr::group_by(MGT_combo) %>%
-      dplyr::mutate(
-        run_end = as.Date(cummax(as.numeric(crop_end)), origin = "1970-01-01"),
-        block   = cumsum(c(TRUE, crop_start[-1] > run_end[-dplyr::n()]))
-      ) %>%
-      dplyr::group_by(MGT_combo, block) %>%
-      dplyr::summarize(
-        crop_start = min(crop_start),
-        crop_end   = max(crop_end),
-        .groups = "drop"
-      )
-
-    season_counts <- merged %>%
-      dplyr::mutate(n_days = as.integer(crop_end - crop_start) + 1L) %>%
-      tidyr::uncount(n_days, .id = "k") %>%
-      dplyr::mutate(
-        date   = crop_start + (k - 1L),
-        season = .season(lubridate::month(date))
-      ) %>%
-      dplyr::count(MGT_combo, season, name = "plant_days")
+  w <- c(w_winter, w_spring, w_summer, w_fall)
+  if (any(!is.finite(w)) || any(w < 0) || sum(w) <= 0) {
+    stop("Season weights must be finite, non-negative, and not all zero.")
   }
+  w <- w / sum(w)
 
-  # -------------------------------------------------------------------------
-  # 5. Expand rotation bounds into daily rows
-  # -------------------------------------------------------------------------
-  rot_days <- rot_bounds %>%
-    mutate(
-      rot_start = as.Date(rot_start),
-      rot_end   = as.Date(rot_end),
-      n_days = as.integer(rot_end - rot_start) + 1L
-    ) %>%
-    tidyr::uncount(n_days) %>%
-    group_by(MGT_combo) %>%
-    mutate(date = rot_start + (row_number() - 1L)) %>%
-    ungroup() %>%
-    mutate(season = .season(lubridate::month(date))) %>%
-    count(MGT_combo, season, name = "days_possible")
+  comp <- compute_cover_components(crop, rot_bounds, clip_to_rotation = clip_to_rotation)
+  P <- as.matrix(comp[, c("p_winter", "p_spring", "p_summer", "p_fall")])
 
-  # -------------------------------------------------------------------------
-  # 6. Merge plant-days and possible-days
-  # -------------------------------------------------------------------------
-  season_totals <- full_join(
-    season_counts,
-    rot_days,
-    by = c("MGT_combo", "season")
-  ) %>%
-    replace_na(list(plant_days = 0, days_possible = 0))
-
-  # -------------------------------------------------------------------------
-  # 7. Compute seasonal proportions
-  # -------------------------------------------------------------------------
-  season_totals <- season_totals %>%
-    mutate(
-      prop = if_else(days_possible > 0,
-                     plant_days / days_possible,
-                     0)
-    )
-
-  # -------------------------------------------------------------------------
-  # 8. Normalize seasonal weights
-  # -------------------------------------------------------------------------
-  w_sum <- w_winter + w_spring + w_summer + w_fall
-  w <- c(
-    winter = w_winter / w_sum,
-    spring = w_spring / w_sum,
-    summer = w_summer / w_sum,
-    fall   = w_fall   / w_sum
-  )
-
-  # -------------------------------------------------------------------------
-  # 9. Weighted cover score
-  # -------------------------------------------------------------------------
-  cover <- season_totals %>%
-    mutate(weight = w[season]) %>%
-    group_by(MGT_combo) %>%
-    summarize(
-      Cover = 100 * sum(weight * prop),
-      .groups = "drop"
-    )
-
-  cover
+  tibble::tibble(MGT_combo = comp$MGT_combo, Cover = 100 * as.vector(P %*% w))
 }
 
 

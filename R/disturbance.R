@@ -22,12 +22,15 @@
 #'
 #' | Class | TI range | Class | TI range |
 #' |---|---|---|---|
-#' | Z | `0 - 0.001` | F | `0.144 - 0.162` |
-#' | A | `0.001 - 0.01` | G | `0.162 - 0.202` |
-#' | B | `0.01 - 0.04` | H | `0.202 - 0.252` |
-#' | C | `0.04 - 0.075` | I | `0.252 - 0.268` |
+#' | Z | `0 - 0.001`     | F | `0.144 - 0.162` |
+#' | A | `0.001 - 0.01`  | G | `0.162 - 0.202` |
+#' | B | `0.01 - 0.04`   | H | `0.202 - 0.252` |
+#' | C | `0.04 - 0.075`  | I | `0.252 - 0.268` |
 #' | D | `0.075 - 0.111` | J | `0.268 - 0.449` |
-#' | E | `0.111 - 0.144` | K | `0.449 - 1` |
+#' | E | `0.111 - 0.144` | K | `0.449 - 1`     |
+#'
+#' Annual TI is capped at 1 before classification (under `"EPA"` the sum of
+#' daily values can exceed 1), so class K covers 0.449-1 inclusive.
 #'
 #' TI is then replaced by a class representative chosen by `ti_rep`: the
 #' lower bound (`"min"`), midpoint (`"mid"`), or upper bound (`"max"`, the
@@ -88,12 +91,12 @@ compute_disturbance <- function(dist,
   # ------------------------------------------------------------
   if (dist_meth == "EPA") {
 
-    # Column missing entirely
+    # Column missing entirely, or present but all values blank/NA
     if (!"SD_depth" %in% names(dist) || all(is.na(dist$SD_depth))) {
       stop("dist_meth = 'EPA' requires SD_depth, but it is missing or blank.")
     }
 
-    # Column present but all values blank/NA
+    # Column present but not numeric
     if (!is.numeric(dist$SD_depth)) {
       stop("SD_depth must be numeric for EPA disturbance calculations.")
     }
@@ -142,19 +145,19 @@ compute_disturbance <- function(dist,
   )
 
   # -------------------------------------------------------------------------
-  # Helper: classify TI_raw using left-closed, right-open intervals
+  # Helper: classify TI (left-closed, right-open; the top class K is closed
+  # at 1). TI is capped at 1 first. Under EPA the annual sum of daily S/30
+  # can exceed 1; capping makes explicit what SHMI <= 1.1.0 did implicitly
+  # through its nearest-midpoint fallback, so class assignments are unchanged.
+  # Vectorized, so no rowwise() pass is needed.
   # -------------------------------------------------------------------------
-  classify_TI <- function(TI_raw) {
-    idx <- which(TI_raw >= ti_classes$ti_min & TI_raw < ti_classes$ti_max)
-    if (length(idx) == 1) {
-      return(idx)
-    }
-    if (length(idx) == 0) {
-      # fallback: nearest midpoint
-      return(which.min(abs(TI_raw - ti_classes$ti_mid)))
-    }
-    # multiple matches -> pick the correct interval by left-closed rule
-    return(idx[length(idx)])  # highest interval that matches
+  score_years <- function(annual) {
+    TI  <- pmin(pmax(annual$TI_raw, 0), 1)
+    idx <- findInterval(TI, ti_classes$ti_min)
+    annual$class        <- ti_classes$class[idx]
+    annual$TI_used      <- ifelse(annual$class == "Z", 0, rep_col[idx])
+    annual$InvDist_year <- 100 * (1 - annual$TI_used)
+    annual
   }
 
   # -------------------------------------------------------------------------
@@ -230,16 +233,7 @@ compute_disturbance <- function(dist,
       dplyr::left_join(annual, by = c("MGT_combo", "year")) %>%
       dplyr::mutate(TI_raw = tidyr::replace_na(TI_raw, 0))
 
-    annual <- annual %>%
-      dplyr::rowwise() %>%
-      dplyr::mutate(
-        idx = classify_TI(TI_raw),
-        class = ti_classes$class[idx],
-        TI_used = rep_col[idx],
-        TI_used = dplyr::if_else(class == "Z", 0, TI_used),
-        InvDist_year = 100 * (1 - TI_used)
-      ) %>%
-      dplyr::ungroup()
+    annual <- score_years(annual)
 
     rot <- annual %>%
       dplyr::group_by(MGT_combo) %>%
@@ -274,16 +268,7 @@ compute_disturbance <- function(dist,
         TI_raw = pmin(STIR_raw / max_stir, 1)
       )
 
-    annual <- annual %>%
-      dplyr::rowwise() %>%
-      dplyr::mutate(
-        idx = classify_TI(TI_raw),
-        class = ti_classes$class[idx],
-        TI_used = rep_col[idx],
-        TI_used = dplyr::if_else(class == "Z", 0, TI_used),
-        InvDist_year = 100 * (1 - TI_used)
-      ) %>%
-      dplyr::ungroup()
+    annual <- score_years(annual)
 
     rot <- annual %>%
       dplyr::group_by(MGT_combo) %>%

@@ -38,41 +38,41 @@ Other SHMI helper functions:
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [343ms]
+#> ✔ Validating inputs... [323ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [302ms]
+#> ✔ Reading Excel file... [324ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [32ms]
+#> ✔ Calculating rotation lengths... [29ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [139ms]
+#> ✔ Calculating crop start/end dates... [149ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [13ms]
+#> ✔ Applying overrides... [15ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [26ms]
+#> ✔ Re-calculating rotation lengths... [33ms]
 #> 
 result <- build_shmi(inputs)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [7ms]
+#> ✔ Validating inputs... [12ms]
 #> 
 #> ℹ Computing cover...
-#> ✔ Computing cover... [60ms]
+#> ✔ Computing cover... [85ms]
 #> 
 #> ℹ Computing diversity...
-#> ✔ Computing diversity... [37ms]
+#> ✔ Computing diversity... [38ms]
 #> 
 #> ℹ Computing disturbance...
-#> ✔ Computing disturbance... [44ms]
+#> ✔ Computing disturbance... [38ms]
 #> 
 #> ℹ Computing organic inputs...
-#> ✔ Computing organic inputs... [29ms]
+#> ✔ Computing organic inputs... [18ms]
 #> 
 #> ℹ Combining indices...
-#> ✔ Combining indices... [32ms]
+#> ✔ Combining indices... [30ms]
 #> 
 #> 
 #> 
@@ -81,13 +81,13 @@ result$indicator_df
 #> # A tibble: 8 × 10
 #>   MGT_combo   MGT_study MGT_farm MGT_field MGT_trt  SHMI Cover Diversity InvDist
 #>   <chr>       <chr>     <chr>    <chr>     <chr>   <dbl> <dbl>     <dbl>   <dbl>
-#> 1 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  57.9  64.5         0    55.1
-#> 2 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  57.9  64.5         0    55.1
-#> 3 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N0   36.8  64.5         0    55.1
-#> 4 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N1…  36.8  64.5         0    55.1
-#> 5 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N0  43.4  64.9         0   100  
-#> 6 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  
-#> 7 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  
-#> 8 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  
+#> 1 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  56.9  62.3         0    55.1
+#> 2 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  56.9  62.3         0    55.1
+#> 3 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N0   35.8  62.3         0    55.1
+#> 4 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N1…  35.8  62.3         0    55.1
+#> 5 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N0  42.2  62.3         0   100  
+#> 6 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  
+#> 7 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  
+#> 8 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  
 #> # ℹ 1 more variable: OrgInput <dbl>
 ```

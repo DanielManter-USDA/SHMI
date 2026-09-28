@@ -62,6 +62,9 @@ class (left-closed, right-open intervals):\tabular{llll}{
 }
 
 
+Annual TI is capped at 1 before classification (under \code{"EPA"} the sum of
+daily values can exceed 1), so class K covers 0.449-1 inclusive.
+
 TI is then replaced by a class representative chosen by \code{ti_rep}: the
 lower bound (\code{"min"}), midpoint (\code{"mid"}), or upper bound (\code{"max"}, the
 official choice). Class Z always uses 0. The annual score is

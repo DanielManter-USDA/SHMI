@@ -13,7 +13,8 @@ prepare_shmi_inputs(
   end_at_sample_date = FALSE,
   max_rot_range = 200,
   calc_yield = FALSE,
-  calc_n_rate = FALSE
+  calc_n_rate = FALSE,
+  rotation_window = c("calendar", "events")
 )
 }
 \arguments{
@@ -36,6 +37,9 @@ spans stop with an error, since they usually indicate a mistyped date.}
 \item{calc_yield}{Logical. Also return converted yields.}
 
 \item{calc_n_rate}{Logical. Also return annual nitrogen rates.}
+
+\item{rotation_window}{\code{"calendar"} (default) or \code{"events"} (SHMI
+<= 1.1.0 behaviour); see \emph{Rotation window and overrides}.}
 }
 \value{
 A named list:
@@ -97,12 +101,27 @@ Every such imputation and data-quality check is recorded in
 
 \section{Rotation window and overrides}{
 
-Rotation bounds run from the first to the last recorded event of any
-type. To evaluate a fixed period, set \code{start_date_override} and/or
+The rotation window is the denominator of every sub-index, so it must not
+depend on management. With \code{rotation_window = "calendar"} (default from
+1.2.0) it runs from 1 January of the first year with a record to
+31 December of the last. Bare periods before the first and after the last
+recorded event are therefore scored as bare, and all four sub-indices
+share the same window. \code{rotation_window = "events"} reproduces
+SHMI <= 1.1.0, where the window ran from the first to the last recorded
+event; that excluded leading and trailing bare periods from the Cover
+denominator and so inflated Cover, most strongly in winter and spring.
+
+To evaluate a fixed period, set \code{start_date_override} and/or
 \code{end_date_override}: events outside the window are removed, crop and
-animal periods are clipped to it, and the rotation bounds are recomputed.
-With \code{end_at_sample_date = TRUE}, each unit is instead cut off at its
-\code{MGT_sample_date} (from the \code{Mgt_Unit} sheet).
+animal periods are clipped to it, and the window boundaries are exactly
+the override dates (under \code{"calendar"}). A unit whose records begin after
+the start override is scored as having no cover, tillage, or inputs
+before its first record, following the missing-record rule. Because
+Organic Inputs and Inverse Disturbance are scored by calendar year,
+overrides are best placed on year boundaries; other dates trigger a
+message. With \code{end_at_sample_date = TRUE}, each unit is cut off at its
+\code{MGT_sample_date} (from the \code{Mgt_Unit} sheet); units without a sample
+date are kept uncut and reported.
 }
 
 \section{Yield and nitrogen rate}{

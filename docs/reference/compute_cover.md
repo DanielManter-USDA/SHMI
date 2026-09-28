@@ -12,7 +12,8 @@ compute_cover(
   w_winter = 0.1259,
   w_spring = 0.126,
   w_summer = 0.3755,
-  w_fall = 0.3726
+  w_fall = 0.3726,
+  clip_to_rotation = TRUE
 )
 ```
 
@@ -30,6 +31,10 @@ compute_cover(
 - w_winter, w_spring, w_summer, w_fall:
 
   Season weights. Defaults are the official values.
+
+- clip_to_rotation:
+
+  Logical; see *Rotation window*. `FALSE` reproduces SHMI \<= 1.1.0.
 
 ## Value
 
@@ -59,11 +64,18 @@ these span the first to the last recorded event, or the window set by
 `start_date_override` and `end_date_override`, which is how a fixed
 evaluation period is imposed.
 
+Only plant days inside `rot_start`-`rot_end` count when
+`clip_to_rotation = TRUE` (the default from 1.2.0). SHMI \<= 1.1.0
+counted every day of an episode, including days outside the rotation,
+against the rotation's season lengths, so a season's proportion could
+exceed 1 when episodes extended past the evaluation window.
+
 A unit in `rot_bounds` with no plant windows (for example a fallow
 reference site) scores 0.
 
 ## See also
 
+[`compute_cover_components()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover_components.md),
 [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md),
 [`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md)
 

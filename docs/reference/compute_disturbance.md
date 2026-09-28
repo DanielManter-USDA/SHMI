@@ -73,6 +73,9 @@ class (left-closed, right-open intervals):
 | D     | `0.075 - 0.111` | J     | `0.268 - 0.449` |
 | E     | `0.111 - 0.144` | K     | `0.449 - 1`     |
 
+Annual TI is capped at 1 before classification (under `"EPA"` the sum of
+daily values can exceed 1), so class K covers 0.449-1 inclusive.
+
 TI is then replaced by a class representative chosen by `ti_rep`: the
 lower bound (`"min"`), midpoint (`"mid"`), or upper bound (`"max"`, the
 official choice). Class Z always uses 0. The annual score is \\100 (1 -

@@ -9,7 +9,8 @@ compute_orginput(
   amend,
   animal,
   w_amend = 0.6615,
-  w_animal = 0.3385
+  w_animal = 0.3385,
+  animal_presence = c("start", "span")
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ compute_orginput(
 
 \item{w_amend, w_animal}{Weights for amendments and animals. Defaults are
 the official values.}
+
+\item{animal_presence}{\code{"start"} (SHMI <= 1.1.0) or \code{"span"}; see
+\code{\link[=compute_orginput_components]{compute_orginput_components()}}.}
 }
 \value{
 A data frame with \code{MGT_combo} and \code{OrgInput} (0-100), one row per
@@ -41,6 +45,10 @@ used. With \eqn{p} the proportion of years with each input,
 
 A missing record means no input: a unit with no organic amendments or
 animals scores 0.
+
+With \code{animal_presence = "span"}, every calendar year overlapped by an
+animal period (\code{AD_start_date} to \code{AD_end_date}) counts, so continuous
+multi-year grazing is scored in every year rather than only its first.
 }
 \examples{
 rot_bounds <- data.frame(MGT_combo = "field_1",
@@ -53,5 +61,5 @@ compute_orginput(rot_bounds, amend, animal)
 
 }
 \seealso{
-\code{\link[=build_shmi]{build_shmi()}}
+\code{\link[=compute_orginput_components]{compute_orginput_components()}}, \code{\link[=build_shmi]{build_shmi()}}
 }

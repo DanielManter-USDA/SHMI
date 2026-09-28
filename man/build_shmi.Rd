@@ -56,12 +56,18 @@ are not comparable to the national SHMI scale.\tabular{lll}{
    \code{hill}, \code{max_div} \tab 1, 10 \tab \code{\link[=compute_diversity]{compute_diversity()}} \cr
    \code{dist_meth}, \code{max_stir}, \code{ti_rep} \tab \code{"EPA"}, 342, \code{"max"} \tab \code{\link[=compute_disturbance]{compute_disturbance()}} \cr
    \code{w_amend}, \code{w_animal} \tab 0.6615, 0.3385 \tab \code{\link[=compute_orginput]{compute_orginput()}} \cr
+   \code{animal_presence} \tab \code{"span"} \tab \code{\link[=compute_orginput]{compute_orginput()}} \cr
+   \code{clip_to_rotation} \tab \code{TRUE} \tab \code{\link[=compute_cover]{compute_cover()}}, \code{\link[=compute_diversity]{compute_diversity()}} \cr
    \code{w_cover}, \code{w_diversity}, \code{w_invdist}, \code{w_orginput} \tab 0.4481, 0.0904, 0.1431, 0.3184 \tab SHMI \cr
 }
 
 
 The four pillar weights are rescaled to sum to 1 and combined as
 \deqn{SHMI = w_{cover} Cover + w_{diversity} Diversity + w_{invdist} InvDist + w_{orginput} OrgInput}
+
+Settings are checked before use: unknown names (for example a misspelled
+weight) and out-of-range values stop with an error rather than being
+silently ignored.
 
 The official disturbance method, \code{"EPA"}, requires a tillage depth
 (\code{SD_depth}) for every pass. Data without depths can be scored in expert

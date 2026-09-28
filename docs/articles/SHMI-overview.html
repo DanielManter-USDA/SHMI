@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,6 +54,7 @@
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../reference/index.html#core-workflow">Core Workflow</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#subindex-functions">Sub-index Functions</a></li>
+    <li><a class="dropdown-item" href="../reference/index.html#calibration-and-diagnostics">Calibration and Diagnostics</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#helper-functions">Helper Functions</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#validation-functions">Validation Functions</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#plotting-functions">Plotting Functions</a></li>
@@ -289,14 +290,14 @@ periods are clipped to it:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 5</span></span></span>
 <span><span class="co">#&gt;   MGT_combo                   rot_start  rot_end    rot_start_yr rot_end_yr</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure  2022-04-08 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+ 2022-04-08 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0      2022-04-08 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160    2022-04-08 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0     2022-04-27 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120   2022-04-27 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180   2022-04-27 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60    2022-04-27 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure  2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+ 2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0      2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160    2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0     2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120   2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180   2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60    2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span></span></code></pre></div>
 <p>Other options include <code>exclude</code> (leave out some units),
 <code>end_at_sample_date</code> (stop each unit at its soil sampling
 date), and <code>calc_yield</code> / <code>calc_n_rate</code> (also
@@ -312,14 +313,14 @@ return yields in kg/ha and annual nitrogen rates).</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 10</span></span></span>
 <span><span class="co">#&gt;   MGT_combo   MGT_study MGT_farm MGT_field MGT_trt  SHMI Cover Diversity InvDist</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  57.9  64.5         0    55.1</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  57.9  64.5         0    55.1</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N0   36.8  64.5         0    55.1</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N1…  36.8  64.5         0    55.1</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N0  43.4  64.9         0   100  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  56.9  62.3         0    55.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  56.9  62.3         0    55.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N0   35.8  62.3         0    55.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N1…  35.8  62.3         0    55.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N0  42.2  62.3         0   100  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: OrgInput &lt;dbl&gt;</span></span></span></code></pre></div>
 <p><code>indicator_df</code> has one row per management unit, with
 <code>SHMI</code>, <code>Cover</code>, <code>Diversity</code>,
@@ -390,14 +391,14 @@ practices.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 2</span></span></span>
 <span><span class="co">#&gt;   MGT_combo                   Cover</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure   64.5</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+  64.5</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0       64.5</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160     64.5</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0      64.9</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120    64.9</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180    64.9</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60     64.9</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure   62.3</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+  62.3</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0       62.3</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160     62.3</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0      62.3</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120    62.3</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180    62.3</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60     62.3</span></span>
 <span><span class="fu"><a href="../reference/compute_diversity.html">compute_diversity</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">crop</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 2</span></span></span>
 <span><span class="co">#&gt;   MGT_combo                   Diversity</span></span>

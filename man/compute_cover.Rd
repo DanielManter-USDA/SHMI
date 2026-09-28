@@ -10,7 +10,8 @@ compute_cover(
   w_winter = 0.1259,
   w_spring = 0.126,
   w_summer = 0.3755,
-  w_fall = 0.3726
+  w_fall = 0.3726,
+  clip_to_rotation = TRUE
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ and \code{crop_end}, as in \code{prepare_shmi_inputs()$crop}.}
 
 \item{w_winter, w_spring, w_summer, w_fall}{Season weights. Defaults are the
 official values.}
+
+\item{clip_to_rotation}{Logical; see \emph{Rotation window}. \code{FALSE} reproduces
+SHMI <= 1.1.0.}
 }
 \value{
 A data frame with \code{MGT_combo} and \code{Cover} (0-100), one row per
@@ -51,6 +55,12 @@ rotation contribute 0.
 recorded event, or the window set by \code{start_date_override} and
 \code{end_date_override}, which is how a fixed evaluation period is imposed.
 
+Only plant days inside \code{rot_start}-\code{rot_end} count
+when \code{clip_to_rotation = TRUE} (the default from 1.2.0). SHMI <= 1.1.0
+counted every day of an episode, including days outside the rotation,
+against the rotation's season lengths, so a season's proportion could
+exceed 1 when episodes extended past the evaluation window.
+
 A unit in \code{rot_bounds} with no plant windows (for example a fallow
 reference site) scores 0.
 }
@@ -70,5 +80,5 @@ compute_cover(crop, rot_bounds)
 
 }
 \seealso{
-\code{\link[=build_shmi]{build_shmi()}}, \code{\link[=compute_diversity]{compute_diversity()}}
+\code{\link[=compute_cover_components]{compute_cover_components()}}, \code{\link[=build_shmi]{build_shmi()}}, \code{\link[=compute_diversity]{compute_diversity()}}
 }

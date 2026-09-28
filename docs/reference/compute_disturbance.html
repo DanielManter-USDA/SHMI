@@ -11,7 +11,7 @@ disturbance."><meta property="og:image" content="https://danielmanter-usda.githu
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,7 @@ disturbance."><meta property="og:image" content="https://danielmanter-usda.githu
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../reference/index.html#core-workflow">Core Workflow</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#subindex-functions">Sub-index Functions</a></li>
+    <li><a class="dropdown-item" href="../reference/index.html#calibration-and-diagnostics">Calibration and Diagnostics</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#helper-functions">Helper Functions</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#validation-functions">Validation Functions</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#plotting-functions">Plotting Functions</a></li>
@@ -117,7 +118,9 @@ overlapping passes are not double-counted:
 <li><p><code>"STIR"</code>: <code>SD_mixeff</code> holds STIR values. They are summed within each
 calendar year, divided by <code>max_stir</code>, and truncated to 1.</p></li>
 </ul><p><strong>Classes.</strong> Each annual tillage intensity (TI) is placed in a Tier-3
-class (left-closed, right-open intervals):</p><table class="table table"><tr><td>Class</td><td>TI range</td><td>Class</td><td>TI range</td></tr><tr><td>Z</td><td><code>0 - 0.001</code></td><td>F</td><td><code>0.144 - 0.162</code></td></tr><tr><td>A</td><td><code>0.001 - 0.01</code></td><td>G</td><td><code>0.162 - 0.202</code></td></tr><tr><td>B</td><td><code>0.01 - 0.04</code></td><td>H</td><td><code>0.202 - 0.252</code></td></tr><tr><td>C</td><td><code>0.04 - 0.075</code></td><td>I</td><td><code>0.252 - 0.268</code></td></tr><tr><td>D</td><td><code>0.075 - 0.111</code></td><td>J</td><td><code>0.268 - 0.449</code></td></tr><tr><td>E</td><td><code>0.111 - 0.144</code></td><td>K</td><td><code>0.449 - 1</code></td></tr></table><p>TI is then replaced by a class representative chosen by <code>ti_rep</code>: the
+class (left-closed, right-open intervals):</p><table class="table table"><tr><td>Class</td><td>TI range</td><td>Class</td><td>TI range</td></tr><tr><td>Z</td><td><code>0 - 0.001</code></td><td>F</td><td><code>0.144 - 0.162</code></td></tr><tr><td>A</td><td><code>0.001 - 0.01</code></td><td>G</td><td><code>0.162 - 0.202</code></td></tr><tr><td>B</td><td><code>0.01 - 0.04</code></td><td>H</td><td><code>0.202 - 0.252</code></td></tr><tr><td>C</td><td><code>0.04 - 0.075</code></td><td>I</td><td><code>0.252 - 0.268</code></td></tr><tr><td>D</td><td><code>0.075 - 0.111</code></td><td>J</td><td><code>0.268 - 0.449</code></td></tr><tr><td>E</td><td><code>0.111 - 0.144</code></td><td>K</td><td><code>0.449 - 1</code></td></tr></table><p>Annual TI is capped at 1 before classification (under <code>"EPA"</code> the sum of
+daily values can exceed 1), so class K covers 0.449-1 inclusive.</p>
+<p>TI is then replaced by a class representative chosen by <code>ti_rep</code>: the
 lower bound (<code>"min"</code>), midpoint (<code>"mid"</code>), or upper bound (<code>"max"</code>, the
 official choice). Class Z always uses 0. The annual score is
 \(100 (1 - TI_{used})\), and the rotation score is the mean over all

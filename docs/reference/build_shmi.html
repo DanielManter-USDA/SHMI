@@ -13,7 +13,7 @@ scaled 0-100:"><meta property="og:image" content="https://danielmanter-usda.gith
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,7 @@ scaled 0-100:"><meta property="og:image" content="https://danielmanter-usda.gith
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../reference/index.html#core-workflow">Core Workflow</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#subindex-functions">Sub-index Functions</a></li>
+    <li><a class="dropdown-item" href="../reference/index.html#calibration-and-diagnostics">Calibration and Diagnostics</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#helper-functions">Helper Functions</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#validation-functions">Validation Functions</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#plotting-functions">Plotting Functions</a></li>
@@ -116,8 +117,11 @@ management metadata that is present (<code>MGT_study</code>, <code>MGT_farm</cod
 national settings below are always used and <code>settings</code> is ignored. With
 <code>expert_mode = TRUE</code>, each element of <code>settings</code> replaces the official
 value; elements not supplied keep their official value. Expert-mode scores
-are not comparable to the national SHMI scale.</p><table class="table table"><tr><td>Setting</td><td>Official value</td><td>Used by</td></tr><tr><td><code>w_winter</code>, <code>w_spring</code>, <code>w_summer</code>, <code>w_fall</code></td><td>0.1259, 0.1260, 0.3755, 0.3726</td><td><code><a href="compute_cover.html">compute_cover()</a></code></td></tr><tr><td><code>hill</code>, <code>max_div</code></td><td>1, 10</td><td><code><a href="compute_diversity.html">compute_diversity()</a></code></td></tr><tr><td><code>dist_meth</code>, <code>max_stir</code>, <code>ti_rep</code></td><td><code>"EPA"</code>, 342, <code>"max"</code></td><td><code><a href="compute_disturbance.html">compute_disturbance()</a></code></td></tr><tr><td><code>w_amend</code>, <code>w_animal</code></td><td>0.6615, 0.3385</td><td><code><a href="compute_orginput.html">compute_orginput()</a></code></td></tr><tr><td><code>w_cover</code>, <code>w_diversity</code>, <code>w_invdist</code>, <code>w_orginput</code></td><td>0.4481, 0.0904, 0.1431, 0.3184</td><td>SHMI</td></tr></table><p>The four pillar weights are rescaled to sum to 1 and combined as
+are not comparable to the national SHMI scale.</p><table class="table table"><tr><td>Setting</td><td>Official value</td><td>Used by</td></tr><tr><td><code>w_winter</code>, <code>w_spring</code>, <code>w_summer</code>, <code>w_fall</code></td><td>0.1259, 0.1260, 0.3755, 0.3726</td><td><code><a href="compute_cover.html">compute_cover()</a></code></td></tr><tr><td><code>hill</code>, <code>max_div</code></td><td>1, 10</td><td><code><a href="compute_diversity.html">compute_diversity()</a></code></td></tr><tr><td><code>dist_meth</code>, <code>max_stir</code>, <code>ti_rep</code></td><td><code>"EPA"</code>, 342, <code>"max"</code></td><td><code><a href="compute_disturbance.html">compute_disturbance()</a></code></td></tr><tr><td><code>w_amend</code>, <code>w_animal</code></td><td>0.6615, 0.3385</td><td><code><a href="compute_orginput.html">compute_orginput()</a></code></td></tr><tr><td><code>animal_presence</code></td><td><code>"span"</code></td><td><code><a href="compute_orginput.html">compute_orginput()</a></code></td></tr><tr><td><code>clip_to_rotation</code></td><td><code>TRUE</code></td><td><code><a href="compute_cover.html">compute_cover()</a></code>, <code><a href="compute_diversity.html">compute_diversity()</a></code></td></tr><tr><td><code>w_cover</code>, <code>w_diversity</code>, <code>w_invdist</code>, <code>w_orginput</code></td><td>0.4481, 0.0904, 0.1431, 0.3184</td><td>SHMI</td></tr></table><p>The four pillar weights are rescaled to sum to 1 and combined as
 $$SHMI = w_{cover} Cover + w_{diversity} Diversity + w_{invdist} InvDist + w_{orginput} OrgInput$$</p>
+<p>Settings are checked before use: unknown names (for example a misspelled
+weight) and out-of-range values stop with an error rather than being
+silently ignored.</p>
 <p>The official disturbance method, <code>"EPA"</code>, requires a tillage depth
 (<code>SD_depth</code>) for every pass. Data without depths can be scored in expert
 mode with <code>settings = list(dist_meth = "STIR")</code>.</p>
@@ -142,43 +146,43 @@ removed earlier, by <code><a href="prepare_shmi_inputs.html">prepare_shmi_inputs
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="fu"><a href="get_shmi_example.html">get_shmi_example</a></span><span class="op">(</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Validating inputs...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Validating inputs... <span style="color: #B2B2B2;">[617ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Validating inputs... <span style="color: #B2B2B2;">[613ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reading Excel file...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Reading Excel file... <span style="color: #B2B2B2;">[354ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Reading Excel file... <span style="color: #B2B2B2;">[325ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Calculating rotation lengths...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating rotation lengths... <span style="color: #B2B2B2;">[42ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating rotation lengths... <span style="color: #B2B2B2;">[45ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Calculating crop start/end dates...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating crop start/end dates... <span style="color: #B2B2B2;">[150ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Applying overrides...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Applying overrides... <span style="color: #B2B2B2;">[16ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Applying overrides... <span style="color: #B2B2B2;">[14ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Re-calculating rotation lengths...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Re-calculating rotation lengths... <span style="color: #B2B2B2;">[27ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Re-calculating rotation lengths... <span style="color: #B2B2B2;">[38ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Official national settings</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">build_shmi</span><span class="op">(</span><span class="va">inputs</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Validating inputs...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Validating inputs... <span style="color: #B2B2B2;">[8ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Validating inputs... <span style="color: #B2B2B2;">[14ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Computing cover...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Computing cover... <span style="color: #B2B2B2;">[62ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Computing cover... <span style="color: #B2B2B2;">[89ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Computing diversity...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Computing diversity... <span style="color: #B2B2B2;">[38ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Computing diversity... <span style="color: #B2B2B2;">[51ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Computing disturbance...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Computing disturbance... <span style="color: #B2B2B2;">[44ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Computing disturbance... <span style="color: #B2B2B2;">[42ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Computing organic inputs...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Computing organic inputs... <span style="color: #B2B2B2;">[35ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Computing organic inputs... <span style="color: #B2B2B2;">[18ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Combining indices...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Combining indices... <span style="color: #B2B2B2;">[35ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Combining indices... <span style="color: #B2B2B2;">[32ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
@@ -187,14 +191,14 @@ removed earlier, by <code><a href="prepare_shmi_inputs.html">prepare_shmi_inputs
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 8 × 10</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   MGT_combo   MGT_study MGT_farm MGT_field MGT_trt  SHMI Cover Diversity InvDist</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  57.9  64.5         0    55.1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  57.9  64.5         0    55.1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N0   36.8  64.5         0    55.1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N1…  36.8  64.5         0    55.1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N0  43.4  64.9         0   100  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  56.9  62.3         0    55.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  56.9  62.3         0    55.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N0   35.8  62.3         0    55.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N1…  35.8  62.3         0    55.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N0  42.2  62.3         0   100  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: OrgInput &lt;dbl&gt;</span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Expert mode: STIR disturbance, for data without tillage depths</span></span></span>

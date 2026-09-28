@@ -74,11 +74,17 @@ scores are not comparable to the national SHMI scale.
 | `hill`, `max_div` | 1, 10 | [`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md) |
 | `dist_meth`, `max_stir`, `ti_rep` | `"EPA"`, 342, `"max"` | [`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md) |
 | `w_amend`, `w_animal` | 0.6615, 0.3385 | [`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md) |
+| `animal_presence` | `"span"` | [`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md) |
+| `clip_to_rotation` | `TRUE` | [`compute_cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.md), [`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md) |
 | `w_cover`, `w_diversity`, `w_invdist`, `w_orginput` | 0.4481, 0.0904, 0.1431, 0.3184 | SHMI |
 
 The four pillar weights are rescaled to sum to 1 and combined as
 \$\$SHMI = w\_{cover} Cover + w\_{diversity} Diversity + w\_{invdist}
 InvDist + w\_{orginput} OrgInput\$\$
+
+Settings are checked before use: unknown names (for example a misspelled
+weight) and out-of-range values stop with an error rather than being
+silently ignored.
 
 The official disturbance method, `"EPA"`, requires a tillage depth
 (`SD_depth`) for every pass. Data without depths can be scored in expert
@@ -105,43 +111,43 @@ are removed earlier, by
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [617ms]
+#> ✔ Validating inputs... [613ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [354ms]
+#> ✔ Reading Excel file... [325ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [42ms]
+#> ✔ Calculating rotation lengths... [45ms]
 #> 
 #> ℹ Calculating crop start/end dates...
 #> ✔ Calculating crop start/end dates... [150ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [16ms]
+#> ✔ Applying overrides... [14ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [27ms]
+#> ✔ Re-calculating rotation lengths... [38ms]
 #> 
 
 # Official national settings
 result <- build_shmi(inputs)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [8ms]
+#> ✔ Validating inputs... [14ms]
 #> 
 #> ℹ Computing cover...
-#> ✔ Computing cover... [62ms]
+#> ✔ Computing cover... [89ms]
 #> 
 #> ℹ Computing diversity...
-#> ✔ Computing diversity... [38ms]
+#> ✔ Computing diversity... [51ms]
 #> 
 #> ℹ Computing disturbance...
-#> ✔ Computing disturbance... [44ms]
+#> ✔ Computing disturbance... [42ms]
 #> 
 #> ℹ Computing organic inputs...
-#> ✔ Computing organic inputs... [35ms]
+#> ✔ Computing organic inputs... [18ms]
 #> 
 #> ℹ Combining indices...
-#> ✔ Combining indices... [35ms]
+#> ✔ Combining indices... [32ms]
 #> 
 #> 
 #> 
@@ -150,14 +156,14 @@ result$indicator_df
 #> # A tibble: 8 × 10
 #>   MGT_combo   MGT_study MGT_farm MGT_field MGT_trt  SHMI Cover Diversity InvDist
 #>   <chr>       <chr>     <chr>    <chr>     <chr>   <dbl> <dbl>     <dbl>   <dbl>
-#> 1 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  57.9  64.5         0    55.1
-#> 2 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  57.9  64.5         0    55.1
-#> 3 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N0   36.8  64.5         0    55.1
-#> 4 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N1…  36.8  64.5         0    55.1
-#> 5 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N0  43.4  64.9         0   100  
-#> 6 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  
-#> 7 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  
-#> 8 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  
+#> 1 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  56.9  62.3         0    55.1
+#> 2 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  56.9  62.3         0    55.1
+#> 3 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N0   35.8  62.3         0    55.1
+#> 4 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N1…  35.8  62.3         0    55.1
+#> 5 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N0  42.2  62.3         0   100  
+#> 6 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  
+#> 7 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  
+#> 8 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  
 #> # ℹ 1 more variable: OrgInput <dbl>
 
 # Expert mode: STIR disturbance, for data without tillage depths

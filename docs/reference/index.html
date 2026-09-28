@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,7 @@
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../reference/index.html#core-workflow">Core Workflow</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#subindex-functions">Sub-index Functions</a></li>
+    <li><a class="dropdown-item" href="../reference/index.html#calibration-and-diagnostics">Calibration and Diagnostics</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#helper-functions">Helper Functions</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#validation-functions">Validation Functions</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#plotting-functions">Plotting Functions</a></li>
@@ -110,6 +111,43 @@
         </dt>
         <dd>Compute the Organic Inputs sub-index</dd>
       </dl></div><div class="section level2">
+      <h2 id="calibration-and-diagnostics">Calibration and Diagnostics<a class="anchor" aria-label="anchor" href="#calibration-and-diagnostics"></a></h2>
+
+      <div class="section-desc"><p>Linear components of Cover and Organic Inputs, used to evaluate or estimate SHMI weights, and a report of records affected by the evaluation window.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="compute_shmi_components.html">compute_shmi_components()</a></code>
+
+        </dt>
+        <dd>All linear components needed to calibrate SHMI weights</dd>
+
+        <dt>
+
+          <code><a href="compute_cover_components.html">compute_cover_components()</a></code>
+
+        </dt>
+        <dd>Seasonal components of the Cover sub-index</dd>
+
+        <dt>
+
+          <code><a href="compute_orginput_components.html">compute_orginput_components()</a></code>
+
+        </dt>
+        <dd>Components of the Organic Inputs sub-index</dd>
+
+        <dt>
+
+          <code><a href="shmi_window_report.html">shmi_window_report()</a></code>
+
+        </dt>
+        <dd>Report records that fall outside, or straddle, the evaluation window</dd>
+      </dl></div><div class="section level2">
       <h2 id="helper-functions">Helper Functions<a class="anchor" aria-label="anchor" href="#helper-functions"></a></h2>
 
 
@@ -120,6 +158,13 @@
 
 
       <dl><dt>
+
+          <code><a href="clip_crop_to_rotation.html">clip_crop_to_rotation()</a></code>
+
+        </dt>
+        <dd>Clip crop episodes to each unit's rotation window</dd>
+
+        <dt>
 
           <code><a href="download_shmi_example.html">download_shmi_example()</a></code>
 

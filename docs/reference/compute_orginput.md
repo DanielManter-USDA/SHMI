@@ -11,7 +11,8 @@ compute_orginput(
   amend,
   animal,
   w_amend = 0.6615,
-  w_animal = 0.3385
+  w_animal = 0.3385,
+  animal_presence = c("start", "span")
 )
 ```
 
@@ -33,6 +34,11 @@ compute_orginput(
 
   Weights for amendments and animals. Defaults are the official values.
 
+- animal_presence:
+
+  `"start"` (SHMI \<= 1.1.0) or `"span"`; see
+  [`compute_orginput_components()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput_components.md).
+
 ## Value
 
 A data frame with `MGT_combo` and `OrgInput` (0-100), one row per unit
@@ -51,8 +57,13 @@ p\_{animal}}{w\_{amend} + w\_{animal}}\$\$
 A missing record means no input: a unit with no organic amendments or
 animals scores 0.
 
+With `animal_presence = "span"`, every calendar year overlapped by an
+animal period (`AD_start_date` to `AD_end_date`) counts, so continuous
+multi-year grazing is scored in every year rather than only its first.
+
 ## See also
 
+[`compute_orginput_components()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput_components.md),
 [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
 
 ## Examples

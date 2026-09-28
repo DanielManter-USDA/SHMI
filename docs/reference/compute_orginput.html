@@ -9,7 +9,7 @@ weighted and scaled 0-100."><meta property="og:image" content="https://danielman
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,6 +34,7 @@ weighted and scaled 0-100."><meta property="og:image" content="https://danielman
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../reference/index.html#core-workflow">Core Workflow</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#subindex-functions">Sub-index Functions</a></li>
+    <li><a class="dropdown-item" href="../reference/index.html#calibration-and-diagnostics">Calibration and Diagnostics</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#helper-functions">Helper Functions</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#validation-functions">Validation Functions</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#plotting-functions">Plotting Functions</a></li>
@@ -65,7 +66,8 @@ weighted and scaled 0-100.</p>
 <span>  <span class="va">amend</span>,</span>
 <span>  <span class="va">animal</span>,</span>
 <span>  w_amend <span class="op">=</span> <span class="fl">0.6615</span>,</span>
-<span>  w_animal <span class="op">=</span> <span class="fl">0.3385</span></span>
+<span>  w_animal <span class="op">=</span> <span class="fl">0.3385</span>,</span>
+<span>  animal_presence <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"start"</span>, <span class="st">"span"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -90,6 +92,11 @@ weighted and scaled 0-100.</p>
 <dd><p>Weights for amendments and animals. Defaults are
 the official values.</p></dd>
 
+
+<dt id="arg-animal-presence">animal_presence<a class="anchor" aria-label="anchor" href="#arg-animal-presence"></a></dt>
+<dd><p><code>"start"</code> (SHMI &lt;= 1.1.0) or <code>"span"</code>; see
+<code><a href="compute_orginput_components.html">compute_orginput_components()</a></code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -106,10 +113,13 @@ used. With \(p\) the proportion of years with each input,
 $$OrgInput = 100 \frac{w_{amend} p_{amend} + w_{animal} p_{animal}}{w_{amend} + w_{animal}}$$</p>
 <p>A missing record means no input: a unit with no organic amendments or
 animals scores 0.</p>
+<p>With <code>animal_presence = "span"</code>, every calendar year overlapped by an
+animal period (<code>AD_start_date</code> to <code>AD_end_date</code>) counts, so continuous
+multi-year grazing is scored in every year rather than only its first.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="build_shmi.html">build_shmi()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="compute_orginput_components.html">compute_orginput_components()</a></code>, <code><a href="build_shmi.html">build_shmi()</a></code></p></div>
     </div>
 
     <div class="section level2">

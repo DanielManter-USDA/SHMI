@@ -150,14 +150,14 @@ inputs_2022_23$rot_bounds
 #> # A tibble: 8 × 5
 #>   MGT_combo                   rot_start  rot_end    rot_start_yr rot_end_yr
 #>   <chr>                       <date>     <date>            <dbl>      <dbl>
-#> 1 MLSH_ARDEC_200A_DMP-Manure  2022-04-08 2023-10-23         2022       2023
-#> 2 MLSH_ARDEC_200A_DMP-Manure+ 2022-04-08 2023-10-23         2022       2023
-#> 3 MLSH_ARDEC_200A_DMP-N0      2022-04-08 2023-10-23         2022       2023
-#> 4 MLSH_ARDEC_200A_DMP-N160    2022-04-08 2023-10-23         2022       2023
-#> 5 MLSH_ARDEC_200A_Rot1-N0     2022-04-27 2023-10-23         2022       2023
-#> 6 MLSH_ARDEC_200A_Rot1-N120   2022-04-27 2023-10-23         2022       2023
-#> 7 MLSH_ARDEC_200A_Rot1-N180   2022-04-27 2023-10-23         2022       2023
-#> 8 MLSH_ARDEC_200A_Rot1-N60    2022-04-27 2023-10-23         2022       2023
+#> 1 MLSH_ARDEC_200A_DMP-Manure  2022-01-01 2023-12-31         2022       2023
+#> 2 MLSH_ARDEC_200A_DMP-Manure+ 2022-01-01 2023-12-31         2022       2023
+#> 3 MLSH_ARDEC_200A_DMP-N0      2022-01-01 2023-12-31         2022       2023
+#> 4 MLSH_ARDEC_200A_DMP-N160    2022-01-01 2023-12-31         2022       2023
+#> 5 MLSH_ARDEC_200A_Rot1-N0     2022-01-01 2023-12-31         2022       2023
+#> 6 MLSH_ARDEC_200A_Rot1-N120   2022-01-01 2023-12-31         2022       2023
+#> 7 MLSH_ARDEC_200A_Rot1-N180   2022-01-01 2023-12-31         2022       2023
+#> 8 MLSH_ARDEC_200A_Rot1-N60    2022-01-01 2023-12-31         2022       2023
 ```
 
 Other options include `exclude` (leave out some units),
@@ -173,14 +173,14 @@ result$indicator_df
 #> # A tibble: 8 × 10
 #>   MGT_combo   MGT_study MGT_farm MGT_field MGT_trt  SHMI Cover Diversity InvDist
 #>   <chr>       <chr>     <chr>    <chr>     <chr>   <dbl> <dbl>     <dbl>   <dbl>
-#> 1 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  57.9  64.5         0    55.1
-#> 2 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  57.9  64.5         0    55.1
-#> 3 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N0   36.8  64.5         0    55.1
-#> 4 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N1…  36.8  64.5         0    55.1
-#> 5 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N0  43.4  64.9         0   100  
-#> 6 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  
-#> 7 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  
-#> 8 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  43.4  64.9         0   100  
+#> 1 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  56.9  62.3         0    55.1
+#> 2 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-Ma…  56.9  62.3         0    55.1
+#> 3 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N0   35.8  62.3         0    55.1
+#> 4 MLSH_ARDEC… MLSH      ARDEC    200A      DMP-N1…  35.8  62.3         0    55.1
+#> 5 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N0  42.2  62.3         0   100  
+#> 6 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  
+#> 7 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  
+#> 8 MLSH_ARDEC… MLSH      ARDEC    200A      Rot1-N…  42.2  62.3         0   100  
 #> # ℹ 1 more variable: OrgInput <dbl>
 ```
 
@@ -252,14 +252,14 @@ compute_cover(inputs$crop, inputs$rot_bounds)
 #> # A tibble: 8 × 2
 #>   MGT_combo                   Cover
 #>   <chr>                       <dbl>
-#> 1 MLSH_ARDEC_200A_DMP-Manure   64.5
-#> 2 MLSH_ARDEC_200A_DMP-Manure+  64.5
-#> 3 MLSH_ARDEC_200A_DMP-N0       64.5
-#> 4 MLSH_ARDEC_200A_DMP-N160     64.5
-#> 5 MLSH_ARDEC_200A_Rot1-N0      64.9
-#> 6 MLSH_ARDEC_200A_Rot1-N120    64.9
-#> 7 MLSH_ARDEC_200A_Rot1-N180    64.9
-#> 8 MLSH_ARDEC_200A_Rot1-N60     64.9
+#> 1 MLSH_ARDEC_200A_DMP-Manure   62.3
+#> 2 MLSH_ARDEC_200A_DMP-Manure+  62.3
+#> 3 MLSH_ARDEC_200A_DMP-N0       62.3
+#> 4 MLSH_ARDEC_200A_DMP-N160     62.3
+#> 5 MLSH_ARDEC_200A_Rot1-N0      62.3
+#> 6 MLSH_ARDEC_200A_Rot1-N120    62.3
+#> 7 MLSH_ARDEC_200A_Rot1-N180    62.3
+#> 8 MLSH_ARDEC_200A_Rot1-N60     62.3
 compute_diversity(inputs$crop)
 #> # A tibble: 8 × 2
 #>   MGT_combo                   Diversity

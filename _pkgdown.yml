@@ -49,6 +49,8 @@ navbar:
           href: "reference/index.html#core-workflow"
         - text: "Sub-index Functions"
           href: "reference/index.html#subindex-functions"
+        - text: "Calibration and Diagnostics"
+          href: "reference/index.html#calibration-and-diagnostics"
         - text: "Helper Functions"
           href: "reference/index.html#helper-functions"
         - text: "Validation Functions"
@@ -75,8 +77,20 @@ reference:
       - compute_disturbance
       - compute_orginput
 
+  - title: "Calibration and Diagnostics"
+    desc: >
+      Linear components of Cover and Organic Inputs, used to evaluate or
+      estimate SHMI weights, and a report of records affected by the
+      evaluation window.
+    contents:
+      - compute_shmi_components
+      - compute_cover_components
+      - compute_orginput_components
+      - shmi_window_report
+
   - title: "Helper Functions"
     contents:
+      - clip_crop_to_rotation
       - download_shmi_example
       - download_shmi_template
       - get_shmi_example

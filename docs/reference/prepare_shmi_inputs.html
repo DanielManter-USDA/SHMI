@@ -13,7 +13,7 @@ way."><meta property="og:image" content="https://danielmanter-usda.github.io/SHM
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,7 @@ way."><meta property="og:image" content="https://danielmanter-usda.github.io/SHM
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../reference/index.html#core-workflow">Core Workflow</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#subindex-functions">Sub-index Functions</a></li>
+    <li><a class="dropdown-item" href="../reference/index.html#calibration-and-diagnostics">Calibration and Diagnostics</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#helper-functions">Helper Functions</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#validation-functions">Validation Functions</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#plotting-functions">Plotting Functions</a></li>
@@ -75,7 +76,8 @@ way.</p>
 <span>  end_at_sample_date <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  max_rot_range <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>  calc_yield <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  calc_n_rate <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  calc_n_rate <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  rotation_window <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"calendar"</span>, <span class="st">"events"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -117,6 +119,11 @@ spans stop with an error, since they usually indicate a mistyped date.</p></dd>
 
 <dt id="arg-calc-n-rate">calc_n_rate<a class="anchor" aria-label="anchor" href="#arg-calc-n-rate"></a></dt>
 <dd><p>Logical. Also return annual nitrogen rates.</p></dd>
+
+
+<dt id="arg-rotation-window">rotation_window<a class="anchor" aria-label="anchor" href="#arg-rotation-window"></a></dt>
+<dd><p><code>"calendar"</code> (default) or <code>"events"</code> (SHMI
+&lt;= 1.1.0 behaviour); see <em>Rotation window and overrides</em>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -171,12 +178,26 @@ year).</p></li>
     <h2 id="rotation-window-and-overrides">Rotation window and overrides<a class="anchor" aria-label="anchor" href="#rotation-window-and-overrides"></a></h2>
 
 
-<p>Rotation bounds run from the first to the last recorded event of any
-type. To evaluate a fixed period, set <code>start_date_override</code> and/or
+<p>The rotation window is the denominator of every sub-index, so it must not
+depend on management. With <code>rotation_window = "calendar"</code> (default from
+1.2.0) it runs from 1 January of the first year with a record to
+31 December of the last. Bare periods before the first and after the last
+recorded event are therefore scored as bare, and all four sub-indices
+share the same window. <code>rotation_window = "events"</code> reproduces
+SHMI &lt;= 1.1.0, where the window ran from the first to the last recorded
+event; that excluded leading and trailing bare periods from the Cover
+denominator and so inflated Cover, most strongly in winter and spring.</p>
+<p>To evaluate a fixed period, set <code>start_date_override</code> and/or
 <code>end_date_override</code>: events outside the window are removed, crop and
-animal periods are clipped to it, and the rotation bounds are recomputed.
-With <code>end_at_sample_date = TRUE</code>, each unit is instead cut off at its
-<code>MGT_sample_date</code> (from the <code>Mgt_Unit</code> sheet).</p>
+animal periods are clipped to it, and the window boundaries are exactly
+the override dates (under <code>"calendar"</code>). A unit whose records begin after
+the start override is scored as having no cover, tillage, or inputs
+before its first record, following the missing-record rule. Because
+Organic Inputs and Inverse Disturbance are scored by calendar year,
+overrides are best placed on year boundaries; other dates trigger a
+message. With <code>end_at_sample_date = TRUE</code>, each unit is cut off at its
+<code>MGT_sample_date</code> (from the <code>Mgt_Unit</code> sheet); units without a sample
+date are kept uncut and reported.</p>
     </div>
     <div class="section level2">
     <h2 id="yield-and-nitrogen-rate">Yield and nitrogen rate<a class="anchor" aria-label="anchor" href="#yield-and-nitrogen-rate"></a></h2>
@@ -199,22 +220,22 @@ are <code>NA</code>, not zero. Unconverted values are listed in <code>assumption
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu">prepare_shmi_inputs</span><span class="op">(</span><span class="fu"><a href="get_shmi_example.html">get_shmi_example</a></span><span class="op">(</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Validating inputs...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Validating inputs... <span style="color: #B2B2B2;">[335ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Validating inputs... <span style="color: #B2B2B2;">[332ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reading Excel file...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Reading Excel file... <span style="color: #B2B2B2;">[302ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Reading Excel file... <span style="color: #B2B2B2;">[309ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Calculating rotation lengths...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating rotation lengths... <span style="color: #B2B2B2;">[30ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating rotation lengths... <span style="color: #B2B2B2;">[31ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Calculating crop start/end dates...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating crop start/end dates... <span style="color: #B2B2B2;">[141ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating crop start/end dates... <span style="color: #B2B2B2;">[140ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Applying overrides...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Applying overrides... <span style="color: #B2B2B2;">[13ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Applying overrides... <span style="color: #B2B2B2;">[14ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Re-calculating rotation lengths...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Re-calculating rotation lengths... <span style="color: #B2B2B2;">[25ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Re-calculating rotation lengths... <span style="color: #B2B2B2;">[30ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># What was assumed, and what should be reviewed?</span></span></span>
@@ -230,35 +251,35 @@ are <code>NA</code>, not zero. Unconverted values are listed in <code>assumption
 <span class="r-in"><span>                                      start_date_override <span class="op">=</span> <span class="st">"2022-01-01"</span>,</span></span>
 <span class="r-in"><span>                                      end_date_override   <span class="op">=</span> <span class="st">"2023-12-31"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Validating inputs...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Validating inputs... <span style="color: #B2B2B2;">[307ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Validating inputs... <span style="color: #B2B2B2;">[318ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reading Excel file...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Reading Excel file... <span style="color: #B2B2B2;">[301ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Reading Excel file... <span style="color: #B2B2B2;">[319ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Calculating rotation lengths...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating rotation lengths... <span style="color: #B2B2B2;">[29ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Calculating crop start/end dates...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating crop start/end dates... <span style="color: #B2B2B2;">[139ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Calculating crop start/end dates... <span style="color: #B2B2B2;">[149ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Applying overrides...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Applying overrides... <span style="color: #B2B2B2;">[22ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Applying overrides... <span style="color: #B2B2B2;">[25ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Re-calculating rotation lengths...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Re-calculating rotation lengths... <span style="color: #B2B2B2;">[25ms]</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Re-calculating rotation lengths... <span style="color: #B2B2B2;">[30ms]</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="va">inputs_2022_23</span><span class="op">$</span><span class="va">rot_bounds</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 8 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   MGT_combo                   rot_start  rot_end    rot_start_yr rot_end_yr</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure  2022-04-08 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+ 2022-04-08 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0      2022-04-08 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160    2022-04-08 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0     2022-04-27 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120   2022-04-27 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180   2022-04-27 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60    2022-04-27 2023-10-23         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure  2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+ 2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0      2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160    2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0     2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120   2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180   2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60    2022-01-01 2023-12-31         <span style="text-decoration: underline;">2</span>022       <span style="text-decoration: underline;">2</span>023</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -9,7 +9,7 @@ cover, scaled 0-100."><meta property="og:image" content="https://danielmanter-us
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,6 +34,7 @@ cover, scaled 0-100."><meta property="og:image" content="https://danielmanter-us
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../reference/index.html#core-workflow">Core Workflow</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#subindex-functions">Sub-index Functions</a></li>
+    <li><a class="dropdown-item" href="../reference/index.html#calibration-and-diagnostics">Calibration and Diagnostics</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#helper-functions">Helper Functions</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#validation-functions">Validation Functions</a></li>
     <li><a class="dropdown-item" href="../reference/index.html#plotting-functions">Plotting Functions</a></li>
@@ -66,7 +67,8 @@ cover, scaled 0-100.</p>
 <span>  w_winter <span class="op">=</span> <span class="fl">0.1259</span>,</span>
 <span>  w_spring <span class="op">=</span> <span class="fl">0.126</span>,</span>
 <span>  w_summer <span class="op">=</span> <span class="fl">0.3755</span>,</span>
-<span>  w_fall <span class="op">=</span> <span class="fl">0.3726</span></span>
+<span>  w_fall <span class="op">=</span> <span class="fl">0.3726</span>,</span>
+<span>  clip_to_rotation <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -87,6 +89,11 @@ and <code>crop_end</code>, as in <code>prepare_shmi_inputs()$crop</code>.</p></d
 <dt id="arg-w-winter-w-spring-w-summer-w-fall">w_winter, w_spring, w_summer, w_fall<a class="anchor" aria-label="anchor" href="#arg-w-winter-w-spring-w-summer-w-fall"></a></dt>
 <dd><p>Season weights. Defaults are the
 official values.</p></dd>
+
+
+<dt id="arg-clip-to-rotation">clip_to_rotation<a class="anchor" aria-label="anchor" href="#arg-clip-to-rotation"></a></dt>
+<dd><p>Logical; see <em>Rotation window</em>. <code>FALSE</code> reproduces
+SHMI &lt;= 1.1.0.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -111,12 +118,17 @@ $$Cover = 100 \sum_s w_s p_s$$</p>
 <code>rot_end</code>. In <code><a href="prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code> these span the first to the last
 recorded event, or the window set by <code>start_date_override</code> and
 <code>end_date_override</code>, which is how a fixed evaluation period is imposed.</p>
+<p>Only plant days inside <code>rot_start</code>-<code>rot_end</code> count
+when <code>clip_to_rotation = TRUE</code> (the default from 1.2.0). SHMI &lt;= 1.1.0
+counted every day of an episode, including days outside the rotation,
+against the rotation's season lengths, so a season's proportion could
+exceed 1 when episodes extended past the evaluation window.</p>
 <p>A unit in <code>rot_bounds</code> with no plant windows (for example a fallow
 reference site) scores 0.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="build_shmi.html">build_shmi()</a></code>, <code><a href="compute_diversity.html">compute_diversity()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="compute_cover_components.html">compute_cover_components()</a></code>, <code><a href="build_shmi.html">build_shmi()</a></code>, <code><a href="compute_diversity.html">compute_diversity()</a></code></p></div>
     </div>
 
     <div class="section level2">

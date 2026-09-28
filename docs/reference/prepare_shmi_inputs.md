@@ -17,7 +17,8 @@ prepare_shmi_inputs(
   end_at_sample_date = FALSE,
   max_rot_range = 200,
   calc_yield = FALSE,
-  calc_n_rate = FALSE
+  calc_n_rate = FALSE,
+  rotation_window = c("calendar", "events")
 )
 ```
 
@@ -56,6 +57,11 @@ prepare_shmi_inputs(
 - calc_n_rate:
 
   Logical. Also return annual nitrogen rates.
+
+- rotation_window:
+
+  `"calendar"` (default) or `"events"` (SHMI \<= 1.1.0 behaviour); see
+  *Rotation window and overrides*.
 
 ## Value
 
@@ -119,12 +125,27 @@ Every such imputation and data-quality check is recorded in
 
 ## Rotation window and overrides
 
-Rotation bounds run from the first to the last recorded event of any
-type. To evaluate a fixed period, set `start_date_override` and/or
+The rotation window is the denominator of every sub-index, so it must
+not depend on management. With `rotation_window = "calendar"` (default
+from 1.2.0) it runs from 1 January of the first year with a record to 31
+December of the last. Bare periods before the first and after the last
+recorded event are therefore scored as bare, and all four sub-indices
+share the same window. `rotation_window = "events"` reproduces SHMI \<=
+1.1.0, where the window ran from the first to the last recorded event;
+that excluded leading and trailing bare periods from the Cover
+denominator and so inflated Cover, most strongly in winter and spring.
+
+To evaluate a fixed period, set `start_date_override` and/or
 `end_date_override`: events outside the window are removed, crop and
-animal periods are clipped to it, and the rotation bounds are
-recomputed. With `end_at_sample_date = TRUE`, each unit is instead cut
-off at its `MGT_sample_date` (from the `Mgt_Unit` sheet).
+animal periods are clipped to it, and the window boundaries are exactly
+the override dates (under `"calendar"`). A unit whose records begin
+after the start override is scored as having no cover, tillage, or
+inputs before its first record, following the missing-record rule.
+Because Organic Inputs and Inverse Disturbance are scored by calendar
+year, overrides are best placed on year boundaries; other dates trigger
+a message. With `end_at_sample_date = TRUE`, each unit is cut off at its
+`MGT_sample_date` (from the `Mgt_Unit` sheet); units without a sample
+date are kept uncut and reported.
 
 ## Yield and nitrogen rate
 
@@ -148,22 +169,22 @@ converted are `NA`, not zero. Unconverted values are listed in
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [335ms]
+#> ✔ Validating inputs... [332ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [302ms]
+#> ✔ Reading Excel file... [309ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [30ms]
+#> ✔ Calculating rotation lengths... [31ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [141ms]
+#> ✔ Calculating crop start/end dates... [140ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [13ms]
+#> ✔ Applying overrides... [14ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [25ms]
+#> ✔ Re-calculating rotation lengths... [30ms]
 #> 
 
 # What was assumed, and what should be reviewed?
@@ -179,33 +200,33 @@ inputs_2022_23 <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE,
                                       start_date_override = "2022-01-01",
                                       end_date_override   = "2023-12-31")
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [307ms]
+#> ✔ Validating inputs... [318ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [301ms]
+#> ✔ Reading Excel file... [319ms]
 #> 
 #> ℹ Calculating rotation lengths...
 #> ✔ Calculating rotation lengths... [29ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [139ms]
+#> ✔ Calculating crop start/end dates... [149ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [22ms]
+#> ✔ Applying overrides... [25ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [25ms]
+#> ✔ Re-calculating rotation lengths... [30ms]
 #> 
 inputs_2022_23$rot_bounds
 #> # A tibble: 8 × 5
 #>   MGT_combo                   rot_start  rot_end    rot_start_yr rot_end_yr
 #>   <chr>                       <date>     <date>            <dbl>      <dbl>
-#> 1 MLSH_ARDEC_200A_DMP-Manure  2022-04-08 2023-10-23         2022       2023
-#> 2 MLSH_ARDEC_200A_DMP-Manure+ 2022-04-08 2023-10-23         2022       2023
-#> 3 MLSH_ARDEC_200A_DMP-N0      2022-04-08 2023-10-23         2022       2023
-#> 4 MLSH_ARDEC_200A_DMP-N160    2022-04-08 2023-10-23         2022       2023
-#> 5 MLSH_ARDEC_200A_Rot1-N0     2022-04-27 2023-10-23         2022       2023
-#> 6 MLSH_ARDEC_200A_Rot1-N120   2022-04-27 2023-10-23         2022       2023
-#> 7 MLSH_ARDEC_200A_Rot1-N180   2022-04-27 2023-10-23         2022       2023
-#> 8 MLSH_ARDEC_200A_Rot1-N60    2022-04-27 2023-10-23         2022       2023
+#> 1 MLSH_ARDEC_200A_DMP-Manure  2022-01-01 2023-12-31         2022       2023
+#> 2 MLSH_ARDEC_200A_DMP-Manure+ 2022-01-01 2023-12-31         2022       2023
+#> 3 MLSH_ARDEC_200A_DMP-N0      2022-01-01 2023-12-31         2022       2023
+#> 4 MLSH_ARDEC_200A_DMP-N160    2022-01-01 2023-12-31         2022       2023
+#> 5 MLSH_ARDEC_200A_Rot1-N0     2022-01-01 2023-12-31         2022       2023
+#> 6 MLSH_ARDEC_200A_Rot1-N120   2022-01-01 2023-12-31         2022       2023
+#> 7 MLSH_ARDEC_200A_Rot1-N180   2022-01-01 2023-12-31         2022       2023
+#> 8 MLSH_ARDEC_200A_Rot1-N60    2022-01-01 2023-12-31         2022       2023
 ```

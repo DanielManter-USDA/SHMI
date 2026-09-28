@@ -49,6 +49,10 @@ A named list:
 record.
 \item \code{crop}: species episodes (\code{MGT_combo}, \code{episode_id}, \code{CD_cat},
 \code{CD_name}, \code{crop_start}, \code{crop_end}, \code{start_imputed}, \code{end_imputed}).
+\code{CD_cat} is standardized to \code{"Annual"} (Annual, Cash, Cover),
+\code{"Perennial"} (Perennial, Woody perennial) or \code{"Fallow"}, matched
+case-insensitively; missing or unrecognized values are treated as annual
+and flagged in \code{assumptions}.
 \item \code{dist}, \code{amend}, \code{animal}: disturbance, amendment, and animal events
 within the rotation window.
 \item \code{yield}: one row per harvest with a yield (\code{CD_yield}, \code{CD_yield_units},

@@ -24,6 +24,15 @@
 #'   \item Otherwise a new episode is created with an imputed start.
 #' }
 #'
+#' ## Crop categories
+#' \code{CD_cat} is matched case- and whitespace-insensitively. \code{perennial}
+#' and \code{woody perennial} are perennial; \code{annual}, \code{cash} and
+#' \code{cover} are annual; \code{fallow} is fallow. Missing or unrecognized
+#' values are treated as annual and flagged as checks, so a typo such as
+#' \code{"perenial"} is visible rather than silently changing how the crop
+#' ends. Output \code{CD_cat} is one of \code{"Annual"}, \code{"Perennial"},
+#' \code{"Fallow"}.
+#'
 #' ## Imputation rules (each logged in \code{assumptions})
 #' \itemize{
 #'   \item Missing start, some other crop ended before this one: start at the
@@ -42,10 +51,15 @@
 #'   \code{.prepare_yield()} from the raw rows.
 #' @param rot_bounds Calendar-year rotation bounds with \code{MGT_combo},
 #'   \code{rot_start}, \code{rot_end}.
-#' @param perennial_cats Values of \code{CD_cat} treated as perennial.
+#' @param perennial_cats Values of \code{CD_cat} treated as perennial
+#'   (compared after lower-casing and trimming whitespace).
 #' @param max_multi_harvest_days Maximum days from an annual planting to a
 #'   later harvest row (without a plant date) for that row to be treated as a
 #'   repeat harvest of the same planting.
+#' @param max_annual_days Annual episodes longer than this (days, after
+#'   imputation) are flagged as \code{annual_long_episode}. The default (400)
+#'   leaves room for winter annuals planted in late summer and harvested the
+#'   following summer.
 #'
 #' @return A list with \code{windows} (one row per species episode) and
 #'   \code{assumptions} (one row per imputation or data check).
@@ -53,13 +67,14 @@
 #' @noRd
 .build_crop_windows <- function(crop,
                                 rot_bounds,
-                                perennial_cats = c("perennial", "Perennial",
-                                                   "woody perennial"),
-                                max_multi_harvest_days = 365) {
+                                perennial_cats = c("perennial", "woody perennial"),
+                                max_multi_harvest_days = 365,
+                                max_annual_days = 400) {
 
   crop <- crop %>%
     dplyr::mutate(
-      .per     = CD_cat %in% perennial_cats,
+      .cat     = .normalize_cat(CD_cat, perennial_cats),
+      .per     = .cat %in% "Perennial",
       .row_end = dplyr::if_else(
         .per,
         CD_term_date,
@@ -90,7 +105,27 @@
     crop[!no_dates, ] %>%
       dplyr::filter(!.per, .is_usually_perennial(CD_name)) %>%
       dplyr::distinct(MGT_combo, CD_name, .keep_all = TRUE) %>%
-      dplyr::mutate(type = "check_category")
+      dplyr::mutate(type = "check_category"),
+
+    crop[!no_dates, ] %>%
+      dplyr::filter(.per, .is_usually_annual(CD_name)) %>%
+      dplyr::distinct(MGT_combo, CD_name, .keep_all = TRUE) %>%
+      dplyr::mutate(type = "check_category_perennial"),
+
+    crop[!no_dates, ] %>%
+      dplyr::filter(is.na(CD_cat) | trimws(CD_cat) == "") %>%
+      dplyr::distinct(MGT_combo, CD_name, .keep_all = TRUE) %>%
+      dplyr::mutate(type = "missing_category"),
+
+    crop[!no_dates, ] %>%
+      dplyr::filter(!is.na(CD_cat), trimws(CD_cat) != "", is.na(.cat)) %>%
+      dplyr::distinct(MGT_combo, CD_name, CD_cat, .keep_all = TRUE) %>%
+      dplyr::mutate(type = "unknown_category"),
+
+    crop[!no_dates, ] %>%
+      dplyr::filter(.is_placeholder_name(CD_name)) %>%
+      dplyr::distinct(MGT_combo, CD_name, .keep_all = TRUE) %>%
+      dplyr::mutate(type = "placeholder_name")
   ) %>%
     dplyr::transmute(MGT_combo, CD_name,
                      crop_start = CD_plant_date, crop_end = .row_end, type)
@@ -119,13 +154,10 @@
   # ------------------------------------------------------------------
   # Harmonize category and finalize columns
   # ------------------------------------------------------------------
+  # Missing/unrecognized categories were treated as annual (and flagged)
   windows <- windows %>%
     dplyr::mutate(
-      CD_cat = dplyr::case_when(
-        CD_cat %in% perennial_cats ~ "Perennial",
-        tolower(CD_cat) %in% c("annual", "cash", "cover", "fallow") ~ "Annual",
-        TRUE ~ CD_cat
-      )
+      CD_cat = dplyr::coalesce(.normalize_cat(CD_cat, perennial_cats), "Annual")
     ) %>%
     dplyr::arrange(MGT_combo, crop_start, CD_name) %>%
     dplyr::group_by(MGT_combo) %>%
@@ -134,7 +166,15 @@
     dplyr::select(MGT_combo, episode_id, CD_cat, CD_name,
                   crop_start, crop_end, start_imputed, end_imputed)
 
-  assumptions <- dplyr::bind_rows(ep_flags, row_flags) %>%
+  # Annual episodes longer than max_annual_days (after imputation) usually
+  # mean a missing end date or a perennial stand coded as annual
+  long_flags <- windows %>%
+    dplyr::filter(CD_cat == "Annual",
+                  as.numeric(crop_end - crop_start) + 1 > max_annual_days) %>%
+    dplyr::transmute(MGT_combo, CD_name, crop_start, crop_end,
+                     type = "annual_long_episode")
+
+  assumptions <- dplyr::bind_rows(ep_flags, row_flags, long_flags) %>%
     dplyr::transmute(MGT_combo, source = "crop", name = CD_name,
                      date_start = crop_start, date_end = crop_end, type) %>%
     .add_assumption_text()
@@ -300,6 +340,69 @@
         tolower(x))
 }
 
+# Standardize CD_cat: "Perennial", "Annual", "Fallow", or NA (missing/unknown)
+.normalize_cat <- function(x, perennial_cats = c("perennial", "woody perennial")) {
+  k <- tolower(trimws(as.character(x)))
+  dplyr::case_when(
+    k %in% tolower(trimws(perennial_cats))  ~ "Perennial",
+    k %in% c("annual", "cash", "cover")      ~ "Annual",
+    k %in% "fallow"                          ~ "Fallow",
+    TRUE                                     ~ NA_character_
+  )
+}
+
+# Species almost always grown as annuals (used only for a data-quality check).
+# "rye" matches cereal rye but not ryegrass.
+.is_usually_annual <- function(x) {
+  grepl(paste0("^(corn|maize|soybeans?|wheat|oats?|barley|sorghum|cotton|",
+               "peanuts?|canola|sunflowers?|triticale|millet|buckwheat|radish|",
+               "turnip)\\b|^rye(?!grass)"),
+        tolower(trimws(x)), perl = TRUE)
+}
+
+# Placeholder species names that should be replaced by real names; each
+# distinct name counts as a separate species in Diversity
+.is_placeholder_name <- function(x) {
+  grepl("^(species|sp\\.?|spp\\.?|unknown|other|none given|tbd|n/?a)\\s*[0-9]*$",
+        tolower(trimws(x)))
+}
+
+# Crop episodes whose end was imputed although soil disturbance is recorded
+# between their start and the imputed end (a termination may be missing).
+# Perennial stands are skipped: their harvest operations are recorded as
+# disturbances. Returns an assumptions table (possibly empty).
+.check_imputed_end_disturbance <- function(windows, dist) {
+  empty <- .add_assumption_text(tibble::tibble(
+    MGT_combo = character(), source = character(), name = character(),
+    date_start = as.Date(character()), date_end = as.Date(character()),
+    type = character()))
+  if (is.null(dist) || nrow(dist) == 0) return(empty)
+
+  w <- windows %>%
+    dplyr::filter(end_imputed, CD_cat != "Perennial") %>%
+    dplyr::select(MGT_combo, CD_name, crop_start, crop_end)
+  if (nrow(w) == 0) return(empty)
+
+  hits <- w %>%
+    dplyr::inner_join(dist %>% dplyr::filter(!is.na(SD_date)) %>%
+                        dplyr::select(MGT_combo, SD_date),
+                      by = "MGT_combo", relationship = "many-to-many") %>%
+    dplyr::filter(SD_date > crop_start, SD_date < crop_end) %>%
+    dplyr::group_by(MGT_combo, CD_name, crop_start, crop_end) %>%
+    dplyr::summarise(first_dist = min(SD_date), .groups = "drop")
+  if (nrow(hits) == 0) return(empty)
+
+  hits %>%
+    dplyr::transmute(MGT_combo, source = "crop", name = CD_name,
+                     date_start = crop_start, date_end = crop_end,
+                     type = "end_imputed_after_disturbance",
+                     first_dist) %>%
+    .add_assumption_text(keep = "first_dist") %>%
+    dplyr::mutate(message = paste0(message, " First disturbance after planting: ",
+                                   format(first_dist, "%Y-%m-%d"), ".")) %>%
+    dplyr::select(-first_dist)
+}
+
 # Days covered by the union of a set of date intervals (overlaps count once)
 .union_days <- function(start, end) {
   ok <- !is.na(start) & !is.na(end)
@@ -324,6 +427,12 @@
   annual_harv_term_conflict = "check",
   annual_term_only          = "check",
   check_category            = "check",
+  check_category_perennial  = "check",
+  missing_category          = "check",
+  unknown_category          = "check",
+  placeholder_name          = "check",
+  annual_long_episode       = "check",
+  end_imputed_after_disturbance = "check",
   end_before_start          = "check",
   row_no_dates              = "check",
   yield_bushels_not_converted = "check",
@@ -365,6 +474,25 @@
   check_category = paste(
     "Species is usually perennial but CD_cat is not perennial; harvests will",
     "end it as an annual. Check CD_cat."),
+  check_category_perennial = paste(
+    "Species is usually annual but CD_cat is perennial; it runs until a",
+    "termination date and harvests do not end it. Check CD_cat (a nurse crop",
+    "sown with a perennial forage is annual)."),
+  missing_category = "CD_cat is missing; the crop was treated as annual. Check CD_cat.",
+  unknown_category = paste(
+    "CD_cat is not a recognized category (Annual, Cash, Cover, Perennial,",
+    "Woody perennial, Fallow); the crop was treated as annual. Check CD_cat."),
+  placeholder_name = paste(
+    "Placeholder species name; each distinct name counts as a separate",
+    "species in Diversity. Replace with the real species name."),
+  annual_long_episode = paste(
+    "Annual crop episode is longer than 400 days. Usually a missing",
+    "harvest/termination date, or a stand kept for more than one growing",
+    "season that should be coded perennial."),
+  end_imputed_after_disturbance = paste(
+    "End date was imputed, but soil disturbance is recorded before it. If",
+    "that operation ended the crop (e.g. fall tillage), add a termination",
+    "date; in-season cultivation needs no change."),
   end_before_start = "End date was before start date; window set to a single day. Check dates.",
   row_no_dates = "Row has no plant, harvest, or termination date and was ignored.",
   yield_bushels_not_converted = paste(
@@ -387,13 +515,13 @@
 )
 
 # Add level and message to an assumptions table and order its columns
-.add_assumption_text <- function(df) {
+.add_assumption_text <- function(df, keep = character(0)) {
   df %>%
     dplyr::mutate(
       level   = unname(.assumption_levels[type]),
       message = unname(.assumption_messages[type])
     ) %>%
     dplyr::select(MGT_combo, source, name, date_start, date_end,
-                  level, type, message) %>%
+                  level, type, message, dplyr::all_of(keep)) %>%
     dplyr::arrange(MGT_combo, date_start, name)
 }

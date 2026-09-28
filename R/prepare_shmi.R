@@ -83,6 +83,10 @@
 #'   record.
 #' * `crop`: species episodes (`MGT_combo`, `episode_id`, `CD_cat`,
 #'   `CD_name`, `crop_start`, `crop_end`, `start_imputed`, `end_imputed`).
+#'   `CD_cat` is standardized to `"Annual"` (Annual, Cash, Cover),
+#'   `"Perennial"` (Perennial, Woody perennial) or `"Fallow"`, matched
+#'   case-insensitively; missing or unrecognized values are treated as annual
+#'   and flagged in `assumptions`.
 #' * `dist`, `amend`, `animal`: disturbance, amendment, and animal events
 #'   within the rotation window.
 #' * `yield`: one row per harvest with a yield (`CD_yield`, `CD_yield_units`,
@@ -491,6 +495,16 @@ prepare_shmi_inputs <- function(path,
   mgt_combos <- unique(rot_bounds$MGT_combo)
   mgt <- mgt %>%
     filter(MGT_combo %in% mgt_combos)
+
+  # ------------------------------------------------------------
+  # Data check: annual crops whose imputed end runs past a recorded
+  # disturbance (a harvest or termination date may be missing).
+  # Changes no windows; logged in `assumptions` only.
+  # ------------------------------------------------------------
+  assumptions <- dplyr::bind_rows(
+    assumptions,
+    .check_imputed_end_disturbance(crop_windows, dist)
+  )
 
   # ------------------------------------------------------------
   # 6. Yield / N-rate

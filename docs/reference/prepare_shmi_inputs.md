@@ -74,6 +74,10 @@ A named list:
 
 - `crop`: species episodes (`MGT_combo`, `episode_id`, `CD_cat`,
   `CD_name`, `crop_start`, `crop_end`, `start_imputed`, `end_imputed`).
+  `CD_cat` is standardized to `"Annual"` (Annual, Cash, Cover),
+  `"Perennial"` (Perennial, Woody perennial) or `"Fallow"`, matched
+  case-insensitively; missing or unrecognized values are treated as
+  annual and flagged in `assumptions`.
 
 - `dist`, `amend`, `animal`: disturbance, amendment, and animal events
   within the rotation window.
@@ -169,19 +173,19 @@ converted are `NA`, not zero. Unconverted values are listed in
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [332ms]
+#> ✔ Validating inputs... [339ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [309ms]
+#> ✔ Reading Excel file... [300ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [31ms]
+#> ✔ Calculating rotation lengths... [27ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [140ms]
+#> ✔ Calculating crop start/end dates... [139ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [14ms]
+#> ✔ Applying overrides... [13ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
 #> ✔ Re-calculating rotation lengths... [30ms]
@@ -200,22 +204,22 @@ inputs_2022_23 <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE,
                                       start_date_override = "2022-01-01",
                                       end_date_override   = "2023-12-31")
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [318ms]
+#> ✔ Validating inputs... [321ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [319ms]
+#> ✔ Reading Excel file... [338ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [29ms]
+#> ✔ Calculating rotation lengths... [30ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [149ms]
+#> ✔ Calculating crop start/end dates... [135ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [25ms]
+#> ✔ Applying overrides... [26ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [30ms]
+#> ✔ Re-calculating rotation lengths... [29ms]
 #> 
 inputs_2022_23$rot_bounds
 #> # A tibble: 8 × 5

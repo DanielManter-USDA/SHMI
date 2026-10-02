@@ -1,0 +1,574 @@
+operation,implement,source
+"Aerator, field surface, ground driven",AERATOR,T-DISC 1.1.1
+"Aerator, field surface, ground driven 0 degree offset",AERATOR,T-DISC 1.1.1
+"Aerator, field surface, ground driven 10 degree offset",AERATOR,T-DISC 1.1.1
+"Aerator, field surface, ground driven 5 degree offset",AERATOR,T-DISC 1.1.1
+"Aerator, offset","AERATOR, TANDEM DRUM, ANGLE>5",T-DISC 1.1.1
+"Aerator, single drum, lugs, angle 0",AERATOR,T-DISC 1.1.1
+"Aerator, tandem drum, lugs, angle 10","AERATOR, TANDEM DRUM, ANGLE>5",T-DISC 1.1.1
+"Aerator, tandem drum, lugs, angle 5","AERATOR, TANDEM DRUM, ANGLE>5",T-DISC 1.1.1
+Bed shaper,"BED SHAPING, BEDDER SHAPER",T-DISC 1.1.1
+Bed shaper high disturbance,"BED SHAPING, FURROW DIKER",T-DISC 1.1.1
+"Bed shaper, 12 inch","BED SHAPING, BEDDER SHAPER",T-DISC 1.1.1
+"Bed shaper, 12 inch, low flattening","BED SHAPING, BEDDER SHAPER",T-DISC 1.1.1
+"Bed shaper, low flattening, high disturbance","BED SHAPING, FURROW DIKER",T-DISC 1.1.1
+"Bedder, disk hiller","BED SHAPING, BEDDER DISK/DISK-HIPPER, DEPTH LE4.5IN",T-DISC 1.1.1
+"Bedder, hipper, disk hiller","BED SHAPING, BEDDER DISK/DISK-HIPPER, DEPTH LE4.5IN",T-DISC 1.1.1
+"Bedder, hipper, hiller 12 inch high","BED SHAPING, BEDDER DISK/DISK-HIPPER, DEPTH GT4.5IN",T-DISC 1.1.1
+"Bedder, hipper, hiller 15 inch high","BED SHAPING, BEDDER DISK/DISK-HIPPER, DEPTH GT4.5IN",T-DISC 1.1.1
+"Bedder, hipper, hiller 18 inch high","BED SHAPING, BEDDER DISK/DISK-HIPPER, DEPTH GT4.5IN",T-DISC 1.1.1
+"Chisel plow, coulter, straight points","PLOW, COULTER-CHISEL",T-DISC 1.1.1
+"Chisel plow, coulter, straight points, cover disks","PLOW, COULTER-CHISEL",T-DISC 1.1.1
+"Chisel plow, coulter, straight points, cover disks, rolling basket","PLOW, COULTER-CHISEL",T-DISC 1.1.1
+"Chisel plow, coulter, sweeps","PLOW, COULTER-CHISEL",T-DISC 1.1.1
+"Chisel plow, coulter, twisted points","PLOW, COULTER-CHISEL",T-DISC 1.1.1
+"Chisel plow, coulter, twisted points, cover disks","PLOW, COULTER-CHISEL",T-DISC 1.1.1
+"Chisel plow, disk, straight points","PLOW, COULTER-CHISEL",T-DISC 1.1.1
+"Chisel plow, disk, straight points, cover disks","PLOW, COULTER-CHISEL",T-DISC 1.1.1
+"Chisel plow, disk, twisted points","PLOW, COULTER-CHISEL",T-DISC 1.1.1
+"Chisel plow, disk, twisted points, cover disks","PLOW, COULTER-CHISEL",T-DISC 1.1.1
+"Chisel, 12-16 inch low crown sweep 3 to 4 inch depth","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Chisel, straight point","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Chisel, straight point 12 inch deep","PLOW, CHISEL",T-DISC 1.1.1
+"Chisel, straight point 15 inch deep","PLOW, CHISEL",T-DISC 1.1.1
+"Chisel, straight point 5 inch deep","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Chisel, straight point 5 inch deep, coil tine harrow","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Chisel, straight point, coil tine harrow","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Chisel, straight point, coil tine harrow","HARROW, COILED TINES",T-DISC 1.1.1
+"Chisel, sweep shovel","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Chisel, sweep shovel 5 inch depth","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Chisel, sweep shovel 5 inch depth, coil tine harrow","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Chisel, sweep shovel 5 inch depth, coil tine harrow","HARROW, COILED TINES",T-DISC 1.1.1
+"Chisel, sweep shovel, coil tine harrow","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Chisel, sweep shovel, coil tine harrow","HARROW, COILED TINES",T-DISC 1.1.1
+"Chisel, twisted shovel","PLOW, CHISEL",T-DISC 1.1.1
+"Chisel, twisted shovel, coil tine harrow","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Chisel, winged with furrow diker","PLOW, COULTER-CHISEL",T-DISC 1.1.1
+Corrugated roller or packer,"CULTIVATOR, CULTIWEEDER",T-DISC 1.1.1
+"Coulter caddy, double gang with fluted coulters","CULTIVATOR, ROTARY HOE",T-DISC 1.1.1
+"Coulter caddy, with fluted coulters","CULTIVATOR, ROTARY HOE",T-DISC 1.1.1
+"Coulter caddy, with smooth coulters","CONDITIONER, COULTER CADDY, SMOOTH COULTERS",T-DISC 1.1.1
+Coulter tiller,"HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+Coulter tiller and spike harrow,"HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+Coulter tiller and spike harrow,"HARROW, SPIKE TOOTH OR SPRING TOOTH",T-DISC 1.1.1
+"Coulter tiller, 10 degree angle, coiled tine harrow, rolling basket","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Coulter tiller, 10 degree angle, coiled tine harrow, rolling basket","HARROW, COILED TINES",T-DISC 1.1.1
+"Coulter tiller, 10 degree angle, coiled tine harrow, rolling basket","HARROW, ROLLING",T-DISC 1.1.1
+Cover crop underseeder,"PLANTER, INTER/OVER SEEDER",T-DISC 1.1.1
+Cultimulcher,"ROLLER, CULTI-MULCHER",T-DISC 1.1.1
+"Cultipacker, pulverizer","ROLLER, CULTI-PACKER/PULVERIZER",T-DISC 1.1.1
+"Cultipacker, roller","ROLLER, CULTI-MULCHER",T-DISC 1.1.1
+"Cultivator, between beds, add residue","CULTIVATOR, ROW",T-DISC 1.1.1
+"Cultivator, field 6-12 inch shovels Central","CULTIVATOR, FIELD",T-DISC 1.1.1
+"Cultivator, field 6-12 inch sweeps","CULTIVATOR, FIELD",T-DISC 1.1.1
+"Cultivator, field 6-12 inch sweeps, coil tine harrow","CULTIVATOR, FIELD",T-DISC 1.1.1
+"Cultivator, field 6-12 inch sweeps, coil tine harrow","HARROW, COILED TINES",T-DISC 1.1.1
+"Cultivator, field w/ spike points","CULTIVATOR, FIELD",T-DISC 1.1.1
+"Cultivator, field w/ spike points, coil tine harrow","CULTIVATOR, FIELD",T-DISC 1.1.1
+"Cultivator, field w/ spike points, coil tine harrow","HARROW, COILED TINES",T-DISC 1.1.1
+"Cultivator, flame","HARROW, COILED TINES",T-DISC 1.1.1
+"Cultivator, hipper, disk hiller on beds, depth GT4.5IN","BED SHAPING, BEDDER DISK/DISK-HIPPER, DEPTH GT4.5IN",T-DISC 1.1.1
+"Cultivator, hipper, disk hiller on beds, depth LE4.5IN","BED SHAPING, BEDDER DISK/DISK-HIPPER, DEPTH LE4.5IN",T-DISC 1.1.1
+"Cultivator, off bar w/disk hillers on beds, depth GT4.5IN","BED SHAPING, BEDDER DISK/DISK-HIPPER, DEPTH GT4.5IN",T-DISC 1.1.1
+"Cultivator, off bar w/disk hillers on beds, depth LE4.5IN","BED SHAPING, BEDDER DISK/DISK-HIPPER, DEPTH LE4.5IN",T-DISC 1.1.1
+"Cultivator, rotary","ROTO-TILLER, ROTO-TILLER DIGGER, ROTERRA",T-DISC 1.1.1
+"Cultivator, rotary on beds","ROTO-TILLER, ROTO-TILLER DIGGER, ROTERRA",T-DISC 1.1.1
+"Cultivator, rotary on beds; Bedder, hipper, disk hiller","ROTO-TILLER, ROTO-TILLER DIGGER, ROTERRA",T-DISC 1.1.1
+"Cultivator, rotary on beds; Bedder, hipper, disk hiller","BED SHAPING, BEDDER DISK/DISK-HIPPER, DEPTH LE4.5IN",T-DISC 1.1.1
+"Cultivator, row - 1st pass ridge till","CULTIVATOR, ROW",T-DISC 1.1.1
+"Cultivator, row - 2nd pass ridge till","CULTIVATOR, ROW",T-DISC 1.1.1
+"Cultivator, row 1 inch ridge","CULTIVATOR, ROW",T-DISC 1.1.1
+"Cultivator, row 3 inch ridge","CULTIVATOR, ROW",T-DISC 1.1.1
+"Cultivator, row between beds","CULTIVATOR, ROW",T-DISC 1.1.1
+"Cultivator, row, high residue","CULTIVATOR, ROW",T-DISC 1.1.1
+Culti-weeder,"CULTIVATOR, CULTIWEEDER",T-DISC 1.1.1
+Disc-o-vator,"HARROW, DISK, SINGLE",T-DISC 1.1.1
+Disc-o-vator,"HARROW, SPIKE TOOTH OR SPRING TOOTH",T-DISC 1.1.1
+"Disk, inter row strips","HARROW, DISK, SINGLE",T-DISC 1.1.1
+"Disk, inter row strips","HARROW, SPIKE TOOTH OR SPRING TOOTH",T-DISC 1.1.1
+"Disk, offset, heavy","HARROW, DISK, OFFSET, HEAVYDUTY",T-DISC 1.1.1
+"Disk, offset, heavy 12 inch depth","HARROW, DISK, OFFSET, HEAVYDUTY",T-DISC 1.1.1
+"Disk, offset, heavy 15 inch depth","HARROW, DISK, OFFSET, HEAVYDUTY",T-DISC 1.1.1
+"Disk, offset, heavy, roller, corrugated packer","HARROW, DISK, OFFSET, HEAVYDUTY",T-DISC 1.1.1
+"Disk, offset, heavy, roller, corrugated packer","CULTIVATOR, CULTIWEEDER",T-DISC 1.1.1
+"Disk, offset, heavy, roller, smooth","HARROW, DISK, OFFSET, HEAVYDUTY",T-DISC 1.1.1
+"Disk, offset, light","HARROW, DISK, OFFSET, LIGHTDUTY",T-DISC 1.1.1
+"Disk, single gang","HARROW, DISK, SINGLE",T-DISC 1.1.1
+"Disk, tandem heavy primary operation","HARROW, DISK, TANDEM, HEAVYDUTY",T-DISC 1.1.1
+"Disk, tandem heavy primary operation, roller, smooth","HARROW, DISK, TANDEM, HEAVYDUTY",T-DISC 1.1.1
+"Disk, tandem light finishing","HARROW, DISK, TANDEM, LIGHTDUTY",T-DISC 1.1.1
+"Disk, tandem secondary operation","HARROW, DISK, TANDEM, LIGHTDUTY",T-DISC 1.1.1
+Do all (Duall),"FINISHER, LANDOLL, DO-ALL",T-DISC 1.1.1
+"Do all, on beds","FINISHER, LANDOLL, DO-ALL",T-DISC 1.1.1
+Drill or air seeder single disk openers 7-10 inch spacing,"PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+Drill or air seeder single disk openers 7-10 inch spacing,"HARROW, DISK, SINGLE",T-DISC 1.1.1
+"Drill or air seeder single disk openers, fertilizer openers 7-10 inch spacing","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder single disk openers, fertilizer openers 7-10 inch spacing","HARROW, DISK, SINGLE",T-DISC 1.1.1
+Drill or air seeder T-slot openers 7-10 inch spacing,"PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+Drill or air seeder T-slot openers 7-10 inch spacing,"HARROW, COILED TINES",T-DISC 1.1.1
+"Drill or air seeder, 4 inch stealth openers on 12 inch spacing","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, 4 inch stealth openers on 12 inch spacing","HARROW, FINISHING",T-DISC 1.1.1
+"Drill or air seeder, 6 inch stealth openers on 12 inch spacing","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, 6 inch stealth openers on 12 inch spacing","HARROW, FINISHING",T-DISC 1.1.1
+"Drill or air seeder, combo field cult, double disk openers","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, combo field cult, double disk openers","CULTIVATOR, FIELD",T-DISC 1.1.1
+"Drill or air seeder, combo field cult, double disk openers","HARROW, DISK, TANDEM, LIGHTDUTY",T-DISC 1.1.1
+"Drill or air seeder, combo single disk-hoe openers, 10 inch spacing","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, combo single disk-hoe openers, 10 inch spacing","HARROW, DISK, SINGLE",T-DISC 1.1.1
+"Drill or air seeder, double disk","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, double disk","HARROW, DISK, TANDEM, LIGHTDUTY",T-DISC 1.1.1
+"Drill or air seeder, double disk opener w/ fluted coulter 5x10 paired row","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, double disk opener w/ fluted coulter 5x10 paired row","HARROW, DISK, TANDEM, LIGHTDUTY",T-DISC 1.1.1
+"Drill or air seeder, double disk opener, w/ fertilizer openers","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, double disk opener, w/ fertilizer openers","HARROW, DISK, TANDEM, LIGHTDUTY",T-DISC 1.1.1
+"Drill or air seeder, double disk, w/ fluted coulters","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, double disk, w/ fluted coulters","HARROW, DISK, TANDEM, LIGHTDUTY",T-DISC 1.1.1
+"Drill or air seeder, hoe opener in heavy residue","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, hoe opener in heavy residue","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Drill or air seeder, hoe opener inch heavy residue w/ fertilizer openers","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, hoe opener inch heavy residue w/ fertilizer openers","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Drill or air seeder, hoe/chisel openers 12-15 inch spacing","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, hoe/chisel openers 12-15 inch spacing","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Drill or air seeder, hoe/chisel openers 12-15 inch spacing w/ fertilizer openers","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, hoe/chisel openers 12-15 inch spacing w/ fertilizer openers","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Drill or air seeder, hoe/chisel openers 6-12 inch spacing","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, hoe/chisel openers 6-12 inch spacing","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Drill or air seeder, hoe/chisel openers 6-12 inch spacing w/fertilizer openers","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, hoe/chisel openers 6-12 inch spacing w/fertilizer openers","HARROW, DISK, CHISEL (MULCH TILLER)",T-DISC 1.1.1
+"Drill or air seeder, offset double disk openers","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, offset double disk openers","HARROW, DISK, OFFSET, LIGHTDUTY",T-DISC 1.1.1
+"Drill or air seeder, paired, opposing single disk openers 6x9 inch spacing","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, paired, opposing single disk openers 6x9 inch spacing","HARROW, DISK, TANDEM, LIGHTDUTY",T-DISC 1.1.1
+"Drill or air seeder, sweep or band opener","PLANTER, DRILL, AIR DELIVERY",T-DISC 1.1.1
+"Drill or air seeder, sweep or band opener","CULTIVATOR, ROW",T-DISC 1.1.1
+"Drill, deep furrow 12 to 18 inch spacing","PLANTER, DRILL, DISCGRAIN",T-DISC 1.1.1
+"Drill, deep furrow 12 to 18 inch spacing","CULTIVATOR, FURROW-OUT",T-DISC 1.1.1
+"Drill, deep furrow 7 to 10 inch spacing","PLANTER, DRILL, DISCGRAIN",T-DISC 1.1.1
+"Drill, deep furrow 7 to 10 inch spacing","CULTIVATOR, FURROW-OUT",T-DISC 1.1.1
+"Drill, double disk, 7-8 inch packer Central","PLANTER, DRILL, DISCGRAIN",T-DISC 1.1.1
+"Drill, double disk, 7-8 inch packer Central","HARROW, DISK, TANDEM, LIGHTDUTY",T-DISC 1.1.1
+"Drill, double disk, orchard vineyard cover","PLANTER, DRILL, DISCGRAIN",T-DISC 1.1.1
+"Drill, double disk, orchard vineyard cover","HARROW, DISK, TANDEM, LIGHTDUTY",T-DISC 1.1.1
+"Drill, heavy, direct seed, double disk opener","PLANTER, DRILL, DISCGRAIN",T-DISC 1.1.1
+"Drill, heavy, direct seed, double disk opener","HARROW, DISK, TANDEM, LIGHTDUTY",T-DISC 1.1.1
+"Drill, heavy, direct seed, double disk opener w/row cleaners","PLANTER, DRILL, DISCGRAIN",T-DISC 1.1.1
+"Drill, heavy, direct seed, double disk opener w/row cleaners","HARROW, DISK, TANDEM, LIGHTDUTY",T-DISC 1.1.1
+"Drill, semi-deep furrow 12 to 18 inch spacing","PLANTER, DRILL, DISCGRAIN",T-DISC 1.1.1
+"Drill, semi-deep furrow 12 to 18 inch spacing","CULTIVATOR, FURROW-OUT",T-DISC 1.1.1
+Fertilizer applicator anhydrous knife 12 inches,"NUTRIENT MGMT: FERT APPL, ANYHD KNIFE",T-DISC 1.1.1
+"Fertilizer applicator anhydrous knife 12 inches, coil tine harrow","NUTRIENT MGMT: FERT APPL, ANYHD KNIFE",T-DISC 1.1.1
+"Fertilizer applicator anhydrous knife 12 inches, coil tine harrow","HARROW, COILED TINES",T-DISC 1.1.1
+Fertilizer applicator anhydrous knife 15 inch spacing,"NUTRIENT MGMT: FERT APPL, ANYHD KNIFE",T-DISC 1.1.1
+Fertilizer applicator anhydrous knife 15 inch spacing high disturbance,"NUTRIENT MGMT: FERT APPL, SHANK",T-DISC 1.1.1
+"Fertilizer applicator anhydrous knife 15 inch spacing high disturbance, coil tine harrow","NUTRIENT MGMT: FERT APPL, SHANK",T-DISC 1.1.1
+"Fertilizer applicator anhydrous knife 15 inch spacing high disturbance, coil tine harrow","HARROW, COILED TINES",T-DISC 1.1.1
+"Fertilizer applicator anhydrous knife 15 inch spacing, coil tine harrow","NUTRIENT MGMT: FERT APPL, ANYHD KNIFE",T-DISC 1.1.1
+"Fertilizer applicator anhydrous knife 15 inch spacing, coil tine harrow","HARROW, COILED TINES",T-DISC 1.1.1
+Fertilizer applicator anhydrous knife 30 inch spacing,"NUTRIENT MGMT: FERT APPL, ANYHD KNIFE",T-DISC 1.1.1
+"Fertilizer applicator anhydrous knife 30 inch spacing, bedded","NUTRIENT MGMT: FERT APPL, ANYHD KNIFE",T-DISC 1.1.1
+"Fertilizer applicator anhydrous, low disturbance single disk opener, 30 inch spacing","NUTRIENT MGMT: FERT APPL, ANYHD KNIFE",T-DISC 1.1.1
+"Fertilizer applicator anhydrous, low disturbance single disk opener, 30 inch spacing","HARROW, DISK, SINGLE",T-DISC 1.1.1
+"Fertilizer applicator anhydrous, minimal disturbance precision placement, 30 inch spacing","NUTRIENT MGMT: FERT APPL, PRECISION",T-DISC 1.1.1
+"Fertilizer applicator coulter, high pressure inject 12 inches","NUTRIENT MGMT: FERT APPL, COULTER",T-DISC 1.1.1
+Fertilizer applicator deep placement heavy shank,"NUTRIENT MGMT: FERT APPL, SHANK",T-DISC 1.1.1
+Fertilizer applicator double shot knife 15 inch spacing high disturbance,"NUTRIENT MGMT: FERT APPL, SHANK",T-DISC 1.1.1
+Fertilizer applicator shallow anhydrous knife 38 inch spacing,"NUTRIENT MGMT: FERT APPL, ANYHD KNIFE",T-DISC 1.1.1
+"Fertilizer applicator shank low disturbance, 12 inches","NUTRIENT MGMT: FERT APPL, SHANK",T-DISC 1.1.1
+"Fertilizer applicator shank low disturbance, 12 inches, coil tine harrow","NUTRIENT MGMT: FERT APPL, SHANK",T-DISC 1.1.1
+"Fertilizer applicator shank low disturbance, 12 inches, coil tine harrow","HARROW, COILED TINES",T-DISC 1.1.1
+"Fertilizer applicator shank low disturbance, 15 inch spacing","NUTRIENT MGMT: FERT APPL, SHANK",T-DISC 1.1.1
+"Fertilizer applicator single disk opener, low disturbance, 30 inch spacing","NUTRIENT MGMT: FERT APPL, PRECISION",T-DISC 1.1.1
+"Fertilizer applicator single disk opener, low disturbance, 30 inch spacing","HARROW, DISK, SINGLE",T-DISC 1.1.1
+"Fertilizer applicator, strip-till 30 inch spacing","NUTRIENT MGMT: FERT APPL, STRIP TILL",T-DISC 1.1.1
+Float,"FINISHING, FLOAT",T-DISC 1.1.1
+Furrow diker,"CULTIVATOR, FURROW-OUT",T-DISC 1.1.1
+"Furrow shaper, torpedo","BED SHAPING, BEDDER SHAPER",T-DISC 1.1.1
+"Harrow, coiled tine","HARROW, COILED TINES",T-DISC 1.1.1
+"Harrow, coiled tine weeder","HARROW, COILED TINES",T-DISC 1.1.1
+"Harrow, disk chain","HARROW, DISK, SINGLE",T-DISC 1.1.1
+"Harrow, heavy","HARROW, DISK, SINGLE",T-DISC 1.1.1
+"Harrow, heavy on heavy residue","HARROW, DISK, SINGLE",T-DISC 1.1.1
+"Harrow, rolling","HARROW, ROLLING",T-DISC 1.1.1
+"Harrow, rotary","HARROW, POWERED SPIKE TOOTH",T-DISC 1.1.1
+"Harrow, rotary paddle wheel and spike gangs","HARROW, POWERED SPIKE TOOTH",T-DISC 1.1.1
+"Harrow, rotary, light, fluff fragile residue","HARROW, FLEX-TINE",T-DISC 1.1.1
+"Harrow, rotary, light, fluff residue","HARROW, FLEX-TINE",T-DISC 1.1.1
+"Harrow, spike tooth","HARROW, SPIKE TOOTH OR SPRING TOOTH",T-DISC 1.1.1
+"Harrow, spike tooth, cover seed","HARROW, SPIKE TOOTH OR SPRING TOOTH",T-DISC 1.1.1
+"Harrow, tine, on beds","HARROW, COILED TINES",T-DISC 1.1.1
+"Harvest, corn","HARVEST, GRAIN",T-DISC 1.1.1
+"Harvest, corn silage with cover crop","HARVEST, FORAGE",T-DISC 1.1.1
+"Harvest, forage sorghum","HARVEST, FORAGE",T-DISC 1.1.1
+"Harvest, grass or legume seed, remove forage","HARVEST, OILSEEDS",T-DISC 1.1.1
+"Harvest, hay, grass","HARVEST, FORAGE",T-DISC 1.1.1
+"Harvest, hay, legume","HARVEST, FORAGE",T-DISC 1.1.1
+"Harvest, hay, no regrowth","HARVEST, FORAGE",T-DISC 1.1.1
+"Harvest, oilseeds, combine","HARVEST, OILSEEDS",T-DISC 1.1.1
+"Harvest, residue, forage chopper, complete",RESIDUE MGMT: STALK PULLER CHOPPER,T-DISC 1.1.1
+"Harvest, silage","HARVEST, FORAGE",T-DISC 1.1.1
+"Harvest, silage 3-foot stubble","HARVEST, FORAGE",T-DISC 1.1.1
+"Harvest, small grain haylage 5 inch height","HARVEST, FORAGE",T-DISC 1.1.1
+"Harvest, small grain silage with cover crop","HARVEST, FORAGE",T-DISC 1.1.1
+"Harvest, small grain, release understory","HARVEST, GRAIN",T-DISC 1.1.1
+Hipper,"BED SHAPING, HIPPER",T-DISC 1.1.1
+Land plane,"LEVELING, LAND PLANE-LEVELER",T-DISC 1.1.1
+"Lister, 30 inch","PLANTER, LISTER-BEDDER",T-DISC 1.1.1
+"Lister, 30 inch with fertilizer applicator","PLANTER, LISTER-BEDDER",T-DISC 1.1.1
+"Lister, 40 inch","PLANTER, LISTER-BEDDER",T-DISC 1.1.1
+"Lister, 40 inch with fertilizer applicator","PLANTER, LISTER-BEDDER",T-DISC 1.1.1
+"Manure injector, liquid high disturbance 30 inch",NUTRIENT MGMT: MANURE INJECTOR,T-DISC 1.1.1
+"Manure injector, liquid low disturbance 15 inch",NUTRIENT MGMT: MANURE INJECTOR,T-DISC 1.1.1
+"Manure injector, liquid low disturbance 30 inch",NUTRIENT MGMT: MANURE INJECTOR,T-DISC 1.1.1
+"Manure injector, low disturbance 15 inch",NUTRIENT MGMT: MANURE INJECTOR,T-DISC 1.1.1
+"Manure injector, low disturbance 30 inch",NUTRIENT MGMT: MANURE INJECTOR,T-DISC 1.1.1
+Marker (cultivator),"CULTIVATOR, MARKER",T-DISC 1.1.1
+"Middle buster, digger","CULTIVATOR, MIDDLE-BUSTER, GT5IN",T-DISC 1.1.1
+Mulch treader,RESIDUE MGMT: MULCH TREADER,T-DISC 1.1.1
+Multiweeder,WEED MGMT: MULTI-WEEDER OR ROD WEEDER,T-DISC 1.1.1
+Packer,"ROLLER, PACKER",T-DISC 1.1.1
+Para-plow or para-till,"PLOW, PARAPLOW",T-DISC 1.1.1
+"Planter, double disk opener w/fluted coulter","PLANTER, REGULAR",T-DISC 1.1.1
+"Planter, double disk opener w/fluted coulter","HARROW, DISK, TANDEM, LIGHTDUTY",T-DISC 1.1.1
+"Planter, furrow opener 4 inch deep furrows","PLANTER, REGULAR",T-DISC 1.1.1
+"Planter, furrow opener 4 inch deep furrows","CULTIVATOR, FURROW-OUT",T-DISC 1.1.1
+"Planter, furrow opener 6 inch deep furrows","PLANTER, REGULAR",T-DISC 1.1.1
+"Planter, furrow opener 6 inch deep furrows","BED SHAPING, FURROW DIKER",T-DISC 1.1.1
+"Planter, furrow opener 8 inch deep furrows","PLANTER, REGULAR",T-DISC 1.1.1
+"Planter, furrow opener 8 inch deep furrows","HARROW, DISK, TANDEM, HEAVYDUTY",T-DISC 1.1.1
+"Planter, in-row subsoiler","PLANTER, REGULAR",T-DISC 1.1.1
+"Planter, in-row subsoiler","CULTIVATOR, ROW",T-DISC 1.1.1
+"Planter, in-row subsoiler low disturbance","PLANTER, REGULAR",T-DISC 1.1.1
+"Planter, in-row subsoiler low disturbance","CONDITIONER, ROW",T-DISC 1.1.1
+"Planter, in-row subsoiler w/ residue managers","PLANTER, REGULAR",T-DISC 1.1.1
+"Planter, in-row subsoiler w/ residue managers","CULTIVATOR, ROW",T-DISC 1.1.1
+"Planter, narrow slot w/smooth or rippled coulter","PLANTER, NO-TILL",T-DISC 1.1.1
+"Planter, RELAY INTERCROP, double disk opener","PLANTER, INTER/OVER SEEDER",T-DISC 1.1.1
+"Planter, RELAY INTERCROP, double disk opener","HARROW, DISK, TANDEM, LIGHTDUTY",T-DISC 1.1.1
+"Planter, ridge till","PLANTER, RIDGE TILL",T-DISC 1.1.1
+"Planter, runner opener","PLANTER, REGULAR",T-DISC 1.1.1
+"Planter, strip till","PLANTER, STRIP TILL",T-DISC 1.1.1
+"Planter, strip till, 22 inch","PLANTER, STRIP TILL",T-DISC 1.1.1
+"Planter, strip till, shallow subsoiler","PLANTER, STRIP TILL",T-DISC 1.1.1
+"Planter, strip till, subsoiler","PLANTER, STRIP TILL",T-DISC 1.1.1
+"Plow, deep, large, moldboard","PLOW, MOLDBOARD",T-DISC 1.1.1
+"Plow, disk","PLOW, DISK",T-DISC 1.1.1
+"Plow, Levee-plow (or Border Plow)","CULTIVATOR, MIDDLE-BUSTER, GT5IN",T-DISC 1.1.1
+"Plow, moldboard","PLOW, MOLDBOARD",T-DISC 1.1.1
+"Plow, moldboard 10 inch depth","PLOW, MOLDBOARD",T-DISC 1.1.1
+"Plow, moldboard 6-7 inch depth","PLOW, MOLDBOARD",T-DISC 1.1.1
+"Plow, moldboard, conservation","PLOW, MOLDBOARD",T-DISC 1.1.1
+"Plow, moldboard, up hill","PLOW, MOLDBOARD",T-DISC 1.1.1
+"Plow, reversible","PLOW, MOLDBOARD",T-DISC 1.1.1
+Power mulcher bed conditioner,RESIDUE MGMT: POWER MULCHER,T-DISC 1.1.1
+Reel disk vertical tiller,"CONDITIONER, COULTER CADDY, SMOOTH COULTERS",T-DISC 1.1.1
+Reel disk vertical tiller,"HARROW, SPIKE TOOTH OR SPRING TOOTH",T-DISC 1.1.1
+Reel disk vertical tiller,"HARROW, ROLLING",T-DISC 1.1.1
+"Residue conditioner, coil tine harrow, rolling basket","HARROW, FLEX-TINE",T-DISC 1.1.1
+"Residue conditioner, coil tine harrow, rolling basket","HARROW, COILED TINES",T-DISC 1.1.1
+"Residue conditioner, coil tine harrow, rolling basket","HARROW, ROLLING",T-DISC 1.1.1
+"Residue, row cleaner",RESIDUE MGMT: TRASH WHEEL,T-DISC 1.1.1
+Ripper,RIPPER/SUBSOILER,T-DISC 1.1.1
+"Ripper, deep ripper-subsoiler",RIPPER/SUBSOILER,T-DISC 1.1.1
+"Ripper, intra row","CULTIVATOR, ROW",T-DISC 1.1.1
+"Ripper, intra row and furrow diker","CULTIVATOR, FURROW-OUT",T-DISC 1.1.1
+Rodweeder,WEED MGMT: MULTI-WEEDER OR ROD WEEDER,T-DISC 1.1.1
+"Rodweeder, harrow, spike tooth",WEED MGMT: MULTI-WEEDER OR ROD WEEDER,T-DISC 1.1.1
+Roller harrow,"HARROW, ROLLING",T-DISC 1.1.1
+"Roller packer, flat roller","ROLLER, PACKER",T-DISC 1.1.1
+"Roller, corrugated packer","ROLLER, PACKER",T-DISC 1.1.1
+"Roller, corrugated packer 6 by 16","ROLLER, PACKER",T-DISC 1.1.1
+"Roller, crimp, cover crop","ROLLER, CRIMPER",T-DISC 1.1.1
+"Roller, on beds","ROLLER, PACKER",T-DISC 1.1.1
+"Roller, packer, flat roller","ROLLER, PACKER",T-DISC 1.1.1
+"Roller, residue","ROLLER, PACKER",T-DISC 1.1.1
+"Roller, residue incorporator","ROLLER, CULTI-MULCHER",T-DISC 1.1.1
+"Roller, row shaper","ROLLER, PACKER",T-DISC 1.1.1
+"Roller, smooth","ROLLER, PACKER",T-DISC 1.1.1
+Rolling basket incorporator,"HARROW, ROLLING",T-DISC 1.1.1
+"Rolling cultivator, GE15 ft","CULTIVATOR, ROLLING",T-DISC 1.1.1
+Rotary hoe,"CULTIVATOR, ROTARY HOE",T-DISC 1.1.1
+"Rotary hoe, on heavy soil","CULTIVATOR, ROTARY HOE",T-DISC 1.1.1
+"Rotary hoe, residue","CULTIVATOR, ROTARY HOE",T-DISC 1.1.1
+Roterra,"ROTO-TILLER, ROTO-TILLER DIGGER, ROTERRA",T-DISC 1.1.1
+"Rototiller, field, add residue","ROTO-TILLER, ROTO-TILLER DIGGER, ROTERRA",T-DISC 1.1.1
+"Rototiller, on beds","ROTO-TILLER, ROTO-TILLER DIGGER, ROTERRA",T-DISC 1.1.1
+"Rototiller, row cultivation add residue","ROTO-TILLER, ROTO-TILLER DIGGER, ROTERRA",T-DISC 1.1.1
+"Rototiller, row cultivator","ROTO-TILLER, ROTO-TILLER DIGGER, ROTERRA",T-DISC 1.1.1
+Rotovator-bedder,"CULTIVATOR, ROTOVATOR-BEDDER",T-DISC 1.1.1
+Row conditioner,"CONDITIONER, ROW",T-DISC 1.1.1
+Rubber wheel weed puller,WEED MGMT: RUBBER-WHEEL WEED PULLER,T-DISC 1.1.1
+Sandfighter,"CULTIVATOR, SAND-FIGHTER",T-DISC 1.1.1
+Scalper,WEED MGMT: SCALPER,T-DISC 1.1.1
+Scarifier,"CONDITIONER, FIELD",T-DISC 1.1.1
+"Scraper/pan/grader, clearing/cutting","LEVELING, LAND PLANE-LEVELER",T-DISC 1.1.1
+"Seedbed conditioner: coil tine harrow, rolling basket","HARROW, COILED TINES",T-DISC 1.1.1
+"Seedbed conditioner: coil tine harrow, rolling basket","HARROW, ROLLING",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), coil tine harrow","CONDITIONER, COULTER CADDY, SMOOTH COULTERS",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), coil tine harrow","HARROW, COILED TINES",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), coil tine harrow, rolling basket","CONDITIONER, COULTER CADDY, SMOOTH COULTERS",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), coil tine harrow, rolling basket","HARROW, COILED TINES",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), coil tine harrow, rolling basket","HARROW, ROLLING",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), field cult, spike harrow","CONDITIONER, COULTER CADDY, SMOOTH COULTERS",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), field cult, spike harrow","CULTIVATOR, FIELD",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), field cult, spike harrow","HARROW, SPIKE TOOTH OR SPRING TOOTH",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), rotary harrow","CONDITIONER, COULTER CADDY, SMOOTH COULTERS",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), rotary harrow","HARROW, POWERED SPIKE TOOTH",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), rotary harrow, rolling basket","CONDITIONER, COULTER CADDY, SMOOTH COULTERS",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), rotary harrow, rolling basket","HARROW, POWERED SPIKE TOOTH",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), rotary harrow, rolling basket","HARROW, ROLLING",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), spike harrow","CONDITIONER, COULTER CADDY, SMOOTH COULTERS",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), spike harrow","HARROW, SPIKE TOOTH OR SPRING TOOTH",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), spike harrow, rolling basket","CONDITIONER, COULTER CADDY, SMOOTH COULTERS",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), spike harrow, rolling basket","HARROW, SPIKE TOOTH OR SPRING TOOTH",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (smooth), spike harrow, rolling basket","HARROW, ROLLING",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), coil tine harrow","CULTIVATOR, ROTARY HOE",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), coil tine harrow","HARROW, COILED TINES",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), coil tine harrow, rolling basket","CULTIVATOR, ROTARY HOE",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), coil tine harrow, rolling basket","HARROW, COILED TINES",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), coil tine harrow, rolling basket","HARROW, ROLLING",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), field cult, spike harrow","CULTIVATOR, ROTARY HOE",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), field cult, spike harrow","CULTIVATOR, FIELD",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), field cult, spike harrow","HARROW, SPIKE TOOTH OR SPRING TOOTH",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), rotary harrow","CULTIVATOR, ROTARY HOE",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), rotary harrow","HARROW, POWERED SPIKE TOOTH",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), rotary harrow, rolling basket","CULTIVATOR, ROTARY HOE",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), rotary harrow, rolling basket","HARROW, POWERED SPIKE TOOTH",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), rotary harrow, rolling basket","HARROW, ROLLING",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), spike harrow","CULTIVATOR, ROTARY HOE",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), spike harrow","HARROW, SPIKE TOOTH OR SPRING TOOTH",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), spike harrow, rolling basket","CULTIVATOR, ROTARY HOE",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), spike harrow, rolling basket","HARROW, SPIKE TOOTH OR SPRING TOOTH",T-DISC 1.1.1
+"Seedbed conditioner: coulter caddy (fluted), spike harrow, rolling basket","HARROW, ROLLING",T-DISC 1.1.1
+"Seedbed finisher, single disk, rotary harrow","HARROW, DISK, SINGLE",T-DISC 1.1.1
+"Seedbed finisher, single disk, rotary harrow","HARROW, POWERED SPIKE TOOTH",T-DISC 1.1.1
+Seedbed finisher: coil tine harrow,"HARROW, COILED TINES",T-DISC 1.1.1
+"Seedbed finisher: coil tine harrow, rolling basket","HARROW, COILED TINES",T-DISC 1.1.1
+"Seedbed finisher: coil tine harrow, rolling basket","HARROW, ROLLING",T-DISC 1.1.1
+Seedbed finisher: rotary harrow,"HARROW, POWERED SPIKE TOOTH",T-DISC 1.1.1
+"Seedbed finisher: single disk, coil tine harrow","HARROW, DISK, SINGLE",T-DISC 1.1.1
+"Seedbed finisher: single disk, coil tine harrow","HARROW, COILED TINES",T-DISC 1.1.1
+"Seedbed finisher: spike harrow, rolling basket","HARROW, SPIKE TOOTH OR SPRING TOOTH",T-DISC 1.1.1
+"Seedbed finisher: spike harrow, rolling basket","HARROW, ROLLING",T-DISC 1.1.1
+"Seeder, corrugated packer","PLANTER, AIR-DELIVERY",T-DISC 1.1.1
+"Seeder, corrugated packer","CULTIVATOR, CULTIWEEDER",T-DISC 1.1.1
+"Seeder, dormant, corrugated packer","PLANTER, AIR-DELIVERY",T-DISC 1.1.1
+"Seeder, dormant, corrugated packer","CULTIVATOR, CULTIWEEDER",T-DISC 1.1.1
+"Shred residue, 6 inch stubble",RESIDUE MGMT: MULCH TREADER,T-DISC 1.1.1
+Single disk,"HARROW, DISK, SINGLE",T-DISC 1.1.1
+Slip plow 48 to 60 inches deep,RIPPER/SUBSOILER,T-DISC 1.1.1
+Soil aerator,AERATOR,T-DISC 1.1.1
+"Soil finisher: field cult, chop, spike harrow, rolling basket","CULTIVATOR, FIELD",T-DISC 1.1.1
+"Soil finisher: field cult, chop, spike harrow, rolling basket",RESIDUE MGMT: STALK PULLER CHOPPER,T-DISC 1.1.1
+"Soil finisher: field cult, chop, spike harrow, rolling basket","HARROW, SPIKE TOOTH OR SPRING TOOTH",T-DISC 1.1.1
+"Soil finisher: field cult, chop, spike harrow, rolling basket","HARROW, ROLLING",T-DISC 1.1.1
+"Soil finisher: field cult, coil tine harrow, rolling basket","CULTIVATOR, FIELD",T-DISC 1.1.1
+"Soil finisher: field cult, coil tine harrow, rolling basket","HARROW, COILED TINES",T-DISC 1.1.1
+"Soil finisher: field cult, coil tine harrow, rolling basket","HARROW, ROLLING",T-DISC 1.1.1
+"Soil finisher: field cultivator, mulch treader","CULTIVATOR, FIELD",T-DISC 1.1.1
+"Soil finisher: field cultivator, mulch treader",RESIDUE MGMT: MULCH TREADER,T-DISC 1.1.1
+"Soil finisher: field cultivator, rotary harrow","CULTIVATOR, FIELD",T-DISC 1.1.1
+"Soil finisher: field cultivator, rotary harrow","HARROW, POWERED SPIKE TOOTH",T-DISC 1.1.1
+"Soil finisher: single disk, field cultivator, coil tine harrow","CULTIVATOR, FIELD",T-DISC 1.1.1
+"Soil finisher: single disk, field cultivator, coil tine harrow","HARROW, DISK, SINGLE",T-DISC 1.1.1
+"Soil finisher: single disk, field cultivator, coil tine harrow","HARROW, COILED TINES",T-DISC 1.1.1
+"Soil finisher: single disk, field cultivator, coil tine harrow, rolling basket","CULTIVATOR, FIELD",T-DISC 1.1.1
+"Soil finisher: single disk, field cultivator, coil tine harrow, rolling basket","HARROW, DISK, SINGLE",T-DISC 1.1.1
+"Soil finisher: single disk, field cultivator, coil tine harrow, rolling basket","HARROW, COILED TINES",T-DISC 1.1.1
+"Soil finisher: single disk, field cultivator, coil tine harrow, rolling basket","HARROW, ROLLING",T-DISC 1.1.1
+"Soil finisher: single disk, rotary harrow","HARROW, DISK, SINGLE",T-DISC 1.1.1
+"Soil finisher: single disk, rotary harrow","HARROW, POWERED SPIKE TOOTH",T-DISC 1.1.1
+Spader,"SPADER, GT4IN",T-DISC 1.1.1
+"Spader, shallow depth","SPADER, SHALLOW, LE4IN",T-DISC 1.1.1
+"Stalk chopper, rolling",RESIDUE MGMT: STALK PULLER CHOPPER,T-DISC 1.1.1
+"Stalk chopper, rolling, light disturbance",RESIDUE MGMT: STALK PULLER CHOPPER,T-DISC 1.1.1
+"Stalk chopper, rolling, on ridgetill ridges",RESIDUE MGMT: STALK PULLER CHOPPER,T-DISC 1.1.1
+"Stalk chopper, rolling, strip",RESIDUE MGMT: STALK PULLER CHOPPER,T-DISC 1.1.1
+"Stalk chopper, rotary",RESIDUE MGMT: STALK PULLER CHOPPER,T-DISC 1.1.1
+"Stalk chopper, strip rotary",RESIDUE MGMT: STALK PULLER CHOPPER,T-DISC 1.1.1
+Stalk puller,RESIDUE MGMT: STALK PULLER CHOPPER,T-DISC 1.1.1
+Stalk puller high disturbance,RESIDUE MGMT: STALK PULLER CHOPPER,T-DISC 1.1.1
+S-Tine Cultivator,"HARROW, FLEX-TINE",T-DISC 1.1.1
+Strip till bed conditioner,"CONDITIONER, ROW",T-DISC 1.1.1
+Striptiller w/ middlebuster on beds,"CULTIVATOR, MIDDLE-BUSTER, LE5IN",T-DISC 1.1.1
+Subsoil disk ripper,RIPPER/SUBSOILER,T-DISC 1.1.1
+"Subsoil disk ripper, coulter smooth, rolling basket",RIPPER/SUBSOILER,T-DISC 1.1.1
+"Subsoil disk ripper, roller smooth",RIPPER/SUBSOILER,T-DISC 1.1.1
+Subsoiler,RIPPER/SUBSOILER,T-DISC 1.1.1
+Subsoiler bedder (ripper/hipper),RIPPER/SUBSOILER,T-DISC 1.1.1
+Subsoiler leveler,"LEVELING, LEVELER",T-DISC 1.1.1
+"Subsoiler ripper, 24 to 40 inches deep",RIPPER/SUBSOILER,T-DISC 1.1.1
+"Subsoiler, 12 foot spacing","CULTIVATOR, ROW",T-DISC 1.1.1
+"Subsoiler, in row","CULTIVATOR, ROW",T-DISC 1.1.1
+"Subsoiler, in row strip conditioner","CULTIVATOR, ROW",T-DISC 1.1.1
+"Subsoiler, in row strip conditioner, 40 inch row","CULTIVATOR, ROW",T-DISC 1.1.1
+"Subsoiler, inline heavy shanks with coulter caddy",RIPPER/SUBSOILER,T-DISC 1.1.1
+"Subsoiler, inline with coulter caddy",RIPPER/SUBSOILER,T-DISC 1.1.1
+"Subsoiler, rolling stalk chopper, roller, mulch treader",RIPPER/SUBSOILER,T-DISC 1.1.1
+"Subsoiler, wide spacing","CULTIVATOR, ROW",T-DISC 1.1.1
+"Subsoiler; stalk chopper, rolling basket",RIPPER/SUBSOILER,T-DISC 1.1.1
+Sweep plow 20-40 inch wide,"PLOW, SWEEP",T-DISC 1.1.1
+Sweep plow wider than 40 inch w/ mulch treader,"PLOW, SWEEP",T-DISC 1.1.1
+"Sweep plow, under bed","PLOW, SWEEP",T-DISC 1.1.1
+"Sweep plow, wider than 40 inches","PLOW, SWEEP",T-DISC 1.1.1
+"Sweep, single under row","PLOW, SWEEP",T-DISC 1.1.1
+"Sweep, single under row, regrow perennial","PLOW, SWEEP",T-DISC 1.1.1
+Triple K,"CULTIVATOR, TRIPLE-K",T-DISC 1.1.1
+V-Ripper,RIPPER/SUBSOILER,T-DISC 1.1.1
+"drill, no till; average","PLANTER, DRILL, NO-TILL, MIN-TILL",NAPESHM crosswalk
+"drill or airseeder, double disk","PLANTER, DRILL, AIR DELIVERY",NAPESHM crosswalk
+"drill or airseeder, double disk","HARROW, DISK, TANDEM, LIGHTDUTY",NAPESHM crosswalk
+"disk, primary operation; average","HARROW, DISK, TANDEM, HEAVYDUTY",NAPESHM crosswalk
+harvest,"HARVEST, GRAIN",NAPESHM crosswalk
+non-selective herbicide(s) (herbicide),SPRAYER/AERIAL/BROADCAST APPLICATION,NAPESHM crosswalk
+disc harrow,"HARROW, DISK, TANDEM, HEAVYDUTY",NAPESHM crosswalk
+row planter,"PLANTER, REGULAR",NAPESHM crosswalk
+chisel plow; average,"PLOW, CHISEL",NAPESHM crosswalk
+"planter, double disk opener; average","PLANTER, REGULAR",NAPESHM crosswalk
+grain drill,"PLANTER, DRILL, DISCGRAIN",NAPESHM crosswalk
+furrow formation,"BED SHAPING, BEDDER SHAPER",NAPESHM crosswalk
+"cultivator, field; average","CULTIVATOR, FIELD",NAPESHM crosswalk
+"planter, furrow opener in 4 inch deep furrows","PLANTER, REGULAR",NAPESHM crosswalk
+"planter, furrow opener in 4 inch deep furrows","CULTIVATOR, FURROW-OUT",NAPESHM crosswalk
+"planter, double disk opnr","PLANTER, REGULAR",NAPESHM crosswalk
+"cultivator, row; average","CULTIVATOR, ROW",NAPESHM crosswalk
+row cultivator,"CULTIVATOR, ROW",NAPESHM crosswalk
+"planter, sprig, no-till","PLANTER, NO-TILL",NAPESHM crosswalk
+air seeder,"PLANTER, DRILL, AIR DELIVERY",NAPESHM crosswalk
+"drill or air seeder, hoe/chisel openers 12-15 in spac. w/ fert openers","PLANTER, DRILL, AIR DELIVERY",NAPESHM crosswalk
+"drill or air seeder, hoe/chisel openers 12-15 in spac. w/ fert openers","HARROW, DISK, CHISEL (MULCH TILLER)",NAPESHM crosswalk
+native warm season grasses,"PLANTER, INTER/OVER SEEDER",NAPESHM crosswalk
+"Disk, primary operation; average","HARROW, DISK, TANDEM, HEAVYDUTY",NAPESHM crosswalk
+seedbed or soil finisher; average,"HARROW, FINISHING",NAPESHM crosswalk
+"manure spreader, solid and semi-solid",SPRAYER/AERIAL/BROADCAST APPLICATION,NAPESHM crosswalk
+"cultivator, field 6-12 in sweeps, coil tine har","CULTIVATOR, FIELD",NAPESHM crosswalk
+"cultivator, field 6-12 in sweeps, coil tine har","HARROW, COILED TINES",NAPESHM crosswalk
+"disk, tandem light finishing 2nd pass","HARROW, DISK, TANDEM, LIGHTDUTY",NAPESHM crosswalk
+"Cultivator, field; average","CULTIVATOR, FIELD",NAPESHM crosswalk
+"grain drill, average","PLANTER, DRILL, DISCGRAIN",NAPESHM crosswalk
+seedbed finisher,"HARROW, FINISHING",NAPESHM crosswalk
+"fert applic. shank low disturbance, 12 in","NUTRIENT MGMT: FERT APPL, SHANK",NAPESHM crosswalk
+"drill or airseeder, double disk opener, w/ fert openers","PLANTER, DRILL, AIR DELIVERY",NAPESHM crosswalk
+"drill or airseeder, double disk opener, w/ fert openers","HARROW, DISK, TANDEM, LIGHTDUTY",NAPESHM crosswalk
+double disc opener,"PLANTER, REGULAR",NAPESHM crosswalk
+"rototiller, field","ROTO-TILLER, ROTO-TILLER DIGGER, ROTERRA",NAPESHM crosswalk
+rototiller,"ROTO-TILLER, ROTO-TILLER DIGGER, ROTERRA",NAPESHM crosswalk
+"chisel, st. pt. 12 in deep","PLOW, CHISEL",NAPESHM crosswalk
+"cutlivator, field; average","CULTIVATOR, FIELD",NAPESHM crosswalk
+bed formation,"BED SHAPING, BEDDER DISK/DISK-HIPPER, DEPTH LE4.5IN",NAPESHM crosswalk
+"sprayer, post-emergence",SPRAYER/AERIAL/BROADCAST APPLICATION,NAPESHM crosswalk
+strip tiller,"NUTRIENT MGMT: FERT APPL, STRIP TILL",NAPESHM crosswalk
+"shredder, flail or rotary",SPRAYER/AERIAL/BROADCAST APPLICATION,NAPESHM crosswalk
+field cultivator,"CULTIVATOR, FIELD",NAPESHM crosswalk
+residue management,SPRAYER/AERIAL/BROADCAST APPLICATION,NAPESHM crosswalk
+"grain drill or airseeder, double disc","PLANTER, DRILL, AIR DELIVERY",NAPESHM crosswalk
+"grain drill or airseeder, double disc","HARROW, DISK, TANDEM, LIGHTDUTY",NAPESHM crosswalk
+"commercial farm harvester, 15 ft wide","HARVEST, GRAIN",NAPESHM crosswalk
+"sweep plow, wider than 40 in","PLOW, SWEEP",NAPESHM crosswalk
+vacuum planter,"PLANTER, REGULAR",NAPESHM crosswalk
+"weed control, hoeing in row",WEED MGMT: SCALPER,NAPESHM crosswalk
+"lister, 40 in","PLANTER, LISTER-BEDDER",NAPESHM crosswalk
+"planter, double disk opener","PLANTER, REGULAR",NAPESHM crosswalk
+"Planter, double disk opnr","PLANTER, REGULAR",NAPESHM crosswalk
+"lister, 30 in","PLANTER, LISTER-BEDDER",NAPESHM crosswalk
+"sprayer, post emergence",SPRAYER/AERIAL/BROADCAST APPLICATION,NAPESHM crosswalk
+"manure spreader, slurry",SPRAYER/AERIAL/BROADCAST APPLICATION,NAPESHM crosswalk
+"disk chisel 8""","PLOW, COULTER-CHISEL",NAPESHM crosswalk
+"regular combine, grain harvester","HARVEST, GRAIN",NAPESHM crosswalk
+"cultivator, field 6-12 in sweeps","CULTIVATOR, FIELD",NAPESHM crosswalk
+cotton,"PLANTER, INTER/OVER SEEDER",NAPESHM crosswalk
+soybean,"PLANTER, INTER/OVER SEEDER",NAPESHM crosswalk
+strip tilling (PI reference),"NUTRIENT MGMT: FERT APPL, STRIP TILL",NAPESHM crosswalk
+"chisel plow, disk, twst. pts., cover disks","PLOW, COULTER-CHISEL",NAPESHM crosswalk
+"Cultivator, field 6-12 in sweeps, coil tine har","CULTIVATOR, FIELD",NAPESHM crosswalk
+"Cultivator, field 6-12 in sweeps, coil tine har","HARROW, COILED TINES",NAPESHM crosswalk
+"fert applic. coulter, high press. inject  12 in","NUTRIENT MGMT: FERT APPL, COULTER",NAPESHM crosswalk
+furrow shaper,"BED SHAPING, BEDDER SHAPER",NAPESHM crosswalk
+sorghum,"PLANTER, INTER/OVER SEEDER",NAPESHM crosswalk
+"harvest, peanut digger","CULTIVATOR, MIDDLE-BUSTER, GT5IN",NAPESHM crosswalk
+oats,"PLANTER, DRILL, DISCGRAIN",NAPESHM crosswalk
+"Drill or airseeder, double disk","PLANTER, DRILL, AIR DELIVERY",NAPESHM crosswalk
+"Drill or airseeder, double disk","HARROW, DISK, TANDEM, LIGHTDUTY",NAPESHM crosswalk
+harvest winter wheat,"HARVEST, GRAIN",NAPESHM crosswalk
+disc plow,"PLOW, DISK",NAPESHM crosswalk
+"sprayer, pre-emergence",SPRAYER/AERIAL/BROADCAST APPLICATION,NAPESHM crosswalk
+winter wheat,"PLANTER, INTER/OVER SEEDER",NAPESHM crosswalk
+"drill or air seeder, hoe/chisel openers 6-12 in spac. w/fert openers","PLANTER, DRILL, AIR DELIVERY",NAPESHM crosswalk
+"drill or air seeder, hoe/chisel openers 6-12 in spac. w/fert openers","HARROW, DISK, CHISEL (MULCH TILLER)",NAPESHM crosswalk
+chisel 15 cm depth,"HARROW, DISK, CHISEL (MULCH TILLER)",NAPESHM crosswalk
+disc plow 30 cm depth,"PLOW, DISK",NAPESHM crosswalk
+hand tillage,WEED MGMT: SCALPER,NAPESHM crosswalk
+disc harrow light,"HARROW, DISK, TANDEM, LIGHTDUTY",NAPESHM crosswalk
+disc harrow 20 cm depth,"HARROW, DISK, TANDEM, HEAVYDUTY",NAPESHM crosswalk
+drum roller bed shaper,"BED SHAPING, BEDDER SHAPER",NAPESHM crosswalk
+harvest grain,"HARVEST, GRAIN",NAPESHM crosswalk
+"disk, offset, heavy 12 in depth","HARROW, DISK, OFFSET, HEAVYDUTY",NAPESHM crosswalk
+cutting spreading,SPRAYER/AERIAL/BROADCAST APPLICATION,NAPESHM crosswalk
+harrow,"HARROW, SPIKE TOOTH OR SPRING TOOTH",NAPESHM crosswalk
+no till drill,"PLANTER, DRILL, NO-TILL, MIN-TILL",NAPESHM crosswalk
+bahiagrass,"PLANTER, INTER/OVER SEEDER",NAPESHM crosswalk
+peanut,"PLANTER, DRILL, DISCGRAIN",NAPESHM crosswalk
+"harvest, dig root crops 12 in depth res. buried","CULTIVATOR, MIDDLE-BUSTER, GT5IN",NAPESHM crosswalk
+"planter, potato, 6 in beds after small grains","PLANTER, LISTER-BEDDER",NAPESHM crosswalk
+"harvest, dig root crops 12 in depth res. on surf","CULTIVATOR, MIDDLE-BUSTER, GT5IN",NAPESHM crosswalk
+"coulter caddy, w/ fluted coulters","CONDITIONER, COULTER CADDY, SMOOTH COULTERS",NAPESHM crosswalk
+"disk, tandem secondary op.","HARROW, DISK, TANDEM, LIGHTDUTY",NAPESHM crosswalk
+"disk, tandem heavy primary op.","HARROW, DISK, TANDEM, HEAVYDUTY",NAPESHM crosswalk
+"planter, double disk opener on 8 inch high beds","PLANTER, REGULAR",NAPESHM crosswalk
+residue spreading,SPRAYER/AERIAL/BROADCAST APPLICATION,NAPESHM crosswalk
+peanut digger,"CULTIVATOR, MIDDLE-BUSTER, GT5IN",NAPESHM crosswalk
+disc 30 cm depth,"PLOW, DISK",NAPESHM crosswalk
+"harrow, other average","HARROW, SPIKE TOOTH OR SPRING TOOTH",NAPESHM crosswalk
+"planter, double disk opener on 12 inch high beds","PLANTER, REGULAR",NAPESHM crosswalk
+"disk, tandem light finishing 3rd pass","HARROW, DISK, TANDEM, LIGHTDUTY",NAPESHM crosswalk
+"disk, tandem light finishing 4th pass","HARROW, DISK, TANDEM, LIGHTDUTY",NAPESHM crosswalk
+"planter, transplanter, vegetable on 8 inch high beds","PLANTER, REGULAR",NAPESHM crosswalk
+"harvest, vine crops, mechanical","HARVEST, OILSEEDS",NAPESHM crosswalk
+"strip till, average","NUTRIENT MGMT: FERT APPL, STRIP TILL",NAPESHM crosswalk
+"cultivator, rotary + cultivator, field w/ spike points","ROTO-TILLER, ROTO-TILLER DIGGER, ROTERRA",NAPESHM crosswalk
+"cultivator, rotary + cultivator, field w/ spike points","CULTIVATOR, FIELD",NAPESHM crosswalk
+tall fescue,"PLANTER, INTER/OVER SEEDER",NAPESHM crosswalk
+fert. applic. anhyd knife 30 in,"NUTRIENT MGMT: FERT APPL, ANYHD KNIFE",NAPESHM crosswalk
+"shredder, rotary mower",SPRAYER/AERIAL/BROADCAST APPLICATION,NAPESHM crosswalk
+drill or air seeder; paired,"PLANTER, DRILL, AIR DELIVERY",NAPESHM crosswalk
+drill or air seeder; paired,"HARROW, DISK, TANDEM, LIGHTDUTY",NAPESHM crosswalk
+drill; generic deep furrow,"PLANTER, DRILL, LISTER",NAPESHM crosswalk
+"6 row planter, double disc opener, fertilizer disc (2x2)","PLANTER, REGULAR",NAPESHM crosswalk
+"6 row planter, double disc opener, fertilizer disc (2x2)","HARROW, DISK, SINGLE",NAPESHM crosswalk
+striptiller w/middlebuster on beds,"CULTIVATOR, MIDDLE-BUSTER, LE5IN",NAPESHM crosswalk
+cultivation,"CULTIVATOR, ROW",NAPESHM crosswalk
+disk plow,"PLOW, DISK",NAPESHM crosswalk
+harrow disc 20 cm depth,"HARROW, DISK, TANDEM, HEAVYDUTY",NAPESHM crosswalk
+harrow 20 cm depth,"HARROW, SPIKE TOOTH OR SPRING TOOTH",NAPESHM crosswalk
+leveling,"LEVELING, LEVELER",NAPESHM crosswalk
+"planter, double disk opnr w/fluted coulter with starter fertilizer","PLANTER, REGULAR",NAPESHM crosswalk
+"planter, double disk opnr w/fluted coulter with starter fertilizer","HARROW, DISK, TANDEM, LIGHTDUTY",NAPESHM crosswalk
+"planting, no-til manually","PLANTER, NO-TILL",NAPESHM crosswalk
+"drill or air seeder, hoe/chisel openers 12-15 in spac.","PLANTER, DRILL, AIR DELIVERY",NAPESHM crosswalk
+"drill or air seeder, hoe/chisel openers 12-15 in spac.","HARROW, DISK, CHISEL (MULCH TILLER)",NAPESHM crosswalk
+"disk, typical primary tillage","HARROW, DISK, TANDEM, HEAVYDUTY",NAPESHM crosswalk
+"planting, broadcast seeder","PLANTER, INTER/OVER SEEDER",NAPESHM crosswalk
+swath forage,"HARVEST, FORAGE",NAPESHM crosswalk
+bale forage,"HARVEST, FORAGE",NAPESHM crosswalk
+row interseeder; pi reference,"PLANTER, INTER/OVER SEEDER",NAPESHM crosswalk
+"sweep, average","PLOW, SWEEP",NAPESHM crosswalk
+"chisel, st. pt. 5 in deep","HARROW, DISK, CHISEL (MULCH TILLER)",NAPESHM crosswalk
+row cultivator; average,"CULTIVATOR, ROW",NAPESHM crosswalk
+sweep plow 20-40 in wide,"PLOW, SWEEP",NAPESHM crosswalk
+"fert. applic. anhyd knife 15 in spacing, coil tine har","NUTRIENT MGMT: FERT APPL, ANYHD KNIFE",NAPESHM crosswalk
+"fert. applic. anhyd knife 15 in spacing, coil tine har","HARROW, COILED TINES",NAPESHM crosswalk
+rod weeder; generic,WEED MGMT: MULTI-WEEDER OR ROD WEEDER,NAPESHM crosswalk
+"6 row planter, double disc opener","PLANTER, REGULAR",NAPESHM crosswalk
+disk harrow,"HARROW, DISK, TANDEM, HEAVYDUTY",NAPESHM crosswalk
+Bed formation,"BED SHAPING, BEDDER DISK/DISK-HIPPER, DEPTH LE4.5IN",NAPESHM crosswalk
+harrow disc,"HARROW, DISK, TANDEM, HEAVYDUTY",NAPESHM crosswalk
+"chisel, st. pt. 30 cm deep","PLOW, CHISEL",NAPESHM crosswalk
+row planter double disc opener,"PLANTER, REGULAR",NAPESHM crosswalk
+sweep,"PLOW, SWEEP",NAPESHM crosswalk
+deep disc plow 30 cm,"PLOW, DISK",NAPESHM crosswalk
+"planter, double disk opnr w/fluted coulter no fertilizer applied","PLANTER, REGULAR",NAPESHM crosswalk
+"planter, double disk opnr w/fluted coulter no fertilizer applied","HARROW, DISK, TANDEM, LIGHTDUTY",NAPESHM crosswalk
+Harvest,"HARVEST, GRAIN",NAPESHM crosswalk
+"roller, crimp, covercrop","ROLLER, CRIMPER",NAPESHM crosswalk
+spray with pre emerge herbicide at planting,SPRAYER/AERIAL/BROADCAST APPLICATION,NAPESHM crosswalk
+"chisel plow, coulter, st. pts.","PLOW, COULTER-CHISEL",NAPESHM crosswalk
+"harvest grass seed, burn forage","HARVEST, OILSEEDS",NAPESHM crosswalk

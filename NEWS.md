@@ -1,89 +1,103 @@
-# SHMI 1.2.0
+---
+editor_options: 
+  markdown: 
+    wrap: 72
+---
 
-## Scoring changes (national scores change; re-run `prepare_shmi_inputs()`)
+# SHMI 1.0.0
 
-* **Calendar-year rotation window.** `prepare_shmi_inputs()` now sets the
-  rotation window from 1 January of the first year with a record to
-  31 December of the last (`rotation_window = "calendar"`), or exactly to
-  the override / sample dates. SHMI <= 1.1.0 used the first and last
-  recorded events, which dropped the bare periods before the first planting
-  or tillage and after the last harvest from the Cover denominator. That
-  made the denominator depend on management and inflated Cover, most in
-  winter and spring. `rotation_window = "events"` reproduces the old
-  behaviour. All four sub-indices now share one window.
+First public release.
 
-* **Animal presence spans the grazing period.** `compute_orginput()` gains
-  `animal_presence`. The official value is now `"span"`: every calendar
-  year overlapped by `AD_start_date`-`AD_end_date` counts. SHMI <= 1.1.0
-  (`"start"`) counted a multi-year grazing period only in its first year.
+## The index
 
-* **Crop episodes are clipped to the rotation window** before Cover and
-  Diversity are computed (`clip_crop_to_rotation()`, setting
-  `clip_to_rotation`). Inputs from `prepare_shmi_inputs()` already satisfy
-  this; the change protects hand-built inputs.
+SHMI scores a field's management record from 0 to 100:
 
-* **Official weights are provisional.** The season, amendment/animal and
-  pillar weights shown for 1.2.0 are the 1.1.0 values, which were
-  calibrated under the old definitions. They will be re-estimated under the
-  1.2.0 definitions before release.
+SHMI = 0.400 Cover + 0.317 OrgInput + 0.153 Diversity + 0.130 InvDist
 
-* **Intensive-tillage end for crops without an end date.** A crop with no
-  harvest or termination record now ends on the first day after planting
-  with intensive tillage (the day's passes sum to STIR >= 80, or EPA daily
-  tillage intensity >= 0.252, the conventional-tillage class boundary)
-  whenever that comes before its imputed end (next planting or end of the
-  window). New argument `tillage_end` in `prepare_shmi_inputs()`
-  (`"auto"`, `"STIR"`, `"EPA"`, `"none"`); logged as `end_intensive_tillage`.
+Each sub-index also runs from 0 to 100.
 
-## New functions
+-   **Cover**: share of days with living plants in each unit's growing
+    and non-growing seasons, set by its climate. A month is in the
+    growing season when its mean temperature is at least 5 °C and,
+    unless the unit is irrigated, its precipitation (mm) is at least
+    twice its temperature (°C). The growing season counts 0.860 and the
+    rest of the year 0.140.
+-   **Organic Inputs**: share of years with an organic amendment or
+    grazing animals. Grazing counts in every calendar year a grazing
+    period spans.
+-   **Diversity**: average number of plant species per year (0 for one
+    species, 100 for eight or more). Placeholder mixtures such as
+    "8-species mix" count as that many species.
+-   **Inverse Disturbance**: tillage intensity computed exactly as
+    USDA's Tillage Disturbance Index for Soil Carbon (T-DISC, version
+    1.1.1). Each cash crop defines a crop interval; passes fall into
+    five tillage windows around planting; implements combine within a
+    window by the EPA soil-mixing model; and each interval is rated by
+    its most intense window. Each unit also receives T-DISC's
+    designation: no-till, reduced till or conventional till. STIR
+    records can be scored on the same intervals and windows.
 
-* `compute_cover_components()`, `compute_orginput_components()` and
-  `compute_shmi_components()` return the seasonal cover proportions and the
-  amendment/animal year proportions. Cover and OrgInput are weighted means
-  of these, so weights can be evaluated or estimated without recomputing
-  the sub-indices. `compute_cover()` and `compute_orginput()` are now
-  implemented on top of them (one implementation for scoring and
-  calibration).
-* `clip_crop_to_rotation()`.
-* `shmi_window_report()` lists units affected by the window and animal
-  definitions.
+## Calibration
 
-## Bug fixes and robustness
+The weights were calibrated against a soil-health score built from 11
+laboratory indicators, adjusted for climate and soil texture, on 354 US
+plots at 74 sites of the North American Project to Evaluate Soil Health
+Measurements (NAPESHM). Each weight is the median of 1,000
+cross-validated fits, and every weight was positive in all of them. For
+sites held out of the fitting, SHMI explained about a quarter of the
+differences in soil health and ranked practices in the right order at
+82% of sites. SHMI is calibrated for US systems; other regions should
+recalibrate.
 
-* `build_shmi()` stops on unknown setting names (a misspelled weight used to
-  be ignored silently) and on invalid values (e.g. `hill = 3`,
-  `max_div <= 1`, negative weights, all-zero weight groups).
-* `build_shmi()` requires `shmi_inputs$mgt` and stops on duplicated
-  `MGT_combo`; results record `rotation_window`.
-* `compute_cover()` and `compute_orginput()` reject negative weights; zero
-  weights are allowed.
-* `compute_cover()` treats fallow names case- and whitespace-insensitively,
-  as `compute_diversity()` already did.
-* `compute_disturbance()` caps annual TI at 1 explicitly (EPA sums could
-  exceed 1 and relied on a nearest-midpoint fallback) and classifies years
-  with a vectorized `findInterval()`. Class assignments are unchanged.
-* `prepare_shmi_inputs()`:
-  * animal periods without an end date are no longer dropped by
-    `start_date_override`;
-  * `end_at_sample_date = TRUE` keeps (and reports) units with no
-    `MGT_sample_date` instead of silently removing all their records, and
-    parses the date with the package date parser;
-  * stops if `start_date_override` is after `end_date_override`, and notes
-    overrides not on calendar-year boundaries;
-  * checks that every crop episode lies inside its rotation window.
+## The workbook
 
-* New data checks in `prepare_shmi_inputs()` (no score change):
-  `end_window_light_tillage` (crop runs to the end of the window although
-  lighter tillage is recorded after planting), `start_imputed_candidates`
-  (imputed planting date, with the disturbance dates that may be the
-  planting), and `no_crop_records` (unit scored as bare soil because it has
-  no crop records).
-* The `end_imputed_after_disturbance` check was removed: it mostly flagged
-  in-season cultivation, and crops ended by intensive tillage are now
-  handled by the scoring rule above.
+-   A standard Excel workbook (`download_shmi_template()`), with a
+    completed example (`download_shmi_example()`, `get_shmi_example()`).
+-   **Mgt_Unit**: one row per management unit, with its location
+    (`MGT_lat`, `MGT_lon`) and irrigation method (`MGT_irr_cat`, "None"
+    if rain-fed). `MGT_combo` is built automatically from study, farm,
+    field and treatment.
+-   **Crop_Diversity**: one row per crop species per planting, with
+    planting, harvest and termination dates; no sequence numbers are
+    needed.
+-   **Soil_Disturbance**: each pass's implement is chosen from T-DISC's
+    implements, and the workbook shows its T-DISC mixing efficiency and
+    depth. `SD_mixeff` and `SD_depth` (inches) are optional overrides,
+    either alone or together; STIR values have their own column
+    (`SD_stir`).
+-   **Soil_Amendments** and **Animal_Diversity**: organic amendments and
+    grazing periods.
 
-## Tests
+## Preparing the records
 
-* Frozen copies of the 1.1.0 `compute_cover()`, `compute_orginput()` and
-  `compute_disturbance()` are kept in `tests/testthat/helper-legacy-v110.R`;
-  the refactored functions must reproduce them exactly in legacy mode.
+`prepare_shmi_inputs()` reads and validates the workbook and:
+
+-   converts crop records into species episodes, so mixtures, relays,
+    intercrops and perennial cuttings need no special coding;
+-   fills gaps with fixed rules (a crop without an end date ends at the
+    next planting, at the first intensive tillage, or at the end of the
+    record) and reports every assumption, along with data checks that
+    flag likely entry errors, in `$assumptions`;
+-   scores each unit from 1 January of its first year with a record to
+    31 December of its last, or over fixed dates, or up to each unit's
+    soil sampling date;
+-   optionally converts yields and nitrogen rates to kg/ha.
+
+Missing records mean a practice did not happen: no tillage, no cover or
+no organic input.
+
+## Main functions
+
+-   `prepare_shmi_inputs()`: read, validate and prepare a workbook.
+-   `get_shmi_climate()`: WorldClim monthly climate normals at each
+    unit's coordinates (needs `geodata` and `terra`).
+-   `build_shmi()`: the four sub-indices and SHMI, with the official
+    weights (`shmi_weights()`) or custom weights for research.
+-   `compute_cover()`, `compute_orginput()`, `compute_diversity()`,
+    `compute_disturbance()` and `shmi_components()`: the sub-indices on
+    their own.
+-   `tdisc_implements()` and `tdisc_mapping()`: the T-DISC implement
+    values and operation names used for tillage; a user table
+    (`implements =`) can replace or add to them.
+-   `plot_shmi_gauge()` and `plot_shmi_lollipop()`: results for one unit
+    or many.

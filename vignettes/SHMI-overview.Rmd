@@ -15,18 +15,25 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 The Soil Health Management Index (SHMI) turns a record of field management
 into a single 0-100 score. It combines four sub-indices, each also scored
-0-100:
+0-100, with weights calibrated against measured soil health:
 
-- **Cover**: the season-weighted share of days with living plants.
-- **Diversity**: how many crop species were grown, and how evenly, over the
-  rotation.
-- **Inverse disturbance (InvDist)**: how little the soil was tilled; 100
-  means no disturbance.
-- **Organic inputs (OrgInput)**: how often organic amendments were applied
-  and animals were present.
+- **Cover** (weight 0.40): the share of days with living plants in the
+  growing and non-growing seasons, set by the site's climate.
+- **Organic inputs (OrgInput)** (0.32): the share of years with an organic
+  amendment or grazing animals.
+- **Diversity** (0.15): the average number of plant species per year.
+- **Inverse disturbance (InvDist)** (0.13): how little the soil was tilled;
+  100 means no tillage.
 
 This vignette walks through the standard workflow: fill in the Excel
-workbook, prepare the inputs, compute SHMI, and review the results.
+workbook, prepare the inputs, add climate, compute SHMI, and review the
+results.
+
+SHMI 1.0 was calibrated on 354 US plots at 74 sites of the North American
+Project to Evaluate Soil Health Measurements (NAPESHM), mostly annual cropping
+systems plus perennial and native reference systems. It is most reliable for
+comparing practices at the same site, and should be recalibrated before use
+in other regions.
 
 ```{r load}
 library(SHMI)
@@ -52,7 +59,7 @@ fourth row:
 
 | Sheet | Records |
 |---|---|
-| `Mgt_Unit` | Management units (`MGT_combo`), with study, farm, field, and treatment |
+| `Mgt_Unit` | Management units (`MGT_combo`), with study, farm, field, treatment, and optionally the soil sampling date (`MGT_sample_date`) |
 | `Crop_Diversity` | Crops: name, category, and plant, harvest, and termination dates |
 | `Soil_Disturbance` | Tillage and other soil-disturbing passes |
 | `Soil_Amendments` | Amendments, including organic inputs |
@@ -61,6 +68,14 @@ fourth row:
 The disturbance, amendment, and animal sheets may be left empty. Each crop is
 entered by name with its dates; mixtures are entered as one row per species.
 Sequence numbers (`CD_seq_num`) and mixture flags (`CD_mix`) are not needed.
+
+The crop category (`CD_cat`) decides how a crop ends, so it is worth getting
+right. *Cash*, *Cover*, and *Annual* crops end at their harvest or
+termination; *Perennial* (and *Woody perennial*) stands continue through
+harvests until a termination; *Fallow* marks bare-fallow periods. Categories
+are matched regardless of capitalization. A cover crop interseeded, broadcast,
+or frost-seeded into a growing crop is entered with its own planting and
+termination dates, and does not end at the companion crop's harvest.
 
 ## 2. Prepare the inputs
 
@@ -86,10 +101,13 @@ head(inputs$crop)
    episodes. Harvest rows without a plant date are attached to a standing
    perennial as cuttings.
 3. **Fills in missing dates**, following fixed rules. A crop with no plant
-   date starts where the previous crop ended, or at the start of the record.
+   date starts where the previous crop ended, or at the start of the window.
    A crop with no end date ends at the next planting, or at the end of the
-   record.
-4. **Sets the rotation window** from the first to the last recorded event.
+   window, and earlier if intensive tillage is recorded after its planting
+   (see *Crops without an end date* below).
+4. **Sets the evaluation window** from 1 January of the first year with a
+   record to 31 December of the last, so bare periods before the first and
+   after the last recorded event count as bare.
 
 It returns a list:
 
@@ -117,14 +135,37 @@ subset(inputs$assumptions, level == "check")
 
 Rows with `level == "assumption"` are routine gap-filling. Rows with
 `level == "check"` usually point to a data-entry issue worth correcting in
-the workbook. `?prepare_shmi_inputs` describes each type.
+the workbook: a perennial species entered as an annual (or the reverse), an
+unrecognized crop category or placeholder name, an annual crop lasting more
+than 400 days, an imputed planting date (listed with the disturbance dates
+that may be the real planting), a crop running to the end of the window
+although tillage is recorded after planting, or a unit with no crops at all.
+`?prepare_shmi_inputs` describes each type.
+
+### Crops without an end date
+
+A crop with no harvest or termination record first gets an imputed end: the
+next planting or, if there is none, the end of the window. It then ends
+earlier on the first day after planting with intensive tillage, meaning a day
+whose passes sum to STIR ≥ 80, or whose EPA tillage intensity (mixed depth /
+30 cm) is ≥ 0.252. Both thresholds are the lower bound of the
+conventional-tillage class. Each such change is recorded as
+`end_intensive_tillage`:
+
+```{r tillage-end}
+subset(inputs$assumptions, type == "end_intensive_tillage")
+```
+
+The scale is chosen from the data (`tillage_end = "auto"`: EPA when every pass
+has a depth, otherwise STIR); set `tillage_end = "none"` to switch the rule
+off.
 
 ### Choosing the evaluation window
 
-By default the rotation runs from the first to the last recorded event for
-each unit. To score a fixed period instead, give start and end dates; events
-outside the window are dropped, and crops and grazing periods are clipped to
-it:
+By default the window runs over whole calendar years, from the first to the
+last year with a record. To score a fixed period instead, give start and end
+dates; events outside the window are dropped, crops and grazing periods are
+clipped to it, and the window runs exactly between the two dates:
 
 ```{r window, message = FALSE}
 inputs_2022_23 <- prepare_shmi_inputs(
@@ -136,79 +177,105 @@ inputs_2022_23$rot_bounds
 ```
 
 Other options include `exclude` (leave out some units), `end_at_sample_date`
-(stop each unit at its soil sampling date), and `calc_yield` / `calc_n_rate`
-(also return yields in kg/ha and annual nitrogen rates).
+(stop each unit at its soil sampling date, taken from the `MGT_sample_date`
+column of `Mgt_Unit`), and `calc_yield` / `calc_n_rate` (also return yields
+in kg/ha and annual nitrogen rates). Overrides are best placed on calendar-year
+boundaries, because Organic Inputs and Inverse Disturbance are scored by
+calendar year.
 
-## 3. Compute SHMI
+## 3. Add climate
+
+Cover splits the year into a growing and a non-growing season for each
+management unit. A month is in the growing season when its long-term mean
+temperature is at least 5 °C and, unless the unit is irrigated, it is not dry
+(precipitation in mm at least twice the mean temperature in °C).
+Each unit's coordinates (`MGT_lat`, `MGT_lon`) and irrigation method
+(`MGT_irr_cat`) are recorded on the Mgt_Unit tab. `get_shmi_climate()` takes
+the monthly normals from WorldClim at those coordinates (it needs the
+`geodata` and `terra` packages):
+
+```{r climate-download, eval = FALSE}
+climate <- get_shmi_climate(inputs)
+```
+
+The example's units are sprinkler-irrigated, so none of their months is
+treated as too dry for growth:
+
+```{r irrigated}
+inputs$mgt[, c("MGT_combo", "MGT_irr_cat", "irrigated")]
+```
+
+Any source of monthly normals works, as long as the table has one row per
+`MGT_combo` with `tavg_01` ... `tavg_12` (°C) and `prec_01` ... `prec_12`
+(mm). Here, typical values for a temperate site are entered by hand:
+
+```{r climate}
+climate <- data.frame(MGT_combo = inputs$mgt$MGT_combo)
+climate[sprintf("tavg_%02d", 1:12)] <- as.list(c(-5, -3, 3, 10, 16, 21, 24, 23, 18, 11, 4, -2))
+climate[sprintf("prec_%02d", 1:12)] <- as.list(c(20, 25, 50, 70, 110, 115, 95, 85, 70, 50, 35, 25))
+growing_months(climate[1, ])
+```
+
+## 4. Compute SHMI
 
 ```{r build, message = FALSE}
-result <- build_shmi(inputs)
+result <- build_shmi(inputs, climate)
 result$indicator_df
 ```
 
 `indicator_df` has one row per management unit, with `SHMI`, `Cover`,
-`Diversity`, `InvDist`, and `OrgInput`, plus the unit's study, farm, field,
-and treatment. The result also records `settings_used`, `expert_mode`,
-`shmi_version`, and a `timestamp`, so every score can be traced to how it was
-computed.
+`OrgInput`, `Diversity` and `InvDist`, the two parts of Cover
+(`Cover_growing`, `Cover_nongrowing`), the average number of species per year
+(`Richness`), and the unit's study, farm, field and treatment. The result also
+records the weights, the tillage scale used (`dist_meth`), whether the scores
+are official, the package version and a timestamp.
 
-By default, `build_shmi()` uses the official national settings. These include
-the **EPA** soil-mixing model for disturbance, which needs a tillage depth
-(`SD_depth`, in inches) for every pass. If your data record STIR values
-instead of depths, use expert mode (next section) with
-`dist_meth = "STIR"`.
+**Tillage.** `build_shmi()` computes tillage intensity as USDA's Tillage
+Disturbance Index for Soil Carbon (T-DISC) does: per crop interval, from each
+pass's mixing efficiency and depth. Each pass names its implement
+(`SD_equip`), whose values come from T-DISC (`tdisc_implements()`,
+`tdisc_mapping()`) or from a table you supply with `implements =`. `SD_mixeff`
+and `SD_depth` (inches) are overrides: blank means the implement's values, and
+either can be entered alone. STIR values go in `SD_stir` and are scored with
+`dist_meth = "STIR"`, on the same crop intervals and windows.
+The result also gives each unit's T-DISC tillage designation (NT, RT or CT).
 
-## 4. Expert mode
+## 5. Custom weights
 
-For research or scenario analysis, any setting can be changed. Settings you
-do not supply keep their official values:
+For research or scenario analysis, the weights can be changed. They are
+rescaled to sum to 1, and the scores are flagged as not official:
 
-```{r expert, eval = FALSE}
-# Score disturbance with STIR instead of the EPA model
-result_stir <- build_shmi(
-  inputs,
-  settings    = list(dist_meth = "STIR"),
-  expert_mode = TRUE
-)
-
-# Equal weights throughout
-custom <- list(
-  w_winter = 0.25, w_spring = 0.25, w_summer = 0.25, w_fall = 0.25,  # cover
-  hill = 2, max_div = 16,                                            # diversity
-  dist_meth = "STIR", max_stir = 400, ti_rep = "mid",                # disturbance
-  w_amend = 0.5, w_animal = 0.5,                                     # organic inputs
-  w_cover = 0.25, w_diversity = 0.25, w_invdist = 0.25,              # SHMI weights
-  w_orginput = 0.25
-)
-result_custom <- build_shmi(inputs, settings = custom, expert_mode = TRUE)
+```{r custom, eval = FALSE}
+result_equal <- build_shmi(inputs, climate,
+                           weights = c(Cover = 0.25, OrgInput = 0.25,
+                                       Diversity = 0.25, InvDist = 0.25))
+shmi_weights()   # the official weights
 ```
 
-Setting names must match exactly; `?build_shmi` lists them with their
-official values. Scores computed in expert mode are **not comparable** to the
-national SHMI scale.
-
-## 5. How missing records are scored
+## 6. How missing records are scored
 
 SHMI treats a missing record as a practice that did not happen:
 
 - **No disturbance records** means no tillage, so InvDist = 100. This is how
   continuous no-till is represented.
 - **No crop on a given day** means no cover that day. A fallow reference site
-  scores Cover = 0 and Diversity = 0.
+  scores Cover = 0 and Diversity = 0. A unit with management records but no
+  crop records is flagged (`no_crop_records`), so a forgotten crop sheet is
+  not mistaken for a fallow.
 - **No amendment or animal records** means no organic inputs, so
   OrgInput = 0.
 
 Record every tillage pass, planting, harvest, and amendment for the period
 being evaluated, so that gaps in the records are not mistaken for practices.
 
-## 6. The sub-indices one at a time
+## 7. The sub-indices one at a time
 
 Each sub-index can be computed directly from the prepared inputs:
 
 ```{r subindex-inputs}
-compute_cover(inputs$crop, inputs$rot_bounds)
-compute_diversity(inputs$crop)
-compute_disturbance(inputs$dist, inputs$rot_bounds, dist_meth = "EPA")
+compute_cover(inputs$crop, inputs$rot_bounds, climate)
+compute_diversity(inputs$crop, inputs$rot_bounds)
+compute_disturbance(inputs$dist, inputs$rot_bounds, inputs$crop, inputs$harvests)
 compute_orginput(inputs$rot_bounds, inputs$amend, inputs$animal)
 ```
 
@@ -230,33 +297,55 @@ rot_bounds <- data.frame(
   rot_start_yr = 2019,
   rot_end_yr   = 2020
 )
+climate_1 <- climate[1, ]
+climate_1$MGT_combo <- "field_1"
 ```
 
-**Cover** is the season-weighted share of days with a living crop. The rye
-covers most of the winter and spring:
+**Cover** is the share of days with a living crop in each season. The rye
+keeps the soil covered through most of the non-growing season:
 
 ```{r toy-cover}
-compute_cover(crop, rot_bounds)
+compute_cover(crop, rot_bounds, climate_1)
 ```
 
-**Diversity** uses the number of days each species was present. Three
-species, present for unequal lengths of time:
+**Diversity** counts the species present each year: corn and rye in 2019,
+rye and soybean in 2020, so two species a year. One species a year scores 0
+and eight or more score 100:
 
 ```{r toy-diversity}
-compute_diversity(crop)
+compute_diversity(crop, rot_bounds)
 ```
 
-**Inverse disturbance** here uses STIR values, a disk harrow before corn and
-a planter pass each year. The 2019 total is much larger, so 2019 scores
-lower than 2020, and the rotation score is the mean of the two years:
+**Inverse disturbance** is computed as in USDA's T-DISC tool. Each cash crop
+defines a crop interval, ending at its harvest; passes are grouped into
+tillage windows around planting; and the interval is rated by its most
+intense window. Here a heavy disk before corn and a planter pass each year
+are given by implement name, so their mixing efficiency and depth come from
+T-DISC (`tdisc_implements()`):
 
 ```{r toy-disturbance}
 dist <- data.frame(
   MGT_combo = "field_1",
   SD_date   = as.Date(c("2019-04-20", "2019-05-01", "2020-05-10")),
-  SD_mixeff = c(39, 2.4, 2.4)
+  SD_equip  = c("HARROW, DISK, TANDEM, HEAVYDUTY", "PLANTER, REGULAR", "PLANTER, REGULAR")
 )
-compute_disturbance(dist, rot_bounds, dist_meth = "STIR")
+harvests <- data.frame(
+  MGT_combo = "field_1", CD_name = c("Corn", "Soybean"), CD_cat = "cash",
+  harv_date = as.Date(c("2019-09-30", "2020-09-25"))
+)
+res <- compute_disturbance(dist, rot_bounds, crop, harvests, details = TRUE)
+res
+attr(res, "intervals")
+```
+
+The corn interval is rated 0.40 (the disk; conventional till), the soybean
+interval only by its planter pass, and the score is their average weighted by
+interval length. Values for any implement can be replaced with your own:
+
+```{r toy-disturbance-override}
+my_disk <- data.frame(implement = "HARROW, DISK, TANDEM, HEAVYDUTY",
+                      mixing_efficiency = 0.6, depth_cm = 10)
+compute_disturbance(dist, rot_bounds, crop, harvests, implements = my_disk)
 ```
 
 **Organic inputs**: manure applied in one of the two years, and no animals:
@@ -265,11 +354,12 @@ compute_disturbance(dist, rot_bounds, dist_meth = "STIR")
 amend  <- data.frame(MGT_combo = "field_1",
                      SA_date = as.Date("2019-04-01"), SA_cat = "Organic")
 animal <- data.frame(MGT_combo = character(),
-                     AD_start_date = as.Date(character()))
+                     AD_start_date = as.Date(character()),
+                     AD_end_date = as.Date(character()))
 compute_orginput(rot_bounds, amend, animal)
 ```
 
-## 7. Plotting results
+## 8. Plotting results
 
 One unit, with a gauge for each sub-index and for overall SHMI:
 
@@ -285,22 +375,28 @@ plot_shmi_lollipop(result$indicator_df)
 
 Select a unit by name with `MGT_combo = "..."` instead of `row`.
 
-## 8. Interpreting SHMI
+## 9. Interpreting SHMI
 
 Higher scores indicate management that is more supportive of soil health:
-more of the year under living cover, a more diverse rotation, less soil
-disturbance, and more frequent organic inputs.
+more of the year under living cover, more frequent organic inputs, more plant
+species each year, and less tillage.
 
-When comparing units, keep the weights in mind. Under the official settings,
-Cover carries about 45 percent of the weight and Organic Inputs about 32
-percent. A unit with no organic inputs therefore cannot score above about
-68, even with perfect cover, diversity, and no tillage. Looking at the four
-sub-indices alongside SHMI shows which practices drive a unit's score.
+When comparing units, keep the weights in mind. A unit that scores 0 on one
+sub-index cannot score above 100 × (1 − that sub-index's weight): a system
+with no organic inputs, for example, can reach at most 68.3 however well it
+does otherwise. Looking at the four sub-indices alongside SHMI shows which
+practices drive a unit's score. SHMI is most informative for comparing
+practices at the same site; a single score predicted for a new site is
+typically within about 13 soil-health points.
 
 ## Further reading
 
 - `?prepare_shmi_inputs`: workbook structure, crop-date rules, the
   assumptions table, and overrides.
-- `?build_shmi`: official settings and expert mode.
-- `?compute_cover`, `?compute_diversity`, `?compute_disturbance`,
-  `?compute_orginput`: how each sub-index is calculated.
+- `?build_shmi` and `?shmi_weights`: the index and its official weights.
+- `?compute_cover`, `?growing_months`, `?get_shmi_climate`: Cover's seasons
+  and climate.
+- `?compute_diversity`, `?compute_disturbance`, `?compute_orginput`: the other
+  sub-indices.
+- `?shmi_components`: all four sub-indices, for calibration or inspection.
+- `NEWS.md`: what changed in each version.

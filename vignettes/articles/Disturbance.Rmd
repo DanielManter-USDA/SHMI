@@ -2,138 +2,113 @@
 title: "Inverse Disturbance Subindex"
 ---
 
-Mechanistic Inverse Disturbance (Mixing‑Efficiency × Depth Model)
+Tillage Intensity as Computed by USDA's T-DISC
 
 ## **Overview**
 
-The SHMI Inverse Disturbance subindex quantifies **mechanical soil disturbance** using a mechanistic soil‑mixing model based on **mixing efficiency** and **tillage depth**. Disturbance is computed at the **annual** scale and then averaged across the rotation. The final score is expressed as **inverse disturbance**, scaled to **0–100**, where higher values indicate less mechanical disturbance.
-
-This formulation captures both the *intensity* and *cumulative penetration* of tillage operations, reflecting how repeated passes reduce the effective depth of subsequent disturbance.
-
----
-
-## **1. Inputs**
-
-Daily disturbance data for each management unit \( i \) include:
-
-- \( \text{SD_mixeff}_{i,d} \) — mixing efficiency (0–1)  
-- \( \text{SD_depth_cm}_{i,d} \) — tillage depth in cm (capped at 30)  
-- \( \text{date}_{i,d} \) — calendar date  
-- \( \text{MGT_combo}_i \)
-
-Rotation bounds provide:
-
-- \( \text{rot_start}_i \)  
-- \( \text{rot_end}_i \)
-
-Depth is normalized as:
-
-\[
-\text{SD_depth_cm} = \min(\text{SD_depth_cm}, 30)
-\]
+The Inverse Disturbance subindex measures how little the soil is tilled. SHMI
+computes tillage intensity exactly as USDA's **Tillage Disturbance Index for
+Soil Carbon (T-DISC)** does, following the cropland chapter of USDA's
+*Quantifying Greenhouse Gas Fluxes in Agriculture and Forestry: Methods for
+Entity-Scale Inventory*. 100 means no tillage; 0 means maximum disturbance.
+Each unit also receives T-DISC's tillage designation: no-till (NT), reduced
+till (RT) or conventional till (CT).
 
 ---
 
-## **2. Annual Ordering of Disturbance Events**
+## **1. Crop intervals and tillage windows**
 
-Within each year, disturbance events are ordered by:
+Each cash crop defines a **crop interval**, from the day after the previous
+cash crop's harvest to its own harvest. Within it, every tillage pass falls in
+one of five windows, set by its date relative to planting (P):
 
-1. Management unit  
-2. Year  
-3. Depth  
-4. Mixing efficiency  
+| Window | Timing |
+|---|---|
+| Field preparation | up to 56 days before P |
+| Before planting | 55 – 7 days before P |
+| Planting | 6 – 0 days before P |
+| After planting | after P, outside harvest days |
+| Harvest | harvest day(s) |
 
-This ensures deeper, more aggressive operations are applied first in the cumulative‑mixing model.
-
----
-
-## **3. Mechanical Energy and Cumulative Penetration**
-
-For each disturbance event \( i \):
-
-### **Mechanical energy contribution**
-\[
-ME_i = \text{SD_mixeff}_i \times \text{SD_depth_cm}_i
-\]
-
-### **Cumulative mechanical energy**
-\[
-\text{cumME}_i = \sum_{j < i} ME_j
-\]
+Days outside every cash-crop interval (years without a cash crop, or the end
+of the record after the last harvest) form one interval per calendar year,
+with a single window.
 
 ---
 
-## **4. Profile Penetration ( \( T_t \) )**
+## **2. Window intensity**
 
-The effective penetration of each disturbance event is:
-
-\[
-T_{t,i} = \text{SD_mixeff}_i \times \max\left(0,\; \text{SD_depth_cm}_i - \text{cumME}_i \right)
-\]
-
-Normalized by the 30‑cm reference depth:
+Each implement has a **mixing efficiency** \(m\) (0–1) and a **depth** \(d\)
+(cm, capped at 30). Within a window, implements are applied from shallowest
+to deepest (ties: least to most intensive), each mixing its share of the soil
+still unmixed:
 
 \[
-T_{t,i}^{\text{norm}} = \frac{T_{t,i}}{30}
+S_k = S_{k-1} + m_k \left(d_k - S_{k-1}\right)
 \]
+
+so overlapping disturbance is not counted twice. The window's intensity is
+\(S / 30\).
+
+**Where the values come from**, in order of priority:
+
+1. the pass's own `SD_mixeff` (0–1) and `SD_depth` (inches);
+2. a table supplied with `implements =` (`implement`, `mixing_efficiency`,
+   `depth_cm`), which replaces or adds implements;
+3. T-DISC's own values for the implement named in `SD_equip`
+   (`tdisc_implements()`), directly or through its operation names
+   (`tdisc_mapping()`). An operation T-DISC translates into several
+   implements counts as several passes.
+
+**STIR records** (`dist_meth = "STIR"`) use the same intervals and windows:
+a window's intensity is its summed STIR divided by 135, truncated to 1. The
+value 135 makes STIR ratings best match T-DISC ratings on the NAPESHM data.
 
 ---
 
-## **5. Annual Disturbance**
+## **3. Interval rating and score**
 
-Annual disturbance is the sum of normalized penetrations:
+An interval's **rating** is the maximum of its window intensities (T-DISC's
+crop-interval rating). It is placed in an EPA Tier-3 class and replaced by
+the class's upper bound:
 
-\[
-T_t^{\text{annual}} = \sum_i T_{t,i}^{\text{norm}}
-\]
-
----
-
-## **6. Inverse Disturbance**
-
-Annual inverse disturbance is:
-
-\[
-T_t^{\text{inv}} = 1 - T_t^{\text{annual}}
-\]
-
-Values below 0 or above 1 are not expected under the capped model.
-
----
-
-## **7. Rotation‑Scale Disturbance**
-
-Annual inverse disturbance is averaged across all rotation years:
+| Class | TI up to | Class | TI up to |
+|---|---|---|---|
+| Z | 0.001 (scores as 0) | F | 0.162 |
+| A | 0.01 | G | 0.202 |
+| B | 0.04 | H | 0.252 |
+| C | 0.075 | I | 0.268 |
+| D | 0.111 | J | 0.449 |
+| E | 0.144 | K | 1 |
 
 \[
-\text{InvDist}_i = 100 \times \text{mean}\left(T_{t,y}^{\text{inv}}\right)
+\text{InvDist}_{\text{interval}} = 100 \left(1 - TI^{\text{class}}\right)
 \]
 
-If a management unit has **no disturbance events**, then:
-
-\[
-\text{InvDist}_i = 100
-\]
+and the unit's InvDist is the mean over its intervals, weighted by interval
+length. T-DISC's designation follows from the rating: NT up to 0.075, RT up
+to 0.252, CT above. Because the score depends only on the class, a farmer or
+researcher without detailed records can report which class a system falls in.
 
 ---
 
 ## **Interpretation**
 
-- **100** → No mechanical disturbance  
-- **0** → Maximum possible disturbance (deep, repeated, high‑efficiency tillage)  
-- The metric captures both **depth** and **cumulative mixing**, penalizing repeated passes  
-- The 30‑cm cap ensures comparability across systems  
+- **100**: no tillage in any interval.
+- **0**: every interval includes a window of conventional tillage at full
+  intensity.
+- A single heavy disking (0.8 mixing efficiency at 15 cm, intensity 0.40)
+  places its interval in class J, scoring 55.
 
 ---
 
 ## **Output**
 
-A data frame with one row per management unit:
+`compute_disturbance()` returns one row per management unit:
 
-<div style="width: 40%;">
-| MGT_combo | InvDist |
-|-----------|---------|
-| …         | 0–100   |
-</div>
----
+| MGT_combo | InvDist | TI | designation | n_intervals |
+|-----------|---------|----|-------------|-------------|
+| …         | 0–100   | 0–1 | NT / RT / CT | count |
 
+With `details = TRUE`, the result also carries each crop interval's dates,
+rating, class value, score and designation.

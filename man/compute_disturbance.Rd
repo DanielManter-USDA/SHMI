@@ -2,95 +2,111 @@
 % Please edit documentation in R/disturbance.R
 \name{compute_disturbance}
 \alias{compute_disturbance}
-\title{Compute the inverse-disturbance sub-index}
+\title{Compute the Inverse Disturbance sub-index}
 \usage{
 compute_disturbance(
   dist,
   rot_bounds,
+  crop = NULL,
+  harvests = NULL,
   dist_meth = c("EPA", "STIR"),
-  max_stir = 342,
-  ti_rep = c("max", "min", "mid")
+  implements = NULL,
+  max_stir = SHMI_STIR_MAX,
+  details = FALSE
 )
 }
 \arguments{
-\item{dist}{Disturbance passes with \code{MGT_combo}, \code{SD_date}, \code{SD_mixeff},
-and, for \code{"EPA"}, \code{SD_depth} (inches).}
+\item{dist}{Tillage passes with \code{MGT_combo}, \code{SD_date} and, for EPA,
+\code{SD_equip} and the optional overrides \code{SD_mixeff} and \code{SD_depth}; for STIR,
+\code{SD_stir} (or \code{SD_mixeff} in workbooks without an \code{SD_stir} column).}
 
-\item{rot_bounds}{Rotation bounds with \code{MGT_combo}, \code{rot_start_yr}, and
-\code{rot_end_yr}.}
+\item{rot_bounds}{Rotation bounds with \code{MGT_combo}, \code{rot_start_yr},
+\code{rot_end_yr} and, optionally, \code{rot_start} / \code{rot_end} (dates).}
 
-\item{dist_meth}{Disturbance method, \code{"EPA"} or \code{"STIR"}.}
+\item{crop}{Crop episodes (\code{prepare_shmi_inputs()$crop}), for planting
+dates. If \code{NULL}, every calendar year is one interval with one window.}
 
-\item{max_stir}{Annual STIR value that corresponds to TI = 1 (\code{"STIR"}
-only).}
+\item{harvests}{Harvest records (\code{prepare_shmi_inputs()$harvests}) with
+\code{MGT_combo}, \code{CD_name}, \code{CD_cat} and \code{harv_date}. If \code{NULL}, as for \code{crop}.}
 
-\item{ti_rep}{Class representative: \code{"max"}, \code{"min"}, or \code{"mid"}.}
+\item{dist_meth}{\code{"EPA"} (default; mixing efficiency and depth, from the
+implement or the pass's overrides) or \code{"STIR"} (STIR values in \code{SD_stir}).}
+
+\item{implements}{Optional user implement table with \code{implement},
+\code{mixing_efficiency} (0-1) and \code{depth_cm}; its entries take precedence over
+\code{\link[=tdisc_implements]{tdisc_implements()}} and \code{\link[=tdisc_mapping]{tdisc_mapping()}}.}
+
+\item{max_stir}{For \code{"STIR"}: summed STIR in a window corresponding to an
+intensity of 1. The default (135) best matches T-DISC ratings on the
+NAPESHM data.}
+
+\item{details}{If \code{TRUE}, the result carries an \code{"intervals"} attribute
+with each crop interval's dates, rating, class and designation.}
 }
 \value{
-A data frame with \code{MGT_combo} and \code{InvDist} (0-100), one row per
-unit in \code{rot_bounds}.
+A tibble, one row per unit in \code{rot_bounds}: \code{MGT_combo}, \code{InvDist}
+(0-100), \code{TI} (length-weighted mean interval rating, 0-1), \code{designation}
+(T-DISC designation of \code{TI}: \code{"NT"} up to 0.075, \code{"RT"} up to 0.252,
+otherwise \code{"CT"}) and \code{n_intervals}. Units without passes score 100.
 }
 \description{
-Scores soil disturbance for each calendar year of the rotation and
-averages the years, so that 100 means no disturbance and 0 means maximum
-disturbance.
+Tillage intensity computed as in USDA's Tillage Disturbance Index for Soil
+Carbon (T-DISC), scored 0-100 (100 = no tillage).
 }
 \details{
-\strong{Methods.}
-\itemize{
-\item \code{"EPA"} (official): mechanistic soil-mixing model. \code{SD_mixeff} is the
-mixing efficiency (a proportion, 0-1) and \code{SD_depth} the tillage depth
-in inches, converted to cm and capped at 30 cm. Passes on the same day
-are processed from shallowest to deepest, and each disturbs fraction
-\eqn{m} of the soil still undisturbed within its depth \eqn{d}, so
-overlapping passes are not double-counted:
-\eqn{S_k = S_{k-1} + m_k (d_k - S_{k-1})}. The daily value is
-\eqn{S / 30}, and daily values are summed within each calendar year.
-\item \code{"STIR"}: \code{SD_mixeff} holds STIR values. They are summed within each
-calendar year, divided by \code{max_stir}, and truncated to 1.
-}
+\strong{Crop intervals.} Each cash crop (harvest records with category \code{"cash"}
+or \code{"annual"}) defines a crop interval, from the day after the previous
+cash crop's harvest to its own last harvest. Its planting date is the start
+of the latest episode of the same crop beginning on or before the harvest.
+Days outside every crop interval (years without a cash crop, or the end of
+the record after the last harvest) form one interval per calendar year.
 
-\strong{Classes.} Each annual tillage intensity (TI) is placed in a Tier-3
-class (left-closed, right-open intervals):\tabular{llll}{
-   Class \tab TI range \tab Class \tab TI range \cr
-   Z \tab \code{0 - 0.001} \tab F \tab \code{0.144 - 0.162} \cr
-   A \tab \code{0.001 - 0.01} \tab G \tab \code{0.162 - 0.202} \cr
-   B \tab \code{0.01 - 0.04} \tab H \tab \code{0.202 - 0.252} \cr
-   C \tab \code{0.04 - 0.075} \tab I \tab \code{0.252 - 0.268} \cr
-   D \tab \code{0.075 - 0.111} \tab J \tab \code{0.268 - 0.449} \cr
-   E \tab \code{0.111 - 0.144} \tab K \tab \code{0.449 - 1} \cr
-}
+\strong{Tillage windows.} Within a cash-crop interval with planting date P,
+a pass belongs to: \emph{field preparation} (up to 56 days before P),
+\emph{before planting} (55-7 days before P), \emph{planting} (6-0 days before P),
+\emph{after planting} (after P, outside harvest days) or \emph{harvest} (a harvest
+day). Intervals without a planting date, or outside cash crops, have a
+single window.
 
+\strong{Window intensity (EPA soil-mixing model).} Implements are applied from
+shallowest to deepest (ties: least to most intensive); each mixes its share
+of the soil still unmixed within its depth \eqn{d_k} (cm, capped at 30):
+\deqn{S_k = S_{k-1} + m_k (d_k - S_{k-1})}
+and the window's intensity is \eqn{S / 30}. With \code{dist_meth = "STIR"}, the
+window's intensity is its summed STIR divided by \code{max_stir}, truncated to 1.
 
-Annual TI is capped at 1 before classification (under \code{"EPA"} the sum of
-daily values can exceed 1), so class K covers 0.449-1 inclusive.
+\strong{Interval rating and score.} An interval's rating is the maximum of its
+window intensities (T-DISC's crop-interval rating). It is placed in an EPA
+Tier-3 class and replaced by the class's upper bound (class Z: 0); the
+interval scores \eqn{100 (1 - \text{class value})}. The unit's InvDist is
+the mean over its intervals, weighted by interval length in days.
 
-TI is then replaced by a class representative chosen by \code{ti_rep}: the
-lower bound (\code{"min"}), midpoint (\code{"mid"}), or upper bound (\code{"max"}, the
-official choice). Class Z always uses 0. The annual score is
-\eqn{100 (1 - TI_{used})}, and the rotation score is the mean over all
-calendar years from \code{rot_start_yr} to \code{rot_end_yr}.
+\strong{Implement values (EPA).} Each pass names its implement (\code{SD_equip}); its
+mixing efficiency and depth come from \code{implements} (a user table that
+replaces or adds entries) or else from \code{\link[=tdisc_implements]{tdisc_implements()}}, directly or
+through the operation names in \code{\link[=tdisc_mapping]{tdisc_mapping()}}. An operation that maps to
+several implements counts as several passes on the same day.
 
-\strong{Missing records.} A missing record means no disturbance occurred (for
-example, continuous no-till): years without passes score 100, and a unit
-with no passes at all scores 100.
+\code{SD_mixeff} (0-1) and \code{SD_depth} (inches) are \strong{overrides}: leave them blank
+to use the implement's values, or enter either or both to replace them. A
+pass with both values needs no implement. For an operation that maps to
+several implements, enter both overrides or neither.
 
-\strong{Checks.} Inputs are checked for the chosen method. Under \code{"EPA"}, every
-pass with \code{SD_mixeff > 0} needs \code{SD_depth}, \code{SD_mixeff} must lie within
-0-1 (larger values look like STIR), and depths above 20 inches give a
-warning because they may have been entered in cm.
+Names are matched case- and whitespace-insensitively. Passes that cannot
+be resolved stop with a list of the unknown implement names.
 }
 \examples{
-dist <- data.frame(
-  MGT_combo = "field_1",
-  SD_date   = as.Date(c("2020-04-15", "2020-05-01")),
-  SD_mixeff = c(39, 2.4)   # STIR values: disk harrow, planter
-)
-rot_bounds <- data.frame(MGT_combo = "field_1",
-                         rot_start_yr = 2020, rot_end_yr = 2021)
-compute_disturbance(dist, rot_bounds, dist_meth = "STIR")
+rot_bounds <- data.frame(MGT_combo = "field_1", rot_start_yr = 2020, rot_end_yr = 2020)
+dist <- data.frame(MGT_combo = "field_1", SD_date = as.Date("2020-04-15"),
+                   SD_equip = "HARROW, DISK, TANDEM, HEAVYDUTY")
+compute_disturbance(dist, rot_bounds)    # T-DISC implement values
+
+# a user value for the same implement
+mine <- data.frame(implement = "HARROW, DISK, TANDEM, HEAVYDUTY",
+                   mixing_efficiency = 0.6, depth_cm = 10)
+compute_disturbance(dist, rot_bounds, implements = mine)
 
 }
 \seealso{
-\code{\link[=build_shmi]{build_shmi()}}, \code{\link[=validate_shmi_input]{validate_shmi_input()}}
+\code{\link[=tdisc_implements]{tdisc_implements()}}, \code{\link[=tdisc_mapping]{tdisc_mapping()}}, \code{\link[=build_shmi]{build_shmi()}}
 }

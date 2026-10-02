@@ -4,62 +4,40 @@
 \alias{compute_orginput}
 \title{Compute the Organic Inputs sub-index}
 \usage{
-compute_orginput(
-  rot_bounds,
-  amend,
-  animal,
-  w_amend = 0.6615,
-  w_animal = 0.3385,
-  animal_presence = c("start", "span")
-)
+compute_orginput(rot_bounds, amend, animal)
 }
 \arguments{
-\item{rot_bounds}{Rotation bounds with \code{MGT_combo}, \code{rot_start_yr}, and
+\item{rot_bounds}{Rotation bounds with \code{MGT_combo}, \code{rot_start_yr} and
 \code{rot_end_yr}.}
 
-\item{amend}{Amendment events with \code{MGT_combo}, \code{SA_date}, and \code{SA_cat}.}
+\item{amend}{Amendment events with \code{MGT_combo}, \code{SA_date} and \code{SA_cat}.}
 
-\item{animal}{Animal events with \code{MGT_combo} and \code{AD_start_date}.}
-
-\item{w_amend, w_animal}{Weights for amendments and animals. Defaults are
-the official values.}
-
-\item{animal_presence}{\code{"start"} (SHMI <= 1.1.0) or \code{"span"}; see
-\code{\link[=compute_orginput_components]{compute_orginput_components()}}.}
+\item{animal}{Animal events with \code{MGT_combo}, \code{AD_start_date} and
+\code{AD_end_date}.}
 }
 \value{
-A data frame with \code{MGT_combo} and \code{OrgInput} (0-100), one row per
-unit in \code{rot_bounds}.
+A tibble with \code{MGT_combo} and \code{OrgInput} (0-100), one row per unit
+in \code{rot_bounds}.
 }
 \description{
-Proportion of rotation years with organic amendments and with animals,
-weighted and scaled 0-100.
+Share of years with an organic amendment or grazing animals, scaled 0-100.
 }
 \details{
 For every calendar year from \code{rot_start_yr} to \code{rot_end_yr}, a year counts
-as having an amendment if any amendment with \code{SA_cat == "Organic"} is
-dated in that year, and as having animals if any animal period starts in
-that year (\code{AD_start_date}). Only presence is scored; amounts are not
-used. With \eqn{p} the proportion of years with each input,
-\deqn{OrgInput = 100 \frac{w_{amend} p_{amend} + w_{animal} p_{animal}}{w_{amend} + w_{animal}}}
-
-A missing record means no input: a unit with no organic amendments or
+if it has an amendment with \code{SA_cat == "Organic"}, or animals: every
+calendar year overlapped by an animal period (\code{AD_start_date} to
+\code{AD_end_date}; a period without an end date counts in its start year).
+Only presence is scored, not amounts. A unit with no organic amendments or
 animals scores 0.
-
-With \code{animal_presence = "span"}, every calendar year overlapped by an
-animal period (\code{AD_start_date} to \code{AD_end_date}) counts, so continuous
-multi-year grazing is scored in every year rather than only its first.
 }
 \examples{
-rot_bounds <- data.frame(MGT_combo = "field_1",
-                         rot_start_yr = 2019, rot_end_yr = 2020)
-amend <- data.frame(MGT_combo = "field_1",
-                    SA_date = as.Date("2019-04-01"), SA_cat = "Organic")
-animal <- data.frame(MGT_combo = character(),
-                     AD_start_date = as.Date(character()))
-compute_orginput(rot_bounds, amend, animal)
+rot_bounds <- data.frame(MGT_combo = "field_1", rot_start_yr = 2019, rot_end_yr = 2020)
+amend <- data.frame(MGT_combo = "field_1", SA_date = as.Date("2019-04-01"), SA_cat = "Organic")
+animal <- data.frame(MGT_combo = character(), AD_start_date = as.Date(character()),
+                     AD_end_date = as.Date(character()))
+compute_orginput(rot_bounds, amend, animal)   # 50: one of two years
 
 }
 \seealso{
-\code{\link[=compute_orginput_components]{compute_orginput_components()}}, \code{\link[=build_shmi]{build_shmi()}}
+\code{\link[=build_shmi]{build_shmi()}}
 }

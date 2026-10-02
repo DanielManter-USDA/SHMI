@@ -234,6 +234,7 @@ prepare_shmi_inputs <- function(path,
   if (!"CD_yield" %in% names(crop))       crop$CD_yield       <- NA
   if (!"CD_yield_units" %in% names(crop)) crop$CD_yield_units <- NA_character_
   if (!"CD_cat" %in% names(crop))         crop$CD_cat         <- NA_character_
+  if (!"CD_per_res" %in% names(crop))     crop$CD_per_res     <- NA
 
   crop <- crop %>%
     dplyr::mutate(
@@ -242,16 +243,48 @@ prepare_shmi_inputs <- function(path,
       CD_term_date  = as.Date(unname(.parse_shmi_date(CD_term_date)))
     )
 
+  # Irrigation per management unit: MGT_irr_cat on Mgt_Unit (any method other
+  # than blank or "None"). Older workbooks recorded it per crop (CD_irr_cat,
+  # CD_irr_amt); there, any irrigated crop marks its unit as irrigated.
+  if ("MGT_irr_cat" %in% names(mgt)) {
+    mgt$irrigated <- .is_irrigated(mgt$MGT_irr_cat)
+  } else {
+    irr_crop <- rep(FALSE, nrow(crop))
+    if ("CD_irr_cat" %in% names(crop)) irr_crop <- irr_crop | .is_irrigated(crop$CD_irr_cat)
+    if ("CD_irr_amt" %in% names(crop)) irr_crop <- irr_crop | ((suppressWarnings(as.numeric(crop$CD_irr_amt)) > 0) %in% TRUE)
+    mgt$irrigated <- mgt$MGT_combo %in% crop$MGT_combo[irr_crop]
+  }
+  for (k in c("MGT_lat", "MGT_lon")) if (k %in% names(mgt)) mgt[[k]] <- suppressWarnings(as.numeric(mgt[[k]]))
+
+  # Cash-crop ends (harvest, or termination when a cash crop has no harvest
+  # date): they end T-DISC's crop intervals. Other harvests are kept too.
+  harvests <- crop %>%
+    dplyr::mutate(.cat = tolower(trimws(as.character(.data$CD_cat))),
+                  .end = dplyr::if_else(is.na(.data$CD_harv_date) & .data$.cat %in% c("cash", "annual"),
+                                        .data$CD_term_date, .data$CD_harv_date)) %>%
+    dplyr::filter(!is.na(.data$.end)) %>%
+    dplyr::transmute(MGT_combo = .data$MGT_combo,
+                     CD_name   = trimws(as.character(.data$CD_name)),
+                     CD_cat    = .data$.cat,
+                     harv_date = .data$.end,
+                     per_res   = suppressWarnings(as.numeric(.data$CD_per_res)))
+
   dist <- .safe_read(
     path,
     sheet = "Soil_Disturbance",
-    required_cols = c("MGT_combo", "SD_date", "SD_mixeff"),
+    required_cols = c("MGT_combo", "SD_date"),
     skip = 3,
     verbose = verbose
   ) %>%
     janitor::remove_empty("rows") %>%
     dplyr::filter(!(MGT_combo %in% exclude)) %>%
     dplyr::mutate(SD_date = as.Date(unname(.parse_shmi_date(SD_date))))
+  # implement name, the override values (mixing efficiency, depth) and STIR are each optional
+  for (k in c("SD_equip", "SD_mixeff", "SD_depth", "SD_stir")) if (!k %in% names(dist)) dist[[k]] <- NA
+  dist$SD_stir   <- suppressWarnings(as.numeric(dist$SD_stir))
+  dist$SD_mixeff <- suppressWarnings(as.numeric(dist$SD_mixeff))
+  dist$SD_depth  <- suppressWarnings(as.numeric(dist$SD_depth))
+  dist$SD_equip  <- as.character(dist$SD_equip)
 
   amend <- .safe_read(
     path,
@@ -576,6 +609,7 @@ prepare_shmi_inputs <- function(path,
     rot_bounds = rot_bounds,
     mgt        = mgt,
     crop       = crop_windows,
+    harvests   = harvests,
     dist       = dist,
     amend      = amend,
     animal     = animal,
@@ -587,4 +621,11 @@ prepare_shmi_inputs <- function(path,
   attr(inputs, "tillage_end")     <- tillage_method
 
   return(inputs)
+}
+
+
+# TRUE where an irrigation entry names a method (not blank, "None" or "No")
+.is_irrigated <- function(x) {
+  x <- tolower(trimws(as.character(x)))
+  !is.na(x) & !(x %in% c("", "none", "no", "na", "n/a", "false", "0", "rainfed", "rain-fed", "dryland"))
 }

@@ -2,139 +2,84 @@
 title: "Soil Health Management Index (SHMI)"
 ---
 
-Weighted Composite of Four Management Sub-indices
+Weighted Sum of Four Management Sub-indices
 
 ## **Overview**
 
-The Soil Health Management Index (SHMI) integrates four management indices—**Cover**, **Diversity**, **Inverse Disturbance**, and **Animals**—into a single 0–100 score. Each pillar is computed from harmonized rotation‑scale inputs and then combined using **official national SHMI weights** (locked mode) or user‑specified weights (expert mode).
-
-SHMI is designed to be:
-
-- **Mechanistic** (built from daily and annual process‑based inputs)  
-- **Rotation‑scale** (not single‑year snapshots)  
-- **Comparable across systems** (locked mode)  
-- **Flexible for research** (expert mode)
+The Soil Health Management Index (SHMI) combines **Cover**, **Organic
+Inputs**, **Diversity** and **Inverse Disturbance** into a single 0–100 score,
+using weights calibrated against measured soil health.
 
 ---
 
-## **1. Settings**
+## **1. The formula**
 
-SHMI can be computed in two modes:
-
-### **Locked mode (default)**  
-Uses official national SHMI settings:
-
-- Seasonal cover weights  
-- Hill number and max diversity  
-- Amendment/animal weights  
-- Sub-index weights  
-
-User‑supplied settings are ignored.
-
-### **Expert mode**  
-User settings override defaults.  
-Resulting SHMI values are **not** comparable to the national scale.
-
----
-
-## **2. Input Validation**
-
-Before any computation, the input list from `prepare_shmi_inputs()` is validated:
-
-- Required tables present  
-- Required columns present  
-- Valid date formats  
-- No duplicated daily rows  
-- No missing `MGT_combo`  
-- Harmonized crop windows consistent  
-
-If validation fails, SHMI computation stops with explicit error messages.
-
----
-
-## **3. Sub-index Computation**
-
-Each pillar is computed using its dedicated sub‑index function:
-
-- **Cover**  
-  \(\text{Cover}_i = \text{compute_cover}(...)\)
-
-- **Diversity**  
-  \(\text{Diversity}_i = \text{compute_diversity}(...)\)
-
-- **Inverse Disturbance**  
-  \(\text{InvDist}_i = \text{compute_disturbance}(...)\)
-
-- **Organic Inputs (Animals + Amendments)**  
-  \(\text{Animals}_i = \text{compute_orginput}(...)\)
-
-Each sub‑index is already scaled to **0–100**.
-
----
-
-## **4. Weighted Combination**
-
-Let the four sub‑indices for management unit \( i \) be:
-
-- \( C_i \) = Cover  
-- \( D_i \) = Diversity  
-- \( I_i \) = Inverse Disturbance  
-- \( A_i \) = Animals  
-
-Let the pillar weights be:
-
-- \( w_{\text{cover}} \)  
-- \( w_{\text{div}} \)  
-- \( w_{\text{dist}} \)  
-- \( w_{\text{ani}} \)
-
-Weights are normalized:
+For management unit \(i\):
 
 \[
-w_s^{*} = \frac{w_s}{w_{\text{cover}} + w_{\text{div}} + w_{\text{dist}} + w_{\text{ani}}}
+\text{SHMI}_i = 0.400\,\text{Cover}_i + 0.317\,\text{OrgInput}_i + 0.153\,\text{Diversity}_i + 0.130\,\text{InvDist}_i
 \]
 
-The final SHMI score is:
+| Sub-index | Weight | 95% range across 1,000 calibration fits |
+|---|---|---|
+| Cover | 0.400 | 0.29 – 0.48 |
+| Organic Inputs | 0.317 | 0.24 – 0.36 |
+| Diversity | 0.153 | 0.08 – 0.33 |
+| Inverse Disturbance | 0.130 | 0.10 – 0.16 |
 
-\[
-\text{SHMI}_i =
-w_{\text{cover}}^{*} C_i +
-w_{\text{div}}^{*} D_i +
-w_{\text{dist}}^{*} I_i +
-w_{\text{ani}}^{*} A_i
-\]
-
-By construction:
-
-\[
-0 \le \text{SHMI}_i \le 100
-\]
+The weights sum to 1, so \(0 \le \text{SHMI}_i \le 100\). Within Cover, the
+growing season counts 0.860. `shmi_weights()` returns the official weights.
 
 ---
 
-## **5. Output Assembly**
+## **2. How `build_shmi()` computes it**
 
-The final output is a tidy data frame:
+1. **Validation.** The inputs from `prepare_shmi_inputs()` are checked:
+   required tables and columns, valid dates, unique `MGT_combo`, and tillage
+   values that suit the tillage scale.
+2. **Tillage.** Computed as in USDA's T-DISC tool, from implement mixing
+   efficiencies and depths (from the pass, a user table, or T-DISC); STIR
+   records with `dist_meth = "STIR"`.
+3. **Sub-indices.** `shmi_components()` computes the four sub-indices over
+   each unit's evaluation window, using the monthly climate for Cover.
+   Missing records mean the practice did not happen.
+4. **Combination.** The weighted sum above.
 
-| MGT_combo | SHMI | Cover | Diversity | InvDist | Animals |
-|:---------:|:----:|:------:|:---------:|:-------:|:-------:|
-| …         | 0–100 | 0–100 | 0–100     | 0–100   | 0–100   |
+---
 
-Additional metadata returned:
+## **3. Official and custom scores**
 
-- `settings_used` — actual settings applied  
-- `expert_mode` — TRUE/FALSE  
-- `shmi_version` — version string  
-- `timestamp` — computation time  
+Scores are **official** when the official weights are used, with either
+tillage scale. Custom weights (for research or scenario analysis) are rescaled
+to sum to 1, and the result is flagged `official = FALSE`.
+
+---
+
+## **4. Output**
+
+`build_shmi()` returns a list. Its `indicator_df` has one row per management
+unit:
+
+| MGT_combo | SHMI | Cover | OrgInput | Diversity | InvDist | Cover_growing | Cover_nongrowing | Richness |
+|:---------:|:----:|:-----:|:--------:|:---------:|:-------:|:-------------:|:----------------:|:--------:|
+| …         | 0–100 | 0–100 | 0–100   | 0–100     | 0–100   | 0–100         | 0–100            | species per year |
+
+plus the unit's study, farm, field and treatment. The list also records
+`weights`, `dist_meth`, `official`, `shmi_version` and `timestamp`.
 
 ---
 
 ## **Interpretation**
 
-- **SHMI = 0** → No cover, no diversity, high disturbance, no organic inputs  
-- **SHMI = 100** → Continuous cover, high diversity, no disturbance, frequent organic inputs  
-- Pillar weights reflect national priorities in locked mode  
-- Expert mode enables research flexibility  
-
----
-
+- **Higher scores** mean management more supportive of soil health: more of the
+  year under living cover, more frequent organic inputs, more plant species
+  each year, and less tillage.
+- **Ceilings.** A unit scoring 0 on one sub-index cannot exceed
+  100 × (1 − that weight): with no organic inputs, at most 68.3.
+- **Precision.** For US sites not used in calibration, SHMI explained about a
+  quarter of the differences in measured soil health and ranked practices in
+  the right order at 82% of sites; a single prediction is typically within
+  about 13 soil-health points. It is most informative for comparing practices
+  at the same site.
+- **Scope.** Calibrated on US systems; recalibrate before use in other
+  regions.

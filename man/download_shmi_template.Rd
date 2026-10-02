@@ -29,8 +29,10 @@ the file to \code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}}.
 download_shmi_template("SHMI_template.xlsx")
 
 # After filling in the template:
-inputs <- prepare_shmi_inputs("SHMI_template.xlsx")
-result <- build_shmi(inputs)
+inputs  <- prepare_shmi_inputs("SHMI_template.xlsx")
+climate <- get_shmi_climate(data.frame(MGT_combo = inputs$mgt$MGT_combo,
+                                       lon = -105.08, lat = 40.59))
+result  <- build_shmi(inputs, climate)
 }
 
 }

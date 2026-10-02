@@ -19,8 +19,10 @@
 #' download_shmi_template("SHMI_template.xlsx")
 #'
 #' # After filling in the template:
-#' inputs <- prepare_shmi_inputs("SHMI_template.xlsx")
-#' result <- build_shmi(inputs)
+#' inputs  <- prepare_shmi_inputs("SHMI_template.xlsx")
+#' climate <- get_shmi_climate(data.frame(MGT_combo = inputs$mgt$MGT_combo,
+#'                                        lon = -105.08, lat = 40.59))
+#' result  <- build_shmi(inputs, climate)
 #' }
 #'
 #' @family SHMI helper functions
@@ -62,7 +64,9 @@ download_shmi_template <- function(path = "SHMI_template.xlsx", overwrite = TRUE
 #' \dontrun{
 #' my_file <- download_shmi_example()
 #' inputs  <- prepare_shmi_inputs(my_file)
-#' result  <- build_shmi(inputs)
+#' climate <- get_shmi_climate(data.frame(MGT_combo = inputs$mgt$MGT_combo,
+#'                                        lon = -105.08, lat = 40.59))
+#' result  <- build_shmi(inputs, climate)
 #' head(result$indicator_df)
 #' }
 #'
@@ -70,7 +74,7 @@ download_shmi_template <- function(path = "SHMI_template.xlsx", overwrite = TRUE
 #' @seealso [prepare_shmi_inputs()], [build_shmi()]
 #' @export
 download_shmi_example <- function(path = ".", overwrite = TRUE) {
-  src <- system.file("extdata", "SHMI_example_1.xlsx", package = "SHMI")
+  src <- system.file("extdata", "SHMI_example.xlsx", package = "SHMI")
   dest <- file.path(path.expand(path), "SHMI_example.xlsx")
 
   if (file.copy(src, dest, overwrite = overwrite)) {
@@ -98,11 +102,18 @@ download_shmi_example <- function(path = ".", overwrite = TRUE) {
 #' settings. To get a copy you can open in Excel, use
 #' [download_shmi_example()].
 #'
-#' @return The path to `SHMI_example_1.xlsx` in the installed package.
+#' @return The path to `SHMI_example.xlsx` in the installed package.
 #'
 #' @examples
 #' inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
-#' result <- build_shmi(inputs)
+#'
+#' # Monthly climate normals for each unit; get_shmi_climate() downloads these
+#' # from WorldClim given coordinates. Typical temperate values, entered by hand:
+#' climate <- data.frame(MGT_combo = inputs$mgt$MGT_combo)
+#' climate[sprintf("tavg_%02d", 1:12)] <- as.list(c(-5, -3, 3, 10, 16, 21, 24, 23, 18, 11, 4, -2))
+#' climate[sprintf("prec_%02d", 1:12)] <- as.list(c(20, 25, 50, 70, 110, 115, 95, 85, 70, 50, 35, 25))
+#'
+#' result <- build_shmi(inputs, climate)
 #' result$indicator_df
 #'
 #' @family SHMI helper functions
@@ -110,7 +121,7 @@ download_shmi_example <- function(path = ".", overwrite = TRUE) {
 #'   [build_shmi()]
 #' @export
 get_shmi_example <- function() {
-  path <- system.file("extdata", "SHMI_example_1.xlsx", package = "SHMI")
+  path <- system.file("extdata", "SHMI_example.xlsx", package = "SHMI")
   if (!nzchar(path)) {
     stop("The SHMI example workbook was not found. Try reinstalling SHMI.",
          call. = FALSE)

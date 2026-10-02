@@ -8,4 +8,5 @@
 inst/doc
 /doc/
 /Meta/
+/dev/
 tests/testthat/_compare/

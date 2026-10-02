@@ -1,348 +1,112 @@
-#' Compute SHMI scores from prepared inputs
+#' Official SHMI weights
 #'
-#' Computes the Soil Health Management Index (SHMI) for each management unit
-#' (`MGT_combo`) from the rotation-scale inputs returned by
-#' [prepare_shmi_inputs()]. SHMI is a weighted mean of four sub-indices, each
-#' scaled 0-100:
+#' The weights of the four sub-indices in SHMI 1.0, the medians of 1,000
+#' cross-validated calibration fits against measured soil health on 354 US
+#' plots at 74 sites (NAPESHM). Within Cover, the growing season counts for
+#' 0.860 and the non-growing season for 0.140 (see [compute_cover()]).
 #'
-#' * **Cover**: season-weighted proportion of days with living plants
-#'   ([compute_cover()]).
-#' * **Diversity**: rotation-scale crop diversity ([compute_diversity()]).
-#' * **InvDist**: inverse soil disturbance ([compute_disturbance()]).
-#' * **OrgInput**: organic amendments and animal integration
-#'   ([compute_orginput()]).
-#'
-#' @section Settings and expert mode:
-#' With `expert_mode = FALSE` (the default, "locked mode") the official
-#' national settings below are always used and `settings` is ignored. With
-#' `expert_mode = TRUE`, each element of `settings` replaces the official
-#' value; elements not supplied keep their official value. Expert-mode scores
-#' are not comparable to the national SHMI scale.
-#'
-#' | Setting | Official value | Used by |
-#' |---|---|---|
-#' | `w_winter`, `w_spring`, `w_summer`, `w_fall` | 0.1259, 0.1260, 0.3755, 0.3726 | [compute_cover()] |
-#' | `hill`, `max_div` | 1, 10 | [compute_diversity()] |
-#' | `dist_meth`, `max_stir`, `ti_rep` | `"EPA"`, 342, `"max"` | [compute_disturbance()] |
-#' | `w_amend`, `w_animal` | 0.6615, 0.3385 | [compute_orginput()] |
-#' | `animal_presence` | `"span"` | [compute_orginput()] |
-#' | `clip_to_rotation` | `TRUE` | [compute_cover()], [compute_diversity()] |
-#' | `w_cover`, `w_diversity`, `w_invdist`, `w_orginput` | 0.4481, 0.0904, 0.1431, 0.3184 | SHMI |
-#'
-#' The four pillar weights are rescaled to sum to 1 and combined as
-#' \deqn{SHMI = w_{cover} Cover + w_{diversity} Diversity + w_{invdist} InvDist + w_{orginput} OrgInput}
-#'
-#' Settings are checked before use: unknown names (for example a misspelled
-#' weight) and out-of-range values stop with an error rather than being
-#' silently ignored.
-#'
-#' The official disturbance method, `"EPA"`, requires a tillage depth
-#' (`SD_depth`) for every pass. Data without depths can be scored in expert
-#' mode with `settings = list(dist_meth = "STIR")`.
-#'
-#' @section Missing records:
-#' Every management unit in `shmi_inputs$mgt` receives a score. A missing
-#' record means the practice did not happen: a unit with no crops scores
-#' Cover = 0 and Diversity = 0, no disturbance scores InvDist = 100, and no
-#' organic inputs scores OrgInput = 0. Units with no dated records at all are
-#' removed earlier, by [prepare_shmi_inputs()].
-#'
-#' @param shmi_inputs A list returned by [prepare_shmi_inputs()].
-#' @param settings Optional named list of settings (see *Settings and expert
-#'   mode*). Ignored unless `expert_mode = TRUE`.
-#' @param expert_mode Logical. If `TRUE`, elements of `settings` override the
-#'   official national settings.
-#'
-#' @return A list with:
-#' * `indicator_df`: one row per management unit with `MGT_combo`, the
-#'   management metadata that is present (`MGT_study`, `MGT_farm`,
-#'   `MGT_field`, `MGT_trt`), `SHMI`, `Cover`, `Diversity`, `InvDist`, and
-#'   `OrgInput`.
-#' * `settings_used`: the full list of settings applied.
-#' * `expert_mode`: logical flag.
-#' * `shmi_version`: version of the SHMI package used.
-#' * `timestamp`: time of computation.
-#'
-#' @seealso [prepare_shmi_inputs()], [validate_shmi_input()],
-#'   [plot_shmi_gauge()], [plot_shmi_lollipop()]
-#'
+#' @return A named numeric vector: `Cover`, `OrgInput`, `Diversity`,
+#'   `InvDist`, summing to 1.
 #' @examples
-#' inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
-#'
-#' # Official national settings
-#' result <- build_shmi(inputs)
-#' result$indicator_df
-#'
-#' # Expert mode: STIR disturbance, for data without tillage depths
-#' \dontrun{
-#' result_stir <- build_shmi(inputs, settings = list(dist_meth = "STIR"),
-#'                           expert_mode = TRUE)
-#' }
-#'
+#' shmi_weights()
 #' @export
-build_shmi <- function(shmi_inputs,
-                       settings = NULL,
-                       expert_mode = FALSE) {
-
-  cli::cli_progress_step("Validating inputs...")
-
-  # --------------------------------------------------------------------------
-  # 1. Official national SHMI settings (locked mode)
-  # --------------------------------------------------------------------------
-  official <- list(
-    # cover
-    w_winter = 0.1259,
-    w_spring = 0.1260,
-    w_summer = 0.3755,
-    w_fall   = 0.3726,
-
-    # diversity
-    hill      = 1,
-    max_div   = 10,
-
-    # disturbance
-    dist_meth = "EPA",
-    max_stir  = 342,
-    ti_rep    = "max",
-
-    # organic amendments
-    w_amend  = 0.6615,
-    w_animal = 0.3385,
-    animal_presence = "start",
-
-    # evaluation window
-    clip_to_rotation = TRUE,
-
-    # shmi weights
-    w_cover      = 0.4481,
-    w_diversity  = 0.0904,
-    w_invdist    = 0.1431,
-    w_orginput   = 0.3184
-  )
-
-  # --------------------------------------------------------------------------
-  # 2. Determine which settings to use
-  # --------------------------------------------------------------------------
-  if (!expert_mode) {
-    if (!is.null(settings)) {
-      message(
-        "Note: Custom settings ignored because expert_mode = FALSE. ",
-        "Using official national SHMI settings."
-      )
-    }
-    settings <- official
-  } else {
-    message(
-      "Expert mode enabled: SHMI scores will NOT be comparable ",
-      "to the national SHMI scale."
-    )
-    unknown <- setdiff(names(settings), names(official))
-    if (length(unknown) > 0) {
-      stop("Unknown setting(s): ", paste(unknown, collapse = ", "),
-           ". Valid names: ", paste(names(official), collapse = ", "), call. = FALSE)
-    }
-    settings <- utils::modifyList(official, settings)
-  }
-  .check_shmi_settings(settings)
-
-  if (is.null(attr(shmi_inputs, "rotation_window"))) {
-    message("Note: shmi_inputs was prepared by SHMI < 1.2.0 (event-based rotation ",
-            "window). Re-run prepare_shmi_inputs() for the calendar-year window.")
-  }
-
-  val <- validate_shmi_input(shmi_inputs, dist_meth = settings$dist_meth)
-
-  if (!val$ok) {
-    message("SHMI input validation failed.\n")
-    message("Errors:\n", paste0(" - ", val$errors, collapse = "\n"))
-    stop("Fix the errors above and re-run build_shmi().", call. = FALSE)
-  }
-  if (length(val$warnings) > 0) {
-    message("\nWarnings:\n", paste0(" - ", val$warnings, collapse = "\n"))
-  }
-
-  # --------------------------------------------------------------------------
-  # 3. Check and extract inputs
-  # --------------------------------------------------------------------------
-  required <- c("mgt", "rot_bounds", "crop", "dist", "amend", "animal")
-
-  missing <- setdiff(required, names(shmi_inputs))
-  if (length(missing) > 0) {
-    stop(
-      "Missing required inputs in shmi_inputs: ",
-      paste(missing, collapse = ", "),
-      call. = FALSE
-    )
-  }
-
-  mgt             <- shmi_inputs$mgt
-  rot_bounds      <- shmi_inputs$rot_bounds
-  crop            <- shmi_inputs$crop
-  if (isTRUE(settings$clip_to_rotation)) {
-    # Cover and Diversity use the same window as InvDist and OrgInput
-    crop <- clip_crop_to_rotation(crop, rot_bounds)
-  }
-  dist            <- shmi_inputs$dist
-  amend           <- shmi_inputs$amend
-  animal          <- shmi_inputs$animal
-
-  # --------------------------------------------------------------------------
-  # 4. Compute sub-indices
-  # --------------------------------------------------------------------------
-
-  # Cover
-  cli::cli_progress_step("Computing cover...")
-  cover <- compute_cover(
-    crop        = crop,
-    rot_bounds  = rot_bounds,
-    w_winter    = settings$w_winter,
-    w_spring    = settings$w_spring,
-    w_summer    = settings$w_summer,
-    w_fall      = settings$w_fall,
-    clip_to_rotation = settings$clip_to_rotation
-  )
-
-  # Diversity
-  cli::cli_progress_step("Computing diversity...")
-  diversity <- compute_diversity(
-    crop      = crop,
-    hill      = settings$hill,
-    max_div   = settings$max_div
-  )
-
-  # Disturbance (inverse disturbance pillar)
-  cli::cli_progress_step("Computing disturbance...")
-  invdist <- compute_disturbance(
-    dist          = dist,
-    rot_bounds    = rot_bounds,
-    dist_meth     = settings$dist_meth,
-    max_stir      = settings$max_stir,
-    ti_rep        = settings$ti_rep
-  )
-
-  # Organic inputs (amendments + animals)
-  cli::cli_progress_step("Computing organic inputs...")
-  orginput <- compute_orginput(
-    rot_bounds  = rot_bounds,
-    amend       = amend,
-    animal      = animal,
-    w_amend     = settings$w_amend,
-    w_animal    = settings$w_animal,
-    animal_presence = settings$animal_presence
-  )
-
-  # --------------------------------------------------------------------------
-  # 5. Combine sub-indices
-  # --------------------------------------------------------------------------
-  cli::cli_progress_step("Combining indices...")
-
-  # Ensure all pillars contain all MGT_combo values
-  if (anyDuplicated(mgt$MGT_combo)) {
-    stop("Duplicated MGT_combo in shmi_inputs$mgt: ",
-         paste(utils::head(unique(mgt$MGT_combo[duplicated(mgt$MGT_combo)]), 5),
-               collapse = ", "), call. = FALSE)
-  }
-  all_sites <- mgt %>% dplyr::distinct(MGT_combo)
-
-  cover     <- all_sites %>% left_join(cover,     by = "MGT_combo") %>%
-    mutate(Cover     = replace_na(Cover,     0))
-
-  diversity <- all_sites %>% left_join(diversity, by = "MGT_combo") %>%
-    mutate(Diversity = replace_na(Diversity, 0))
-
-  invdist   <- all_sites %>% left_join(invdist,   by = "MGT_combo") %>%
-    mutate(InvDist   = replace_na(InvDist,   100))
-
-  orginput  <- all_sites %>% left_join(orginput,  by = "MGT_combo") %>%
-    mutate(OrgInput  = replace_na(OrgInput,  0))
-
-  indicator_df <- purrr::reduce(
-    list(mgt, cover, diversity, invdist, orginput),
-    dplyr::full_join,
-    by = "MGT_combo"
-  )
-
-  w_sum   <- settings$w_cover + settings$w_diversity + settings$w_invdist + settings$w_orginput
-
-  w_cover     <- settings$w_cover     / w_sum
-  w_diversity <- settings$w_diversity / w_sum
-  w_invdist   <- settings$w_invdist   / w_sum
-  w_orginput  <- settings$w_orginput  / w_sum
-
-  indicator_df <- indicator_df %>%
-    dplyr::mutate(
-      SHMI = (
-        w_cover     * .data$Cover +
-          w_diversity * .data$Diversity +
-          w_invdist   * .data$InvDist +
-          w_orginput  * .data$OrgInput
-      )
-    ) %>%
-    dplyr::select(any_of(c(
-      "MGT_combo", "MGT_study", "MGT_farm",
-      "MGT_field", "MGT_trt",
-      "SHMI", "Cover", "Diversity",
-      "InvDist", "OrgInput"
-    ))) %>%
-    dplyr::arrange(.data$MGT_combo)
-
-  cli::cli_progress_done()
-  cli::cli_progress_cleanup()
-
-  if (!expert_mode) {
-    message("\n\nSHMI computed using official national settings.")
-  }
-
-  # --------------------------------------------------------------------------
-  # 6. Return both indicators and settings used
-  # --------------------------------------------------------------------------
-  list(
-    indicator_df = indicator_df,
-    settings_used = settings,
-    expert_mode   = expert_mode,
-    shmi_version  = as.character(utils::packageVersion("SHMI")),
-    rotation_window = if (is.null(attr(shmi_inputs, "rotation_window"))) "events" else
-      attr(shmi_inputs, "rotation_window"),
-    timestamp     = Sys.time()
-  )
+shmi_weights <- function() {
+  c(Cover = 0.400, OrgInput = 0.317, Diversity = 0.153, InvDist = 0.130)
 }
 
 
-# Validate a complete settings list (internal)
-.check_shmi_settings <- function(s) {
-  err <- character()
-  nonneg_group <- function(nms, label) {
-    v <- unlist(s[nms])
-    if (length(v) != length(nms) || !is.numeric(v) || any(!is.finite(v)) || any(v < 0)) {
-      return(paste0(label, " must be finite, non-negative numbers."))
-    }
-    if (sum(v) <= 0) return(paste0(label, " must not all be zero."))
-    NULL
+#' Compute SHMI scores
+#'
+#' Computes the Soil Health Management Index (SHMI) for each management unit
+#' (`MGT_combo`) from prepared inputs and monthly climate normals:
+#' \deqn{SHMI = 0.400\,Cover + 0.317\,OrgInput + 0.153\,Diversity + 0.130\,InvDist}
+#'
+#' * **Cover**: share of days with living plants in the growing and
+#'   non-growing seasons, set by each unit's climate ([compute_cover()]).
+#' * **OrgInput**: share of years with an organic amendment or grazing
+#'   animals ([compute_orginput()]).
+#' * **Diversity**: average annual plant species richness
+#'   ([compute_diversity()]).
+#' * **InvDist**: inverse tillage disturbance, computed as in USDA's T-DISC
+#'   from implement mixing efficiencies and depths, or from STIR
+#'   ([compute_disturbance()]).
+#'
+#' Every sub-index and SHMI run from 0 to 100. A missing record means the
+#' practice did not happen.
+#'
+#' @param shmi_inputs A list returned by [prepare_shmi_inputs()].
+#' @param climate Monthly climate normals, one row per `MGT_combo`, with
+#'   `tavg_01` ... `tavg_12` and `prec_01` ... `prec_12`.
+#'   `get_shmi_climate(shmi_inputs)` builds it from the coordinates on
+#'   Mgt_Unit. Irrigation comes from Mgt_Unit (`MGT_irr_cat`) unless the table
+#'   has its own `irrigated` column.
+#' @param weights Optional named vector of custom weights (`Cover`,
+#'   `OrgInput`, `Diversity`, `InvDist`), rescaled to sum to 1. Scores with
+#'   custom weights are not comparable to the official SHMI scale.
+#' @param dist_meth Tillage scale: `"EPA"` (default; each pass's mixing
+#'   efficiency and depth, or its implement's T-DISC values), `"STIR"` (STIR
+#'   values), or `"auto"` (STIR for records holding only STIR values,
+#'   otherwise EPA). Both are scored with T-DISC's crop intervals and windows.
+#' @param implements Optional user implement table (`implement`,
+#'   `mixing_efficiency`, `depth_cm`) overriding T-DISC's values for named
+#'   implements; see [compute_disturbance()].
+#'
+#' @return A list with `indicator_df` (one row per unit: `MGT_combo`, any
+#'   management metadata, `SHMI`, `Cover`, `OrgInput`, `Diversity`,
+#'   `InvDist`, `Cover_growing`, `Cover_nongrowing`, `Richness`),
+#'   `weights`, `dist_meth` (the tillage scale used), `official` (`TRUE`
+#'   unless custom weights were used),
+#'   `shmi_version` and `timestamp` (plus `expert_mode` and `settings_used`,
+#'   kept for code written against SHMI < 1.0).
+#'
+#' @seealso [prepare_shmi_inputs()], [get_shmi_climate()], [shmi_components()],
+#'   [plot_shmi_gauge()], [plot_shmi_lollipop()]
+#'
+#' @examples
+#' \dontrun{
+#' inputs  <- prepare_shmi_inputs("my_workbook.xlsx")
+#' climate <- get_shmi_climate(inputs)
+#' result  <- build_shmi(inputs, climate)
+#' result$indicator_df
+#' }
+#' @export
+build_shmi <- function(shmi_inputs, climate, weights = NULL, dist_meth = c("EPA", "STIR", "auto"),
+                       implements = NULL) {
+  dist_meth <- .resolve_dist_meth(shmi_inputs$dist, match.arg(dist_meth))
+  cli::cli_progress_step("Validating inputs...")
+  val <- validate_shmi_input(shmi_inputs, dist_meth = dist_meth)
+  if (!val$ok) {
+    message("Errors:\n", paste0(" - ", val$errors, collapse = "\n"))
+    stop("Fix the errors above and re-run build_shmi().", call. = FALSE)
   }
-  err <- c(err,
-           nonneg_group(c("w_winter", "w_spring", "w_summer", "w_fall"), "Season weights"),
-           nonneg_group(c("w_amend", "w_animal"), "w_amend and w_animal"),
-           nonneg_group(c("w_cover", "w_diversity", "w_invdist", "w_orginput"), "Pillar weights"))
+  if (length(val$warnings)) message("Warnings:\n", paste0(" - ", val$warnings, collapse = "\n"))
 
-  if (!(length(s$hill) == 1 && s$hill %in% c(0, 1, 2)))
-    err <- c(err, "hill must be 0, 1, or 2.")
-  if (!(length(s$max_div) == 1 && is.numeric(s$max_div) && is.finite(s$max_div) &&
-        s$max_div > if (isTRUE(s$hill == 0)) 0 else 1))
-    err <- c(err, "max_div must be > 1 (> 0 for hill = 0); log(max_div) scales entropy.")
-  if (!(length(s$dist_meth) == 1 && s$dist_meth %in% c("EPA", "STIR")))
-    err <- c(err, "dist_meth must be \"EPA\" or \"STIR\".")
-  if (!(length(s$max_stir) == 1 && is.numeric(s$max_stir) && s$max_stir > 0))
-    err <- c(err, "max_stir must be a positive number.")
-  if (!(length(s$ti_rep) == 1 && s$ti_rep %in% c("max", "min", "mid")))
-    err <- c(err, "ti_rep must be \"max\", \"min\", or \"mid\".")
-  if (!(length(s$animal_presence) == 1 && s$animal_presence %in% c("start", "span")))
-    err <- c(err, "animal_presence must be \"start\" or \"span\".")
-  if (!(length(s$clip_to_rotation) == 1 && is.logical(s$clip_to_rotation) &&
-        !is.na(s$clip_to_rotation)))
-    err <- c(err, "clip_to_rotation must be TRUE or FALSE.")
-
-  if (length(err) > 0) {
-    stop("Invalid SHMI settings:\n", paste0(" - ", err, collapse = "\n"), call. = FALSE)
+  w <- shmi_weights(); official <- is.null(weights)
+  if (!is.null(weights)) {
+    if (is.null(names(weights)) || !setequal(names(weights), names(w)) ||
+        any(!is.finite(weights)) || any(weights < 0) || sum(weights) <= 0)
+      stop("`weights` must be non-negative numbers named Cover, OrgInput, Diversity and InvDist.", call. = FALSE)
+    w <- weights[names(w)] / sum(weights)
+    message("Custom weights: scores are not comparable to the official SHMI scale.")
   }
-  invisible(TRUE)
+
+  cli::cli_progress_step("Computing sub-indices...")
+  comp <- shmi_components(shmi_inputs, climate, dist_meth = dist_meth, implements = implements)
+
+  cli::cli_progress_step("Combining...")
+  indicator_df <- shmi_inputs$mgt %>%
+    dplyr::select(dplyr::any_of(c("MGT_combo", "MGT_study", "MGT_farm", "MGT_field", "MGT_trt", "irrigated"))) %>%
+    dplyr::left_join(comp, by = "MGT_combo") %>%
+    dplyr::mutate(SHMI = w[["Cover"]] * .data$Cover + w[["OrgInput"]] * .data$OrgInput +
+                    w[["Diversity"]] * .data$Diversity + w[["InvDist"]] * .data$InvDist) %>%
+    dplyr::relocate("SHMI", "Cover", "OrgInput", "Diversity", "InvDist", .after = dplyr::last_col()) %>%
+    dplyr::relocate("Cover_growing", "Cover_nongrowing", "Richness", "TI_tillage", "tillage_designation",
+                    .after = dplyr::last_col()) %>%
+    dplyr::arrange(.data$MGT_combo)
+  cli::cli_progress_done()
+
+  list(indicator_df = indicator_df, weights = w, dist_meth = dist_meth, official = official,
+       shmi_version = as.character(utils::packageVersion("SHMI")), timestamp = Sys.time(),
+       # kept for code written against SHMI < 1.0 (e.g. plotting helpers)
+       expert_mode = !official, settings_used = list(weights = w, dist_meth = dist_meth))
 }

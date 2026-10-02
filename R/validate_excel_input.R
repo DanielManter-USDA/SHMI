@@ -81,7 +81,7 @@ validate_excel_input <- function(path, verbose = TRUE) {
 
   sd <- .safe_read(path,
                    sheet = "Soil_Disturbance",
-                   required_cols = c("MGT_combo", "SD_date", "SD_mixeff"),
+                   required_cols = c("MGT_combo", "SD_date"),
                    skip = 3,
                    verbose = verbose)
 
@@ -116,7 +116,7 @@ validate_excel_input <- function(path, verbose = TRUE) {
     ),
 
     Soil_Disturbance = c(
-      "MGT_combo", "SD_date", "SD_mixeff"
+      "MGT_combo", "SD_date"
     )
   )
 
@@ -182,7 +182,7 @@ validate_excel_input <- function(path, verbose = TRUE) {
   }
 
   # ---- Soil_Disturbance: dates and values (method-independent) ----
-  if (.n(sd) > 0 && all(c("MGT_combo", "SD_date", "SD_mixeff") %in% names(sd))) {
+  if (.n(sd) > 0 && all(c("MGT_combo", "SD_date") %in% names(sd))) {
 
     # Missing or unparseable dates: these passes cannot be placed in a year
     parsed_date <- unname(.parse_shmi_date(sd$SD_date))
@@ -195,18 +195,29 @@ validate_excel_input <- function(path, verbose = TRUE) {
       ))
     }
 
-    # SD_mixeff: must be numeric and non-negative
-    mixeff <- suppressWarnings(as.numeric(sd$SD_mixeff))
-    non_num <- !is.na(sd$SD_mixeff) & is.na(mixeff)
-    if (any(non_num)) {
-      errors <- c(errors, paste0(
-        "Soil_Disturbance has ", sum(non_num),
-        " non-numeric SD_mixeff value(s): ",
-        paste(utils::head(unique(sd$SD_mixeff[non_num]), 5), collapse = ", ")
-      ))
+    # SD_mixeff (optional: a pass can give its implement, SD_equip, instead)
+    if ("SD_mixeff" %in% names(sd)) {
+      # SD_mixeff: must be numeric and non-negative
+      mixeff <- suppressWarnings(as.numeric(sd$SD_mixeff))
+      non_num <- !is.na(sd$SD_mixeff) & is.na(mixeff)
+      if (any(non_num)) {
+        errors <- c(errors, paste0(
+          "Soil_Disturbance has ", sum(non_num),
+          " non-numeric SD_mixeff value(s): ",
+          paste(utils::head(unique(sd$SD_mixeff[non_num]), 5), collapse = ", ")
+        ))
+      }
+      if (any(mixeff < 0, na.rm = TRUE)) {
+        errors <- c(errors, "Soil_Disturbance contains negative SD_mixeff values.")
+      }
     }
-    if (any(mixeff < 0, na.rm = TRUE)) {
-      errors <- c(errors, "Soil_Disturbance contains negative SD_mixeff values.")
+
+    # SD_stir (optional: STIR values, for dist_meth = "STIR")
+    if ("SD_stir" %in% names(sd)) {
+      stir <- suppressWarnings(as.numeric(sd$SD_stir))
+      bad <- !is.na(sd$SD_stir) & is.na(stir)
+      if (any(bad)) errors <- c(errors, paste0("Soil_Disturbance has ", sum(bad), " non-numeric SD_stir value(s)."))
+      if (any(stir < 0, na.rm = TRUE)) errors <- c(errors, "Soil_Disturbance contains negative SD_stir values.")
     }
 
     # SD_depth (optional column; required only for EPA, checked later)

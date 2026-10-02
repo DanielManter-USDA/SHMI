@@ -1,163 +1,96 @@
 #' Compute the Diversity sub-index
 #'
-#' Rotation-scale crop diversity based on the number of days each species is
-#' present, scaled 0-100.
+#' Average annual plant species richness, scaled 0-100.
 #'
 #' @details
-#' **Species.** Each distinct `CD_name` is a species. Full names are used, so
-#' `"Rye"` and `"Rye, Cereal"` are different species; extra whitespace is
-#' ignored. Count-first placeholder mixtures such as `"8-species"`,
-#' `"8 species"`, or `"8-spp"` are expanded into synthetic species
-#' `species_1`, ..., `species_8`. Placeholders in the same unit share these
-#' names, so a mix repeated in several years counts as the same species.
-#' Names such as `"Species 1"` are ordinary named species. Legacy names
-#' joined by `"+"` (`"A + B"`) are split. Fallow rows are excluded.
+#' For each calendar year in a unit's evaluation window, Diversity counts the
+#' plant species present at any time that year, then averages the counts over
+#' the years. A cover crop or a seed mix therefore raises Diversity in the
+#' years it grows; a rotation of single crops (corn, then soybean) counts one
+#' species per year.
 #'
-#' **Plant-days.** For each species, plant-days are the union of its
-#' episodes, so overlapping episodes of the same species count once, while
-#' different species present on the same day each count. Species proportions
-#' are \eqn{p_i = days_i / \sum_j days_j}.
+#' **Species.** Each distinct `CD_name` is a species (whitespace tidied).
+#' Count-first placeholder mixtures such as `"8-species"`, `"8 spp"` or
+#' `"8-species mix"` count as that many species. Names joined by `"+"` are
+#' split. Rows named `"fallow"`, `"none"` or `"bare"` are not plants.
 #'
-#' **Order** (`hill`):
-#' * `0`: richness, the number of species, divided by `max_div`.
-#' * `1`: Shannon entropy \eqn{-\sum_i p_i \log p_i}, divided by
-#'   `log(max_div)`.
-#' * `2`: Simpson (order-2 Renyi) entropy \eqn{-\log \sum_i p_i^2}, divided
-#'   by `log(max_div)`.
+#' **Score.** \deqn{Diversity = 100 \min\left(\frac{R - 1}{R_{max} - 1}, 1\right)}
+#' where \eqn{R} is the average annual richness: one species a year scores 0,
+#' and \eqn{R_{max}} (8) or more species a year scores 100.
 #'
-#' Orders 1 and 2 are logarithms of the corresponding Hill numbers, so the
-#' score reaches 100 when the effective number of species reaches `max_div`.
-#' Scores are capped at 100. Under orders 1 and 2 a single species scores 0.
+#' @param crop Species episodes with `MGT_combo`, `CD_name`, `crop_start` and
+#'   `crop_end`, as in `prepare_shmi_inputs()$crop`.
+#' @param rot_bounds Rotation bounds with `MGT_combo`, `rot_start` and
+#'   `rot_end`. Episodes are clipped to this window.
+#' @param max_richness Average species per year that scores 100.
 #'
-#' @param crop Species episodes with `MGT_combo`, `CD_name`, `crop_start`,
-#'   and `crop_end`, as in `prepare_shmi_inputs()$crop`.
-#' @param hill Diversity order: `0` (richness), `1` (Shannon, official), or
-#'   `2` (Simpson).
-#' @param max_div Number of species (or effective species) that scores 100.
+#' @return A tibble with `MGT_combo`, `Diversity` (0-100) and `Richness`
+#'   (average species per year), one row per unit in `rot_bounds`.
 #'
-#' @return A data frame with `MGT_combo` and `Diversity` (0-100). Units with
-#'   no non-fallow species are omitted; [build_shmi()] scores them 0.
-#'
-#' @seealso [build_shmi()], [compute_cover()]
+#' @seealso [build_shmi()]
 #'
 #' @examples
 #' crop <- data.frame(
 #'   MGT_combo  = "field_1",
-#'   CD_name    = c("Corn", "Soybean", "8-species"),
-#'   crop_start = as.Date(c("2019-05-01", "2020-05-10", "2020-10-15")),
-#'   crop_end   = as.Date(c("2019-09-30", "2020-09-25", "2021-04-01"))
+#'   CD_name    = c("Corn", "Rye", "Soybean"),
+#'   crop_start = as.Date(c("2020-05-01", "2020-10-15", "2021-05-10")),
+#'   crop_end   = as.Date(c("2020-09-30", "2021-04-20", "2021-09-25"))
 #' )
-#' compute_diversity(crop)            # Shannon (official)
-#' compute_diversity(crop, hill = 0)  # richness
+#' rot_bounds <- data.frame(MGT_combo = "field_1",
+#'                          rot_start = as.Date("2020-01-01"),
+#'                          rot_end   = as.Date("2021-12-31"))
+#' compute_diversity(crop, rot_bounds)   # 2 species in 2020 and 2021
 #'
 #' @export
-compute_diversity <- function(crop,
-                              hill = 1,
-                              max_div = 10) {
+compute_diversity <- function(crop, rot_bounds, max_richness = 8) {
+  if (!is.numeric(max_richness) || length(max_richness) != 1 || max_richness <= 1)
+    stop("max_richness must be a single number greater than 1.", call. = FALSE)
+  rb <- dplyr::distinct(rot_bounds, .data$MGT_combo, .data$rot_start, .data$rot_end)
+  rb$rot_start <- as.Date(rb$rot_start); rb$rot_end <- as.Date(rb$rot_end)
+  yr <- function(d) as.integer(format(as.Date(d), "%Y"))
+  ex <- .expand_species(clip_crop_to_rotation(crop, rot_bounds))
+  ex_by <- split(ex, ex$MGT_combo)
 
-  # ---- 1. Expand mixtures into species ----
-  # Species are identified by their full CD_name (whitespace tidied), so
-  # "Rye" and "Rye, Cereal" are different species.
-  expand_mixtures <- function(df) {
+  R <- vapply(seq_len(nrow(rb)), function(i) {
+    ei  <- ex_by[[rb$MGT_combo[i]]]
+    yrs <- seq(yr(rb$rot_start[i]), yr(rb$rot_end[i]))
+    mean(vapply(yrs, function(y) {
+      if (is.null(ei)) return(0)
+      ys <- as.Date(sprintf("%d-01-01", y)); ye <- as.Date(sprintf("%d-12-31", y))
+      length(unique(ei$species[as.Date(ei$crop_start) <= ye & as.Date(ei$crop_end) >= ys]))
+    }, numeric(1)))
+  }, numeric(1))
 
-    df <- df %>%
-      mutate(CD_name = gsub("\\s+", " ", trimws(as.character(CD_name))))
-
-    n_mix <- .placeholder_n(df$CD_name)
-
-    # ---- CASE 1: Placeholder mixtures like "8-species" ----
-    # Expanded into synthetic species species_1 ... species_n. Placeholders
-    # in the same unit share these names, so an "8-species" mix repeated in
-    # several years counts as the same 8 species (a conservative choice).
-    placeholder <- df[!is.na(n_mix), ] %>%
-      mutate(
-        mix_n   = n_mix[!is.na(n_mix)],
-        species = lapply(mix_n, function(n) paste0("species_", seq_len(n)))
-      ) %>%
-      tidyr::unnest(species) %>%
-      select(MGT_combo, species, crop_start, crop_end)
-
-    # ---- CASE 2: Named species, including legacy "A + B + C" names ----
-    realmix <- df[is.na(n_mix), ] %>%
-      mutate(species = strsplit(CD_name, "\\s*\\+\\s*")) %>%
-      tidyr::unnest(species) %>%
-      mutate(species = trimws(species)) %>%
-      filter(species != "") %>%
-      select(MGT_combo, species, crop_start, crop_end)
-
-    bind_rows(placeholder, realmix)
-  }
-
-  expanded <- expand_mixtures(crop)
-
-  # ---- 2. Compute plant-days per species ----
-  # Union within each species so the same species is never counted twice on
-  # one day (duplicate or overlapping episodes). Different species that
-  # overlap (mixtures, relays, intercrops) each keep their full days.
-  species_days <- expanded %>%
-    filter(!tolower(species) %in% c("fallow", "none", "bare")) %>%
-    group_by(MGT_combo, species) %>%
-    summarize(
-      days = .union_days(crop_start, crop_end),
-      .groups = "drop"
-    ) %>%
-    filter(days > 0)
-
-  # ---- 3. Compute species proportions and entropy ----
-  # hill is a single value, so choose the formula with if/else rather than
-  # case_when() (which evaluates every branch and warns in dplyr >= 1.2).
-  entropy <- function(p) {
-    if (hill == 0) {
-      sum(p > 0)                          # richness
-    } else if (hill == 1) {
-      -sum(p * log(p), na.rm = TRUE)      # Shannon entropy
-    } else {
-      -log(sum(p^2, na.rm = TRUE))        # Simpson entropy (entropy form)
-    }
-  }
-
-  div_rot <- species_days %>%
-    group_by(MGT_combo) %>%
-    mutate(
-      p = days / sum(days)
-    ) %>%
-    summarize(
-      D = entropy(p),
-      .groups = "drop"
-    ) %>%
-    mutate(
-      D = if_else(is.na(D), 0, D)
-    )
-
-  # ---- 4. Scale to 0-100 ----
-  # Richness is scaled by max_div (a species count); entropies by
-  # log(max_div). The cap at 100 is applied once, after scaling, so it is
-  # correct for every Hill order.
-  D_scale <- if (hill == 0) max_div else log(max_div)
-
-  div_final <- div_rot %>%
-    mutate(
-      Diversity_raw = D / D_scale,
-      Diversity     = pmin(Diversity_raw, 1) * 100
-    ) %>%
-    select(MGT_combo, Diversity)
-
-  div_final
+  tibble::tibble(MGT_combo = rb$MGT_combo,
+                 Diversity = 100 * pmin(pmax(R - 1, 0) / (max_richness - 1), 1),
+                 Richness  = R)
 }
 
 
-#' Number of species in a placeholder mixture name (internal)
-#'
-#' Recognizes count-first placeholders such as "8-species", "8 species",
-#' "8species", "8-spp", and "8-species mix" (case-insensitive) and returns the
-#' count. Anything else returns NA and is treated as a named species. Names
-#' such as "Species 1" or "Multi-species" are therefore *not* expanded:
-#' "Species 1" / "Species 2" label individual unnamed species in a mix.
-#'
-#' @param x Character vector of crop names.
-#' @return Integer vector of species counts (NA when not a placeholder).
-#' @keywords internal
-#' @noRd
+# Species in a crop table: placeholder mixtures ("8-species") become that many
+# synthetic species, names joined by "+" are split, fallow is dropped.
+.expand_species <- function(crop) {
+  crop <- crop[!is.na(crop$crop_start) & !is.na(crop$crop_end), , drop = FALSE]
+  crop$CD_name <- gsub("\\s+", " ", trimws(as.character(crop$CD_name)))
+  n_mix <- .placeholder_n(crop$CD_name)
+  ph <- crop[!is.na(n_mix), , drop = FALSE]
+  ph <- if (nrow(ph)) {
+    ph$species <- lapply(n_mix[!is.na(n_mix)], function(n) paste0("species_", seq_len(n)))
+    tidyr::unnest(ph, "species")
+  } else { ph$species <- character(0); ph }
+  nm <- crop[is.na(n_mix), , drop = FALSE]
+  nm$species <- strsplit(nm$CD_name, "\\s*\\+\\s*")
+  nm <- tidyr::unnest(nm, "species")
+  out <- dplyr::bind_rows(ph, nm)
+  out$species <- trimws(out$species)
+  out <- out[out$species != "" & !(tolower(out$species) %in% c("fallow", "none", "bare")), ]
+  out[, c("MGT_combo", "species", "crop_start", "crop_end")]
+}
+
+
+# Number of species in a count-first placeholder name ("8-species", "8 spp",
+# "8-species mix"); NA otherwise. "Species 1" or "Multi-species" are not
+# placeholders.
 .placeholder_n <- function(x) {
   x   <- tolower(trimws(as.character(x)))
   pat <- "^([0-9]+)\\s*-?\\s*(species|spp\\.?)(\\s+(mix|mixture|blend))?$"

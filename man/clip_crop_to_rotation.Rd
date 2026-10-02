@@ -16,8 +16,6 @@ clip_crop_to_rotation(crop, rot_bounds)
 }
 \description{
 Truncates \code{crop_start} / \code{crop_end} to \code{rot_start} / \code{rot_end} and drops
-episodes entirely outside the window. Calling this once in
-\code{\link[=build_shmi]{build_shmi()}}, before \code{\link[=compute_cover]{compute_cover()}} and \code{\link[=compute_diversity]{compute_diversity()}}, makes
-both sub-indices use the same evaluation window as \code{\link[=compute_orginput]{compute_orginput()}}
-and \code{\link[=compute_disturbance]{compute_disturbance()}}.
+episodes entirely outside the window, so every sub-index uses the same
+evaluation window.
 }

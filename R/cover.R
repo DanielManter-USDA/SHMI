@@ -1,94 +1,95 @@
 #' Compute the Cover sub-index
 #'
-#' Season-weighted proportion of days in the rotation with living plant
-#' cover, scaled 0-100.
+#' Share of days with living plants in the growing and non-growing seasons,
+#' weighted and scaled 0-100.
 #'
 #' @details
-#' **Plant windows.** Every row of `crop` (one row per species episode) is a
-#' window of living cover, except rows named `"fallow"`, `"none"`, or
-#' `"bare"`. Overlapping windows (mixtures, relays, intercrops) are merged, so
-#' each day counts once however many species are present.
+#' **Plant days.** Every crop episode is a window of living cover, except
+#' rows named `"fallow"`, `"none"` or `"bare"`. Overlapping windows (mixtures,
+#' relays, cover crops) are merged, so each day counts once.
 #'
-#' **Seasons.** Each day is assigned to a season by calendar month: winter
-#' (Dec-Feb), spring (Mar-May), summer (Jun-Aug), and fall (Sep-Nov). For each
-#' season \eqn{s}, \eqn{p_s} is the number of plant days divided by the number
-#' of days of that season in the rotation; seasons with no days in the
-#' rotation contribute 0.
+#' **Seasons.** A calendar month is in the growing season at a unit when its
+#' long-term mean temperature is at least `grow_temp` (5 C) and, unless the
+#' unit is irrigated, it is not dry: precipitation (mm) at least twice the
+#' mean temperature (C), the Bagnouls-Gaussen dry-month rule. Other months
+#' form the non-growing season. If a unit has no months in one season, that
+#' season takes the other's value.
 #'
-#' **Score.** The season weights are rescaled to sum to 1, and
-#' \deqn{Cover = 100 \sum_s w_s p_s}
+#' **Score.** With \eqn{G} and \eqn{N} the percentage of growing- and
+#' non-growing-season days with living plants,
+#' \deqn{Cover = s G + (1 - s) N}
+#' where \eqn{s} is `growing_share` (0.860, from the SHMI calibration).
 #'
-#' **Rotation window.** Days in the rotation run from `rot_start` to
-#' `rot_end`. In [prepare_shmi_inputs()] these span the first to the last
-#' recorded event, or the window set by `start_date_override` and
-#' `end_date_override`, which is how a fixed evaluation period is imposed.
-#'
-#' Only plant days inside `rot_start`-`rot_end` count
-#' when `clip_to_rotation = TRUE` (the default from 1.2.0). SHMI <= 1.1.0
-#' counted every day of an episode, including days outside the rotation,
-#' against the rotation's season lengths, so a season's proportion could
-#' exceed 1 when episodes extended past the evaluation window.
-#'
-#' A unit in `rot_bounds` with no plant windows (for example a fallow
-#' reference site) scores 0.
-#'
-#' @param crop Species episodes with `MGT_combo`, `CD_name`, `crop_start`,
-#'   and `crop_end`, as in `prepare_shmi_inputs()$crop`.
-#' @param rot_bounds Rotation bounds with `MGT_combo`, `rot_start`, and
+#' @param crop Species episodes with `MGT_combo`, `CD_name`, `crop_start` and
+#'   `crop_end`, as in `prepare_shmi_inputs()$crop`.
+#' @param rot_bounds Rotation bounds with `MGT_combo`, `rot_start` and
 #'   `rot_end`.
-#' @param w_winter,w_spring,w_summer,w_fall Season weights. Defaults are the
-#'   official values.
-#' @param clip_to_rotation Logical; see *Rotation window*. `FALSE` reproduces
-#'   SHMI <= 1.1.0.
+#' @param climate Monthly climate normals, one row per `MGT_combo`, with
+#'   `tavg_01` ... `tavg_12` (mean temperature, C), `prec_01` ... `prec_12`
+#'   (precipitation, mm) and optionally `irrigated` (logical). See
+#'   [get_shmi_climate()].
+#' @param grow_temp Minimum monthly mean temperature (C) of a growing month.
+#' @param growing_share Weight of the growing season within Cover.
 #'
-#' @return A data frame with `MGT_combo` and `Cover` (0-100), one row per
-#'   unit in `rot_bounds`.
+#' @return A tibble with `MGT_combo`, `Cover`, `Cover_growing` and
+#'   `Cover_nongrowing` (all 0-100), one row per unit in `rot_bounds`.
 #'
-#' @seealso [compute_cover_components()], [build_shmi()], [compute_diversity()]
+#' @seealso [get_shmi_climate()], [build_shmi()]
 #'
 #' @examples
-#' crop <- data.frame(
-#'   MGT_combo  = "field_1",
-#'   CD_name    = c("Corn", "Rye"),
-#'   crop_start = as.Date(c("2020-05-01", "2020-10-15")),
-#'   crop_end   = as.Date(c("2020-09-30", "2020-12-31"))
-#' )
-#' rot_bounds <- data.frame(
-#'   MGT_combo = "field_1",
-#'   rot_start = as.Date("2020-01-01"),
-#'   rot_end   = as.Date("2020-12-31")
-#' )
-#' compute_cover(crop, rot_bounds)
+#' crop <- data.frame(MGT_combo = "field_1", CD_name = c("Corn", "Rye"),
+#'                    crop_start = as.Date(c("2020-05-01", "2020-10-15")),
+#'                    crop_end   = as.Date(c("2020-09-30", "2020-12-31")))
+#' rot_bounds <- data.frame(MGT_combo = "field_1",
+#'                          rot_start = as.Date("2020-01-01"),
+#'                          rot_end   = as.Date("2020-12-31"))
+#' climate <- data.frame(MGT_combo = "field_1")
+#' climate[sprintf("tavg_%02d", 1:12)] <- as.list(c(-5, -3, 3, 10, 16, 21, 24, 23, 18, 11, 4, -2))
+#' climate[sprintf("prec_%02d", 1:12)] <- as.list(c(30, 30, 50, 80, 100, 110, 100, 90, 80, 60, 50, 35))
+#' compute_cover(crop, rot_bounds, climate)
 #'
 #' @export
-compute_cover <- function(
-    crop,
-    rot_bounds,
-    w_winter = 0.1259,
-    w_spring = 0.1260,
-    w_summer = 0.3755,
-    w_fall   = 0.3726,
-    clip_to_rotation = TRUE
-) {
-  w <- c(w_winter, w_spring, w_summer, w_fall)
-  if (any(!is.finite(w)) || any(w < 0) || sum(w) <= 0) {
-    stop("Season weights must be finite, non-negative, and not all zero.")
-  }
-  w <- w / sum(w)
-
-  comp <- compute_cover_components(crop, rot_bounds, clip_to_rotation = clip_to_rotation)
-  P <- as.matrix(comp[, c("p_winter", "p_spring", "p_summer", "p_fall")])
-
-  tibble::tibble(MGT_combo = comp$MGT_combo, Cover = 100 * as.vector(P %*% w))
+compute_cover <- function(crop, rot_bounds, climate, grow_temp = 5, growing_share = 0.860) {
+  if (!is.numeric(growing_share) || length(growing_share) != 1 || growing_share < 0 || growing_share > 1)
+    stop("growing_share must be a single number between 0 and 1.", call. = FALSE)
+  mc  <- compute_cover_monthly(crop, rot_bounds)
+  act <- growing_months(climate, grow_temp)
+  miss <- setdiff(mc$MGT_combo, rownames(act))
+  if (length(miss))
+    stop("No climate for ", length(miss), " unit(s): ", paste(utils::head(miss, 5), collapse = ", "),
+         ". Supply a row per MGT_combo in `climate`.", call. = FALSE)
+  act <- act[mc$MGT_combo, , drop = FALSE]
+  P <- as.matrix(mc[, sprintf("plant_%02d", 1:12)]); D <- as.matrix(mc[, sprintf("days_%02d", 1:12)])
+  share <- function(keep) { den <- rowSums(D * keep); ifelse(den > 0, 100 * rowSums(P * keep) / den, NA_real_) }
+  G <- share(act); N <- share(!act)
+  G <- ifelse(is.na(G), N, G); N <- ifelse(is.na(N), G, N)
+  G[is.na(G)] <- 0; N[is.na(N)] <- 0
+  tibble::tibble(MGT_combo = mc$MGT_combo,
+                 Cover = growing_share * G + (1 - growing_share) * N,
+                 Cover_growing = G, Cover_nongrowing = N)
 }
 
 
-# Map month number to season (Dec-Feb winter, Mar-May spring, etc.)
-.season <- function(month) {
-  dplyr::case_when(
-    month %in% c(12, 1, 2)  ~ "winter",
-    month %in% c(3, 4, 5)   ~ "spring",
-    month %in% c(6, 7, 8)   ~ "summer",
-    month %in% c(9, 10, 11) ~ "fall"
-  )
+#' Growing-season months from monthly climate normals
+#'
+#' A month is in the growing season when its mean temperature is at least
+#' `grow_temp` and, unless the unit is irrigated, precipitation (mm) is at
+#' least twice the mean temperature (C).
+#'
+#' @inheritParams compute_cover
+#' @return A logical matrix, one row per `MGT_combo` (row names) and one
+#'   column per month; `TRUE` = growing season.
+#' @export
+growing_months <- function(climate, grow_temp = 5) {
+  need <- c("MGT_combo", sprintf("tavg_%02d", 1:12), sprintf("prec_%02d", 1:12))
+  miss <- setdiff(need, names(climate))
+  if (length(miss)) stop("`climate` lacks: ", paste(miss, collapse = ", "), call. = FALSE)
+  if (anyDuplicated(climate$MGT_combo)) stop("`climate` has more than one row per MGT_combo.", call. = FALSE)
+  Tm <- as.matrix(climate[, sprintf("tavg_%02d", 1:12)]); Pm <- as.matrix(climate[, sprintf("prec_%02d", 1:12)])
+  if (anyNA(Tm) || anyNA(Pm)) stop("`climate` has missing monthly values.", call. = FALSE)
+  irr <- if ("irrigated" %in% names(climate)) as.logical(climate$irrigated) else rep(FALSE, nrow(climate))
+  irr[is.na(irr)] <- FALSE
+  act <- (Tm >= grow_temp) & (irr | Pm >= 2 * Tm)
+  dimnames(act) <- list(as.character(climate$MGT_combo), month.abb)
+  act
 }

@@ -1,329 +1,402 @@
-#' Compute the inverse-disturbance sub-index
+#' Compute the Inverse Disturbance sub-index
 #'
-#' Scores soil disturbance for each calendar year of the rotation and
-#' averages the years, so that 100 means no disturbance and 0 means maximum
-#' disturbance.
+#' Tillage intensity computed as in USDA's Tillage Disturbance Index for Soil
+#' Carbon (T-DISC), scored 0-100 (100 = no tillage).
 #'
 #' @details
-#' **Methods.**
-#' * `"EPA"` (official): mechanistic soil-mixing model. `SD_mixeff` is the
-#'   mixing efficiency (a proportion, 0-1) and `SD_depth` the tillage depth
-#'   in inches, converted to cm and capped at 30 cm. Passes on the same day
-#'   are processed from shallowest to deepest, and each disturbs fraction
-#'   \eqn{m} of the soil still undisturbed within its depth \eqn{d}, so
-#'   overlapping passes are not double-counted:
-#'   \eqn{S_k = S_{k-1} + m_k (d_k - S_{k-1})}. The daily value is
-#'   \eqn{S / 30}, and daily values are summed within each calendar year.
-#' * `"STIR"`: `SD_mixeff` holds STIR values. They are summed within each
-#'   calendar year, divided by `max_stir`, and truncated to 1.
+#' **Crop intervals.** Each cash crop (harvest records with category `"cash"`
+#' or `"annual"`) defines a crop interval, from the day after the previous
+#' cash crop's harvest to its own last harvest. Its planting date is the start
+#' of the latest episode of the same crop beginning on or before the harvest.
+#' Days outside every crop interval (years without a cash crop, or the end of
+#' the record after the last harvest) form one interval per calendar year.
 #'
-#' **Classes.** Each annual tillage intensity (TI) is placed in a Tier-3
-#' class (left-closed, right-open intervals):
+#' **Tillage windows.** Within a cash-crop interval with planting date P,
+#' a pass belongs to: *field preparation* (up to 56 days before P),
+#' *before planting* (55-7 days before P), *planting* (6-0 days before P),
+#' *after planting* (after P, outside harvest days) or *harvest* (a harvest
+#' day). Intervals without a planting date, or outside cash crops, have a
+#' single window.
 #'
-#' | Class | TI range | Class | TI range |
-#' |---|---|---|---|
-#' | Z | `0 - 0.001` | F | `0.144 - 0.162` |
-#' | A | `0.001 - 0.01` | G | `0.162 - 0.202` |
-#' | B | `0.01 - 0.04` | H | `0.202 - 0.252` |
-#' | C | `0.04 - 0.075` | I | `0.252 - 0.268` |
-#' | D | `0.075 - 0.111` | J | `0.268 - 0.449` |
-#' | E | `0.111 - 0.144` | K | `0.449 - 1` |
+#' **Window intensity (EPA soil-mixing model).** Implements are applied from
+#' shallowest to deepest (ties: least to most intensive); each mixes its share
+#' of the soil still unmixed within its depth \eqn{d_k} (cm, capped at 30):
+#' \deqn{S_k = S_{k-1} + m_k (d_k - S_{k-1})}
+#' and the window's intensity is \eqn{S / 30}. With `dist_meth = "STIR"`, the
+#' window's intensity is its summed STIR divided by `max_stir`, truncated to 1.
 #'
-#' Annual TI is capped at 1 before classification (under `"EPA"` the sum of
-#' daily values can exceed 1), so class K covers 0.449-1 inclusive.
+#' **Interval rating and score.** An interval's rating is the maximum of its
+#' window intensities (T-DISC's crop-interval rating). It is placed in an EPA
+#' Tier-3 class and replaced by the class's upper bound (class Z: 0); the
+#' interval scores \eqn{100 (1 - \text{class value})}. The unit's InvDist is
+#' the mean over its intervals, weighted by interval length in days.
 #'
-#' TI is then replaced by a class representative chosen by `ti_rep`: the
-#' lower bound (`"min"`), midpoint (`"mid"`), or upper bound (`"max"`, the
-#' official choice). Class Z always uses 0. The annual score is
-#' \eqn{100 (1 - TI_{used})}, and the rotation score is the mean over all
-#' calendar years from `rot_start_yr` to `rot_end_yr`.
+#' **Implement values (EPA).** Each pass names its implement (`SD_equip`); its
+#' mixing efficiency and depth come from `implements` (a user table that
+#' replaces or adds entries) or else from [tdisc_implements()], directly or
+#' through the operation names in [tdisc_mapping()]. An operation that maps to
+#' several implements counts as several passes on the same day.
 #'
-#' **Missing records.** A missing record means no disturbance occurred (for
-#' example, continuous no-till): years without passes score 100, and a unit
-#' with no passes at all scores 100.
+#' `SD_mixeff` (0-1) and `SD_depth` (inches) are **overrides**: leave them blank
+#' to use the implement's values, or enter either or both to replace them. A
+#' pass with both values needs no implement. For an operation that maps to
+#' several implements, enter both overrides or neither.
 #'
-#' **Checks.** Inputs are checked for the chosen method. Under `"EPA"`, every
-#' pass with `SD_mixeff > 0` needs `SD_depth`, `SD_mixeff` must lie within
-#' 0-1 (larger values look like STIR), and depths above 20 inches give a
-#' warning because they may have been entered in cm.
+#' Names are matched case- and whitespace-insensitively. Passes that cannot
+#' be resolved stop with a list of the unknown implement names.
 #'
-#' @param dist Disturbance passes with `MGT_combo`, `SD_date`, `SD_mixeff`,
-#'   and, for `"EPA"`, `SD_depth` (inches).
-#' @param rot_bounds Rotation bounds with `MGT_combo`, `rot_start_yr`, and
-#'   `rot_end_yr`.
-#' @param dist_meth Disturbance method, `"EPA"` or `"STIR"`.
-#' @param max_stir Annual STIR value that corresponds to TI = 1 (`"STIR"`
-#'   only).
-#' @param ti_rep Class representative: `"max"`, `"min"`, or `"mid"`.
+#' @param dist Tillage passes with `MGT_combo`, `SD_date` and, for EPA,
+#'   `SD_equip` and the optional overrides `SD_mixeff` and `SD_depth`; for STIR,
+#'   `SD_stir` (or `SD_mixeff` in workbooks without an `SD_stir` column).
+#' @param rot_bounds Rotation bounds with `MGT_combo`, `rot_start_yr`,
+#'   `rot_end_yr` and, optionally, `rot_start` / `rot_end` (dates).
+#' @param crop Crop episodes (`prepare_shmi_inputs()$crop`), for planting
+#'   dates. If `NULL`, every calendar year is one interval with one window.
+#' @param harvests Harvest records (`prepare_shmi_inputs()$harvests`) with
+#'   `MGT_combo`, `CD_name`, `CD_cat` and `harv_date`. If `NULL`, as for `crop`.
+#' @param dist_meth `"EPA"` (default; mixing efficiency and depth, from the
+#'   implement or the pass's overrides) or `"STIR"` (STIR values in `SD_stir`).
+#' @param implements Optional user implement table with `implement`,
+#'   `mixing_efficiency` (0-1) and `depth_cm`; its entries take precedence over
+#'   [tdisc_implements()] and [tdisc_mapping()].
+#' @param max_stir For `"STIR"`: summed STIR in a window corresponding to an
+#'   intensity of 1. The default (135) best matches T-DISC ratings on the
+#'   NAPESHM data.
+#' @param details If `TRUE`, the result carries an `"intervals"` attribute
+#'   with each crop interval's dates, rating, class and designation.
 #'
-#' @return A data frame with `MGT_combo` and `InvDist` (0-100), one row per
-#'   unit in `rot_bounds`.
+#' @return A tibble, one row per unit in `rot_bounds`: `MGT_combo`, `InvDist`
+#'   (0-100), `TI` (length-weighted mean interval rating, 0-1), `designation`
+#'   (T-DISC designation of `TI`: `"NT"` up to 0.075, `"RT"` up to 0.252,
+#'   otherwise `"CT"`) and `n_intervals`. Units without passes score 100.
 #'
-#' @seealso [build_shmi()], [validate_shmi_input()]
+#' @seealso [tdisc_implements()], [tdisc_mapping()], [build_shmi()]
 #'
 #' @examples
-#' dist <- data.frame(
-#'   MGT_combo = "field_1",
-#'   SD_date   = as.Date(c("2020-04-15", "2020-05-01")),
-#'   SD_mixeff = c(39, 2.4)   # STIR values: disk harrow, planter
-#' )
-#' rot_bounds <- data.frame(MGT_combo = "field_1",
-#'                          rot_start_yr = 2020, rot_end_yr = 2021)
-#' compute_disturbance(dist, rot_bounds, dist_meth = "STIR")
+#' rot_bounds <- data.frame(MGT_combo = "field_1", rot_start_yr = 2020, rot_end_yr = 2020)
+#' dist <- data.frame(MGT_combo = "field_1", SD_date = as.Date("2020-04-15"),
+#'                    SD_equip = "HARROW, DISK, TANDEM, HEAVYDUTY")
+#' compute_disturbance(dist, rot_bounds)    # T-DISC implement values
+#'
+#' # a user value for the same implement
+#' mine <- data.frame(implement = "HARROW, DISK, TANDEM, HEAVYDUTY",
+#'                    mixing_efficiency = 0.6, depth_cm = 10)
+#' compute_disturbance(dist, rot_bounds, implements = mine)
 #'
 #' @export
-compute_disturbance <- function(dist,
-                                rot_bounds,
-                                dist_meth = c("EPA", "STIR"),
-                                max_stir = 342,
-                                ti_rep = c("max", "min", "mid")) {
-
+compute_disturbance <- function(dist, rot_bounds, crop = NULL, harvests = NULL,
+                                dist_meth = c("EPA", "STIR"), implements = NULL,
+                                max_stir = SHMI_STIR_MAX, details = FALSE) {
   dist_meth <- match.arg(dist_meth)
-  ti_rep    <- match.arg(ti_rep)
-
+  if (!is.numeric(max_stir) || length(max_stir) != 1 || max_stir <= 0)
+    stop("max_stir must be a single positive number.", call. = FALSE)
   chk <- .check_dist_method(dist, dist_meth)
-  if (length(chk$errors) > 0) {
-    stop(paste(chk$errors, collapse = "\n"), call. = FALSE)
-  }
+  if (length(chk$errors)) stop(paste(chk$errors, collapse = "\n"), call. = FALSE)
 
-  # ------------------------------------------------------------
-  # REQUIRED CHECK: EPA needs SD_depth
-  # ------------------------------------------------------------
-  if (dist_meth == "EPA") {
+  rb <- .rot_windows(rot_bounds)
+  ci <- .crop_intervals(rb, crop, harvests)
+  ivs <- ci$intervals; hdays <- ci$harvest_days
+  passes <- .tillage_passes(dist, dist_meth, implements)
 
-    # Column missing entirely, or present but all values blank/NA
-    if (!"SD_depth" %in% names(dist) || all(is.na(dist$SD_depth))) {
-      stop("dist_meth = 'EPA' requires SD_depth, but it is missing or blank.")
-    }
+  # assign passes to intervals and windows
+  scored <- lapply(split(ivs, ivs$MGT_combo), function(iu) {
+    pu <- passes[passes$MGT_combo == iu$MGT_combo[1], , drop = FALSE]
+    iu$TI <- vapply(seq_len(nrow(iu)), function(k) {
+      pk <- pu[pu$date >= iu$start[k] & pu$date <= iu$end[k], , drop = FALSE]
+      if (!nrow(pk)) return(0)
+      pk$window <- .tillage_window(pk$date, iu$plant[k], hdays$harv_date[hdays$iv_id == iu$iv_id[k]])
+      max(vapply(split(pk, pk$window), function(w) {
+        if (dist_meth == "STIR") return(min(sum(w$stir) / max_stir, 1))
+        o <- order(w$depth_cm, w$me)
+        min(.epa_day(w$me[o], w$depth_cm[o]) / 30, 1)
+      }, numeric(1)))
+    }, numeric(1))
+    iu
+  })
+  ivs <- do.call(rbind, scored)
+  ivs$class_value <- .ti_class_value(ivs$TI)
+  ivs$score <- 100 * (1 - ivs$class_value)
+  ivs$days <- as.numeric(ivs$end - ivs$start) + 1
 
-    # Column present but not numeric
-    if (!is.numeric(dist$SD_depth)) {
-      stop("SD_depth must be numeric for EPA disturbance calculations.")
-    }
-  }
+  units <- lapply(split(ivs, ivs$MGT_combo), function(iu)
+    tibble::tibble(MGT_combo = iu$MGT_combo[1],
+                   InvDist = stats::weighted.mean(iu$score, iu$days),
+                   TI = stats::weighted.mean(iu$TI, iu$days),
+                   n_intervals = nrow(iu)))
+  out <- dplyr::distinct(rot_bounds, .data$MGT_combo) %>%
+    dplyr::left_join(dplyr::bind_rows(units), by = "MGT_combo") %>%
+    dplyr::mutate(InvDist = tidyr::replace_na(.data$InvDist, 100),
+                  TI = tidyr::replace_na(.data$TI, 0),
+                  designation = .tdisc_designation(.data$TI))
+  out <- out[, c("MGT_combo", "InvDist", "TI", "designation", "n_intervals")]
+  if (details) attr(out, "intervals") <- tibble::as_tibble(
+    transform(ivs[, c("MGT_combo", "start", "end", "plant", "TI", "class_value", "score", "days")],
+              designation = .tdisc_designation(ivs$TI)))
+  out
+}
 
-  # -------------------------------------------------------------------------
-  # 0. All MGT combos
-  # -------------------------------------------------------------------------
-  all_mgts <- rot_bounds %>% dplyr::select(MGT_combo)
-
-  # -------------------------------------------------------------------------
-  # 1. Expand rotation years
-  # -------------------------------------------------------------------------
-  full_years <- rot_bounds %>%
-    dplyr::mutate(year = purrr::map2(rot_start_yr, rot_end_yr, seq)) %>%
-    tidyr::unnest(year) %>%
-    dplyr::select(MGT_combo, year)
-
-  # -------------------------------------------------------------------------
-  # 2. Tier-3 class table (left-closed, right-open)
-  # -------------------------------------------------------------------------
-  ti_classes <- tibble::tribble(
-    ~class, ~ti_min, ~ti_max,
-    "Z",    0.000,   0.001,
-    "A",    0.001,   0.01,
-    "B",    0.01,    0.04,
-    "C",    0.04,    0.075,
-    "D",    0.075,   0.111,
-    "E",    0.111,   0.144,
-    "F",    0.144,   0.162,
-    "G",    0.162,   0.202,
-    "H",    0.202,   0.252,
-    "I",    0.252,   0.268,
-    "J",    0.268,   0.449,
-    "K",    0.449,   1.00
-  ) %>%
-    dplyr::mutate(
-      ti_mid = (ti_min + ti_max) / 2,
-      ti_mid = dplyr::if_else(class == "Z", 0, ti_mid)
-    )
-
-  rep_col <- switch(ti_rep,
-                    mid = ti_classes$ti_mid,
-                    min = ti_classes$ti_min,
-                    max = ti_classes$ti_max
-  )
-
-  # -------------------------------------------------------------------------
-  # Helper: classify TI (left-closed, right-open; the top class K is closed
-  # at 1). TI is capped at 1 first. Under EPA the annual sum of daily S/30
-  # can exceed 1; capping makes explicit what SHMI <= 1.1.0 did implicitly
-  # through its nearest-midpoint fallback, so class assignments are unchanged.
-  # Vectorized, so no rowwise() pass is needed.
-  # -------------------------------------------------------------------------
-  score_years <- function(annual) {
-    TI  <- pmin(pmax(annual$TI_raw, 0), 1)
-    idx <- findInterval(TI, ti_classes$ti_min)
-    annual$class        <- ti_classes$class[idx]
-    annual$TI_used      <- ifelse(annual$class == "Z", 0, rep_col[idx])
-    annual$InvDist_year <- 100 * (1 - annual$TI_used)
-    annual
-  }
-
-  # -------------------------------------------------------------------------
-  # ============================
-  # EPA METHOD
-  # ============================
-  # -------------------------------------------------------------------------
-  if (dist_meth == "EPA") {
-
-    if (any(dist$SD_mixeff < 0 | dist$SD_mixeff > 1, na.rm = TRUE)) {
-      stop("dist_meth = 'EPA' expects SD_mixeff in [0, 1]; values > 1 look like STIR. ",
-           "Use dist_meth = 'STIR' or convert to mixing efficiencies.", call. = FALSE)
-    }
-
-    bad <- dist %>%
-      dplyr::filter(!is.na(SD_mixeff), SD_mixeff > 0, is.na(SD_depth))
-
-    if (nrow(bad) > 0) {
-      cli::cli_abort(c(
-        "dist_meth = 'EPA' requires SD_depth for every disturbance pass.",
-        "x" = "{nrow(bad)} pass{?es} ha{?s/ve} SD_mixeff but no SD_depth.",
-        "i" = "First affected: {.val {utils::head(unique(paste(bad$MGT_combo, bad$SD_date)), 5)}}"
-      ))
-    }
-    if (!is.numeric(dist$SD_depth)) {
-      cli::cli_abort("SD_depth must be numeric for EPA disturbance calculations.")
-    }
-
-    # Plausibility check on depth units (template expects inches)
-    max_plausible_in <- 20   # ~51 cm; deeper than normal tillage
-
-    if (any(dist$SD_depth < 0, na.rm = TRUE)) {
-      cli::cli_abort("SD_depth contains negative values; depths must be >= 0 inches.")
-    }
-
-    deep <- dist %>%
-      dplyr::filter(!is.na(SD_depth), SD_depth > max_plausible_in)
-
-    if (nrow(deep) > 0) {
-      cli::cli_warn(c(
-        "{nrow(deep)} disturbance pass{?es} ha{?s/ve} SD_depth > {max_plausible_in} inches.",
-        "!" = "SD_depth is expected in inches; values this large may have been entered in cm.",
-        "i" = "Depths are capped at 30 cm (~11.8 in), so unit errors are otherwise absorbed silently.",
-        "i" = "First affected: {.val {utils::head(unique(paste(deep$MGT_combo, deep$SD_date, deep$SD_depth)), 5)}}"
-      ))
-    }
-
-    dist_epa <- dist %>%
-      dplyr::mutate(
-        SD_depth_cm = SD_depth * 2.54,
-        SD_depth_cm = pmin(SD_depth_cm, 30),
-        year        = lubridate::year(SD_date)
-      ) %>%
-      dplyr::filter(!is.na(SD_mixeff), !is.na(SD_depth_cm))
+# Annual STIR in a tillage window corresponding to an intensity of 1; fitted so
+# STIR ratings best match T-DISC ratings on the NAPESHM crop intervals
+SHMI_STIR_MAX <- 135
 
 
-    daily <- dist_epa %>%
-      dplyr::arrange(MGT_combo, SD_date, SD_depth_cm) %>%
-      dplyr::group_by(MGT_combo, year, SD_date) %>%
-      dplyr::summarize(T_t_daily = .epa_day(SD_mixeff, SD_depth_cm) / 30,
-                       .groups = "drop")
+#' T-DISC implement values
+#'
+#' The implements of USDA's Tillage Disturbance Index for Soil Carbon
+#' (T-DISC, version 1.1.1, 9/4/2026) with their mixing efficiency and tillage
+#' depth, used by [compute_disturbance()] when a pass gives an implement name
+#' rather than its own values.
+#'
+#' @return A tibble with `implement`, `mixing_efficiency` (0-1) and
+#'   `depth_cm`.
+#' @source USDA Office of the Chief Economist, T-DISC Excel tool, "Implement
+#'   List" tab. <https://www.usda.gov/t-disc>
+#' @examples
+#' head(tdisc_implements())
+#' @export
+tdisc_implements <- function() {
+  f <- system.file("extdata", "tdisc_implements.csv", package = "SHMI", mustWork = TRUE)
+  tibble::as_tibble(utils::read.csv(f, stringsAsFactors = FALSE, check.names = FALSE))
+}
 
-    annual <- daily %>%
-      dplyr::group_by(MGT_combo, year) %>%
-      dplyr::summarize(TI_raw = sum(T_t_daily, na.rm = TRUE), .groups = "drop")
-
-    annual <- full_years %>%
-      dplyr::left_join(annual, by = c("MGT_combo", "year")) %>%
-      dplyr::mutate(TI_raw = tidyr::replace_na(TI_raw, 0))
-
-    annual <- score_years(annual)
-
-    rot <- annual %>%
-      dplyr::group_by(MGT_combo) %>%
-      dplyr::summarize(InvDist = mean(InvDist_year), .groups = "drop")
-
-    return(all_mgts %>%
-             dplyr::left_join(rot, by = "MGT_combo") %>%
-             dplyr::mutate(InvDist = tidyr::replace_na(InvDist, 100)))
-  }
-
-  # -------------------------------------------------------------------------
-  # ============================
-  # STIR METHOD
-  # ============================
-  # -------------------------------------------------------------------------
-  if (dist_meth == "STIR") {
-
-    # SD_mixeff contains actual STIR values
-    daily <- dist %>%
-      dplyr::group_by(MGT_combo, SD_date) %>%
-      dplyr::summarize(STIR_raw = sum(SD_mixeff, na.rm = TRUE), .groups = "drop")
-
-    stir_years <- daily %>%
-      dplyr::mutate(year = lubridate::year(SD_date)) %>%
-      dplyr::group_by(MGT_combo, year) %>%
-      dplyr::summarize(STIR_raw = sum(STIR_raw), .groups = "drop")
-
-    annual <- full_years %>%
-      dplyr::left_join(stir_years, by = c("MGT_combo", "year")) %>%
-      dplyr::mutate(
-        STIR_raw = tidyr::replace_na(STIR_raw, 0),
-        TI_raw = pmin(STIR_raw / max_stir, 1)
-      )
-
-    annual <- score_years(annual)
-
-    rot <- annual %>%
-      dplyr::group_by(MGT_combo) %>%
-      dplyr::summarize(InvDist = mean(InvDist_year), .groups = "drop")
-
-    return(all_mgts %>%
-             dplyr::left_join(rot, by = "MGT_combo") %>%
-             dplyr::mutate(InvDist = tidyr::replace_na(InvDist, 100)))
-  }
+#' Operation names translated to T-DISC implements
+#'
+#' Operation names (from T-DISC's "Implement Mapping" tab, and implement names
+#' used in the NAPESHM records) with the T-DISC implement(s) that represent
+#' each. An operation listed with several implements counts as several passes.
+#'
+#' @return A tibble with `operation`, `implement` and `source`
+#'   (`"T-DISC 1.1.1"` or `"NAPESHM crosswalk"`).
+#' @source USDA Office of the Chief Economist, T-DISC Excel tool, "Implement
+#'   Mapping" tab. <https://www.usda.gov/t-disc>
+#' @examples
+#' subset(tdisc_mapping(), grepl("moldboard", operation, ignore.case = TRUE))
+#' @export
+tdisc_mapping <- function() {
+  f <- system.file("extdata", "tdisc_mapping.csv", package = "SHMI", mustWork = TRUE)
+  tibble::as_tibble(utils::read.csv(f, stringsAsFactors = FALSE, check.names = FALSE))
 }
 
 
-# ------------------------------------------------------------------------------
-# Internal helpers shared with prepare_shmi_inputs()
-# ------------------------------------------------------------------------------
+# ---- helpers ------------------------------------------------------------------
 
-# EPA mixed depth for one day: passes ordered shallow to deep, each mixing a
-# fraction `me` of the soil between the depth already mixed and its own depth.
-# Returns cm (depths already capped at 30 cm).
+.name_key <- function(x) toupper(gsub("\\s+", " ", trimws(as.character(x))))
+
+# Evaluation window dates per unit (calendar years when no dates are given)
+.rot_windows <- function(rot_bounds) {
+  rb <- dplyr::distinct(rot_bounds, .data$MGT_combo, .keep_all = TRUE)
+  if (!"rot_start" %in% names(rb)) rb$rot_start <- as.Date(paste0(rb$rot_start_yr, "-01-01"))
+  if (!"rot_end" %in% names(rb))   rb$rot_end   <- as.Date(paste0(rb$rot_end_yr, "-12-31"))
+  rb$rot_start <- as.Date(rb$rot_start); rb$rot_end <- as.Date(rb$rot_end)
+  rb[, c("MGT_combo", "rot_start", "rot_end")]
+}
+
+# Crop intervals per unit: one per cash crop (planting date, harvest days), then
+# the remaining days as calendar-year intervals with no planting date. Returns
+# list(intervals = data frame, harvest_days = data frame of iv_id, harv_date).
+.crop_intervals <- function(rb, crop, harvests) {
+  cash <- NULL
+  if (!is.null(harvests) && nrow(harvests))
+    cash <- harvests[!is.na(harvests$harv_date) &
+                       tolower(trimws(harvests$CD_cat)) %in% c("cash", "annual"), , drop = FALSE]
+  ep <- if (!is.null(crop) && nrow(crop)) crop[!is.na(crop$crop_start), , drop = FALSE] else NULL
+  ivl <- list(); hdl <- list(); id <- 0L
+  add <- function(u, start, end, plant, hd) {
+    id <<- id + 1L
+    ivl[[id]] <<- data.frame(iv_id = id, MGT_combo = u, start = start, end = end, plant = plant,
+                             stringsAsFactors = FALSE)
+    if (length(hd)) hdl[[length(hdl) + 1]] <<- data.frame(iv_id = id, harv_date = hd)
+  }
+  for (i in seq_len(nrow(rb))) {
+    u <- rb$MGT_combo[i]; ws <- rb$rot_start[i]; we <- rb$rot_end[i]; start <- ws
+    cu <- if (!is.null(cash)) cash[cash$MGT_combo == u, , drop = FALSE] else NULL
+    if (!is.null(cu) && nrow(cu)) {
+      eu <- if (!is.null(ep)) ep[ep$MGT_combo == u, , drop = FALSE] else NULL
+      cu$name <- .name_key(cu$CD_name)
+      cu$plant <- as.Date(vapply(seq_len(nrow(cu)), function(k) {
+        if (is.null(eu) || !nrow(eu)) return(NA_real_)
+        st <- eu$crop_start[.name_key(eu$CD_name) == cu$name[k] & eu$crop_start <= cu$harv_date[k]]
+        if (length(st)) as.numeric(max(st)) else NA_real_
+      }, numeric(1)), origin = "1970-01-01")
+      g <- split(cu, paste(cu$name, cu$plant))
+      g <- g[order(vapply(g, function(x) as.numeric(max(x$harv_date)), numeric(1)))]
+      for (x in g) {
+        e <- max(x$harv_date)
+        if (e < start || e > we) next
+        add(u, start, e, x$plant[1], sort(unique(x$harv_date)))
+        start <- e + 1
+      }
+    }
+    while (start <= we) {                                   # remainder: calendar years
+      e <- min(as.Date(paste0(format(start, "%Y"), "-12-31")), we)
+      add(u, start, e, as.Date(NA), as.Date(character()))
+      start <- e + 1
+    }
+  }
+  intervals <- if (length(ivl)) do.call(rbind, ivl) else
+    data.frame(iv_id = integer(), MGT_combo = character(), start = as.Date(character()),
+               end = as.Date(character()), plant = as.Date(character()))
+  harvest_days <- if (length(hdl)) do.call(rbind, hdl) else
+    data.frame(iv_id = integer(), harv_date = as.Date(character()))
+  list(intervals = intervals, harvest_days = harvest_days)
+}
+
+# T-DISC tillage window of each pass date in a crop interval
+.tillage_window <- function(date, plant, harv_days) {
+  if (is.na(plant)) return(rep("single", length(date)))
+  k <- as.numeric(plant - date)
+  w <- ifelse(date %in% harv_days, "harvest",
+       ifelse(date > plant, "after_planting",
+       ifelse(k <= 6, "planting", ifelse(k <= 55, "before_planting", "field_preparation"))))
+  w
+}
+
+# STIR values of each pass: SD_stir, or SD_mixeff in workbooks from before
+# SD_stir existed
+.stir_values <- function(d) {
+  st <- if ("SD_stir" %in% names(d)) suppressWarnings(as.numeric(d$SD_stir)) else rep(NA_real_, nrow(d))
+  if (all(is.na(st)) && "SD_mixeff" %in% names(d)) st <- suppressWarnings(as.numeric(d$SD_mixeff))
+  st
+}
+
+# Passes as rows of (MGT_combo, date, me, depth_cm, stir). EPA: a pass's own
+# SD_mixeff and SD_depth (inches) override its implement's T-DISC values, either
+# or both; an operation that maps to several implements needs both or neither.
+# strict = FALSE drops unresolvable EPA passes silently.
+.tillage_passes <- function(dist, dist_meth, implements = NULL, strict = TRUE) {
+  empty <- data.frame(MGT_combo = character(), date = as.Date(character()),
+                      me = numeric(), depth_cm = numeric(), stir = numeric())
+  if (is.null(dist) || !nrow(dist)) return(empty)
+  d <- dist[!is.na(dist$SD_date), , drop = FALSE]
+  if (!nrow(d)) return(empty)
+  for (k in c("SD_equip", "SD_mixeff", "SD_depth", "SD_stir")) if (!k %in% names(d)) d[[k]] <- NA
+  if (dist_meth == "STIR") {
+    st <- .stir_values(d); keep <- !is.na(st)
+    return(data.frame(MGT_combo = d$MGT_combo[keep], date = as.Date(d$SD_date[keep]),
+                      me = rep(NA_real_, sum(keep)), depth_cm = rep(NA_real_, sum(keep)), stir = st[keep]))
+  }
+  me_o  <- suppressWarnings(as.numeric(d$SD_mixeff))
+  dep_o <- suppressWarnings(as.numeric(d$SD_depth)) * 2.54
+  equip <- trimws(as.character(d$SD_equip))
+  has_eq <- !is.na(equip) & equip != "" & toupper(equip) != "NA"
+
+  lib <- tdisc_implements()
+  if (!is.null(implements)) {
+    need <- c("implement", "mixing_efficiency", "depth_cm")
+    miss <- setdiff(need, names(implements))
+    if (length(miss)) stop("`implements` lacks: ", paste(miss, collapse = ", "), call. = FALSE)
+    lib <- rbind(as.data.frame(implements[, need]), as.data.frame(lib[, need]))
+  }
+  lib <- lib[!duplicated(.name_key(lib$implement)), , drop = FALSE]
+  lk <- .name_key(lib$implement)
+  mp <- tdisc_mapping(); mk <- .name_key(mp$operation)
+  resolve <- function(nm) {
+    key <- .name_key(nm)
+    if (key %in% lk) return(lib[match(key, lk), , drop = FALSE])
+    if (key %in% mk) {
+      imp <- .name_key(mp$implement[mk == key])
+      if (all(imp %in% lk)) return(lib[match(imp, lk), , drop = FALSE])
+    }
+    NULL
+  }
+  nm <- unique(equip[has_eq]); res <- lapply(nm, resolve); names(res) <- nm
+
+  out <- vector("list", nrow(d)); problem <- character(nrow(d))
+  for (k in seq_len(nrow(d))) {
+    r <- if (has_eq[k]) res[[equip[k]]] else NULL
+    both <- !is.na(me_o[k]) & !is.na(dep_o[k]); any_o <- !is.na(me_o[k]) | !is.na(dep_o[k])
+    if (both) {
+      me <- me_o[k]; dep <- dep_o[k]
+    } else if (!is.null(r) && nrow(r) == 1) {
+      me  <- if (!is.na(me_o[k]))  me_o[k]  else r$mixing_efficiency
+      dep <- if (!is.na(dep_o[k])) dep_o[k] else r$depth_cm
+    } else if (!is.null(r)) {
+      if (any_o) { problem[k] <- "partial"; if (strict) next }
+      me <- r$mixing_efficiency; dep <- r$depth_cm
+    } else {
+      problem[k] <- if (has_eq[k]) "unknown" else "blank"
+      next
+    }
+    out[[k]] <- data.frame(MGT_combo = d$MGT_combo[k], date = as.Date(d$SD_date[k]),
+                           me = me, depth_cm = pmin(dep, 30), stir = NA_real_)
+  }
+  if (strict) {
+    first <- function(w) paste(utils::head(unique(paste(d$MGT_combo[w], d$SD_date[w])), 5), collapse = "; ")
+    msg <- character()
+    if (any(problem == "blank"))
+      msg <- c(msg, paste0(sum(problem == "blank"), " tillage pass(es) have no implement (SD_equip) and not both ",
+                           "SD_mixeff and SD_depth. First affected: ", first(problem == "blank")))
+    if (any(problem == "unknown")) {
+      u <- unique(equip[problem == "unknown"])
+      msg <- c(msg, paste0("No T-DISC values for ", length(u), " implement name(s): ",
+                           paste(utils::head(sQuote(u, FALSE), 10), collapse = ", "),
+                           if (length(u) > 10) paste0(" (+", length(u) - 10, " more)") else "",
+                           ". Use a name from tdisc_implements() / tdisc_mapping(), add it to `implements`, ",
+                           "or enter both SD_mixeff and SD_depth on those passes."))
+    }
+    if (any(problem == "partial")) {
+      u <- unique(equip[problem == "partial"])
+      msg <- c(msg, paste0("Operation(s) ", paste(utils::head(sQuote(u, FALSE), 5), collapse = ", "),
+                           " map to several T-DISC implements, so a single override is ambiguous: ",
+                           "enter both SD_mixeff and SD_depth for the operation, or neither."))
+    }
+    if (length(msg)) stop(paste(msg, collapse = "\n"), call. = FALSE)
+  }
+  keep <- !vapply(out, is.null, logical(1))
+  if (!any(keep)) return(empty)
+  do.call(rbind, out[keep])
+}
+
+# EPA mixing recurrence for implements in order (depth in cm)
 .epa_day <- function(me, depth) {
   S <- 0
   for (i in seq_along(me)) S <- S + me[i] * max(depth[i] - S, 0)
   S
 }
 
-# Daily tillage intensity per unit, on the scale of the chosen method:
+# EPA Tier-3 class upper bound of each intensity (class Z: 0)
+.ti_class_value <- function(ti) {
+  ub <- c(0.001, 0.01, 0.04, 0.075, 0.111, 0.144, 0.162, 0.202, 0.252, 0.268, 0.449, 1)
+  ti <- pmin(pmax(ti, 0), 1)
+  idx <- findInterval(ti, c(0, ub[-length(ub)]), left.open = TRUE)
+  idx[idx < 1] <- 1
+  v <- ub[idx]
+  v[ti < 0.001] <- 0
+  v
+}
+
+.tdisc_designation <- function(ti) ifelse(ti <= 0.075, "NT", ifelse(ti <= 0.252, "RT", "CT"))
+
+# Daily tillage intensity per unit, on the scale of the chosen method, for the
+# rule that ends crops at intensive tillage:
 #   STIR : sum of STIR values of the day's passes
-#   EPA  : daily tillage intensity T_t = mixed depth / 30 cm (as in
-#          compute_disturbance()); depths in inches, capped at 30 cm
+#   EPA  : mixed depth / 30 cm, with implement values as in compute_disturbance()
 .daily_tillage <- function(dist, method = c("STIR", "EPA")) {
   method <- match.arg(method)
-  d <- dist[!is.na(dist$SD_date) & !is.na(dist$SD_mixeff), , drop = FALSE]
-  if (nrow(d) == 0) {
-    return(tibble::tibble(MGT_combo = character(), SD_date = as.Date(character()),
-                          intensity = numeric()))
-  }
+  p <- .tillage_passes(dist, method, strict = FALSE)
+  if (!nrow(p)) return(tibble::tibble(MGT_combo = character(), SD_date = as.Date(character()),
+                                      intensity = numeric()))
   if (method == "STIR") {
-    d %>%
-      dplyr::group_by(MGT_combo, SD_date) %>%
-      dplyr::summarise(intensity = sum(SD_mixeff), .groups = "drop")
+    p %>% dplyr::group_by(MGT_combo, SD_date = date) %>%
+      dplyr::summarise(intensity = sum(stir), .groups = "drop")
   } else {
-    d %>%
-      dplyr::filter(!is.na(SD_depth)) %>%
-      dplyr::mutate(depth_cm = pmin(SD_depth * 2.54, 30)) %>%
-      dplyr::arrange(MGT_combo, SD_date, depth_cm) %>%
-      dplyr::group_by(MGT_combo, SD_date) %>%
-      dplyr::summarise(intensity = .epa_day(SD_mixeff, depth_cm) / 30, .groups = "drop")
+    p %>% dplyr::arrange(MGT_combo, date, depth_cm, me) %>%
+      dplyr::group_by(MGT_combo, SD_date = date) %>%
+      dplyr::summarise(intensity = .epa_day(me, depth_cm) / 30, .groups = "drop")
   }
 }
 
-# Which scale to use for the intensive-tillage rule. "auto": EPA when every
-# pass with a mixing efficiency has a depth and all efficiencies are <= 1;
-# otherwise STIR.
+# Which scale to use for the intensive-tillage rule. "auto": STIR when STIR
+# values are recorded (SD_stir, or STIR-like SD_mixeff in older workbooks);
+# otherwise EPA when passes carry implement names or mixing efficiencies.
 .tillage_method <- function(dist, tillage_end = c("auto", "STIR", "EPA", "none")) {
   tillage_end <- match.arg(tillage_end)
   if (tillage_end != "auto") return(tillage_end)
   if (is.null(dist) || nrow(dist) == 0) return("none")
-  me <- dist$SD_mixeff[!is.na(dist$SD_mixeff)]
-  if (!length(me)) return("none")
-  has_depth <- "SD_depth" %in% names(dist) &&
-    all(!is.na(dist$SD_depth[!is.na(dist$SD_mixeff) & dist$SD_mixeff > 0]))
-  if (all(me <= 1) && has_depth) "EPA" else "STIR"
+  st <- if ("SD_stir" %in% names(dist)) suppressWarnings(as.numeric(dist$SD_stir)) else NA
+  if (any(!is.na(st))) return("STIR")
+  me <- suppressWarnings(as.numeric(dist$SD_mixeff))
+  has_equip <- "SD_equip" %in% names(dist) && any(!is.na(dist$SD_equip) & trimws(dist$SD_equip) != "")
+  if (any(me > 1, na.rm = TRUE)) return("STIR")       # older workbooks: STIR values in SD_mixeff
+  if (has_equip || any(!is.na(me))) "EPA" else "none"
 }

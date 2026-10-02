@@ -4,64 +4,53 @@
 \alias{compute_diversity}
 \title{Compute the Diversity sub-index}
 \usage{
-compute_diversity(crop, hill = 1, max_div = 10)
+compute_diversity(crop, rot_bounds, max_richness = 8)
 }
 \arguments{
-\item{crop}{Species episodes with \code{MGT_combo}, \code{CD_name}, \code{crop_start},
-and \code{crop_end}, as in \code{prepare_shmi_inputs()$crop}.}
+\item{crop}{Species episodes with \code{MGT_combo}, \code{CD_name}, \code{crop_start} and
+\code{crop_end}, as in \code{prepare_shmi_inputs()$crop}.}
 
-\item{hill}{Diversity order: \code{0} (richness), \code{1} (Shannon, official), or
-\code{2} (Simpson).}
+\item{rot_bounds}{Rotation bounds with \code{MGT_combo}, \code{rot_start} and
+\code{rot_end}. Episodes are clipped to this window.}
 
-\item{max_div}{Number of species (or effective species) that scores 100.}
+\item{max_richness}{Average species per year that scores 100.}
 }
 \value{
-A data frame with \code{MGT_combo} and \code{Diversity} (0-100). Units with
-no non-fallow species are omitted; \code{\link[=build_shmi]{build_shmi()}} scores them 0.
+A tibble with \code{MGT_combo}, \code{Diversity} (0-100) and \code{Richness}
+(average species per year), one row per unit in \code{rot_bounds}.
 }
 \description{
-Rotation-scale crop diversity based on the number of days each species is
-present, scaled 0-100.
+Average annual plant species richness, scaled 0-100.
 }
 \details{
-\strong{Species.} Each distinct \code{CD_name} is a species. Full names are used, so
-\code{"Rye"} and \code{"Rye, Cereal"} are different species; extra whitespace is
-ignored. Count-first placeholder mixtures such as \code{"8-species"},
-\code{"8 species"}, or \code{"8-spp"} are expanded into synthetic species
-\code{species_1}, ..., \code{species_8}. Placeholders in the same unit share these
-names, so a mix repeated in several years counts as the same species.
-Names such as \code{"Species 1"} are ordinary named species. Legacy names
-joined by \code{"+"} (\code{"A + B"}) are split. Fallow rows are excluded.
+For each calendar year in a unit's evaluation window, Diversity counts the
+plant species present at any time that year, then averages the counts over
+the years. A cover crop or a seed mix therefore raises Diversity in the
+years it grows; a rotation of single crops (corn, then soybean) counts one
+species per year.
 
-\strong{Plant-days.} For each species, plant-days are the union of its
-episodes, so overlapping episodes of the same species count once, while
-different species present on the same day each count. Species proportions
-are \eqn{p_i = days_i / \sum_j days_j}.
+\strong{Species.} Each distinct \code{CD_name} is a species (whitespace tidied).
+Count-first placeholder mixtures such as \code{"8-species"}, \code{"8 spp"} or
+\code{"8-species mix"} count as that many species. Names joined by \code{"+"} are
+split. Rows named \code{"fallow"}, \code{"none"} or \code{"bare"} are not plants.
 
-\strong{Order} (\code{hill}):
-\itemize{
-\item \code{0}: richness, the number of species, divided by \code{max_div}.
-\item \code{1}: Shannon entropy \eqn{-\sum_i p_i \log p_i}, divided by
-\code{log(max_div)}.
-\item \code{2}: Simpson (order-2 Renyi) entropy \eqn{-\log \sum_i p_i^2}, divided
-by \code{log(max_div)}.
-}
-
-Orders 1 and 2 are logarithms of the corresponding Hill numbers, so the
-score reaches 100 when the effective number of species reaches \code{max_div}.
-Scores are capped at 100. Under orders 1 and 2 a single species scores 0.
+\strong{Score.} \deqn{Diversity = 100 \min\left(\frac{R - 1}{R_{max} - 1}, 1\right)}
+where \eqn{R} is the average annual richness: one species a year scores 0,
+and \eqn{R_{max}} (8) or more species a year scores 100.
 }
 \examples{
 crop <- data.frame(
   MGT_combo  = "field_1",
-  CD_name    = c("Corn", "Soybean", "8-species"),
-  crop_start = as.Date(c("2019-05-01", "2020-05-10", "2020-10-15")),
-  crop_end   = as.Date(c("2019-09-30", "2020-09-25", "2021-04-01"))
+  CD_name    = c("Corn", "Rye", "Soybean"),
+  crop_start = as.Date(c("2020-05-01", "2020-10-15", "2021-05-10")),
+  crop_end   = as.Date(c("2020-09-30", "2021-04-20", "2021-09-25"))
 )
-compute_diversity(crop)            # Shannon (official)
-compute_diversity(crop, hill = 0)  # richness
+rot_bounds <- data.frame(MGT_combo = "field_1",
+                         rot_start = as.Date("2020-01-01"),
+                         rot_end   = as.Date("2021-12-31"))
+compute_diversity(crop, rot_bounds)   # 2 species in 2020 and 2021
 
 }
 \seealso{
-\code{\link[=build_shmi]{build_shmi()}}, \code{\link[=compute_cover]{compute_cover()}}
+\code{\link[=build_shmi]{build_shmi()}}
 }

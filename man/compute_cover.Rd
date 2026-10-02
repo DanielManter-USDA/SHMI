@@ -4,81 +4,62 @@
 \alias{compute_cover}
 \title{Compute the Cover sub-index}
 \usage{
-compute_cover(
-  crop,
-  rot_bounds,
-  w_winter = 0.1259,
-  w_spring = 0.126,
-  w_summer = 0.3755,
-  w_fall = 0.3726,
-  clip_to_rotation = TRUE
-)
+compute_cover(crop, rot_bounds, climate, grow_temp = 5, growing_share = 0.86)
 }
 \arguments{
-\item{crop}{Species episodes with \code{MGT_combo}, \code{CD_name}, \code{crop_start},
-and \code{crop_end}, as in \code{prepare_shmi_inputs()$crop}.}
+\item{crop}{Species episodes with \code{MGT_combo}, \code{CD_name}, \code{crop_start} and
+\code{crop_end}, as in \code{prepare_shmi_inputs()$crop}.}
 
-\item{rot_bounds}{Rotation bounds with \code{MGT_combo}, \code{rot_start}, and
+\item{rot_bounds}{Rotation bounds with \code{MGT_combo}, \code{rot_start} and
 \code{rot_end}.}
 
-\item{w_winter, w_spring, w_summer, w_fall}{Season weights. Defaults are the
-official values.}
+\item{climate}{Monthly climate normals, one row per \code{MGT_combo}, with
+\code{tavg_01} ... \code{tavg_12} (mean temperature, C), \code{prec_01} ... \code{prec_12}
+(precipitation, mm) and optionally \code{irrigated} (logical). See
+\code{\link[=get_shmi_climate]{get_shmi_climate()}}.}
 
-\item{clip_to_rotation}{Logical; see \emph{Rotation window}. \code{FALSE} reproduces
-SHMI <= 1.1.0.}
+\item{grow_temp}{Minimum monthly mean temperature (C) of a growing month.}
+
+\item{growing_share}{Weight of the growing season within Cover.}
 }
 \value{
-A data frame with \code{MGT_combo} and \code{Cover} (0-100), one row per
-unit in \code{rot_bounds}.
+A tibble with \code{MGT_combo}, \code{Cover}, \code{Cover_growing} and
+\code{Cover_nongrowing} (all 0-100), one row per unit in \code{rot_bounds}.
 }
 \description{
-Season-weighted proportion of days in the rotation with living plant
-cover, scaled 0-100.
+Share of days with living plants in the growing and non-growing seasons,
+weighted and scaled 0-100.
 }
 \details{
-\strong{Plant windows.} Every row of \code{crop} (one row per species episode) is a
-window of living cover, except rows named \code{"fallow"}, \code{"none"}, or
-\code{"bare"}. Overlapping windows (mixtures, relays, intercrops) are merged, so
-each day counts once however many species are present.
+\strong{Plant days.} Every crop episode is a window of living cover, except
+rows named \code{"fallow"}, \code{"none"} or \code{"bare"}. Overlapping windows (mixtures,
+relays, cover crops) are merged, so each day counts once.
 
-\strong{Seasons.} Each day is assigned to a season by calendar month: winter
-(Dec-Feb), spring (Mar-May), summer (Jun-Aug), and fall (Sep-Nov). For each
-season \eqn{s}, \eqn{p_s} is the number of plant days divided by the number
-of days of that season in the rotation; seasons with no days in the
-rotation contribute 0.
+\strong{Seasons.} A calendar month is in the growing season at a unit when its
+long-term mean temperature is at least \code{grow_temp} (5 C) and, unless the
+unit is irrigated, it is not dry: precipitation (mm) at least twice the
+mean temperature (C), the Bagnouls-Gaussen dry-month rule. Other months
+form the non-growing season. If a unit has no months in one season, that
+season takes the other's value.
 
-\strong{Score.} The season weights are rescaled to sum to 1, and
-\deqn{Cover = 100 \sum_s w_s p_s}
-
-\strong{Rotation window.} Days in the rotation run from \code{rot_start} to
-\code{rot_end}. In \code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}} these span the first to the last
-recorded event, or the window set by \code{start_date_override} and
-\code{end_date_override}, which is how a fixed evaluation period is imposed.
-
-Only plant days inside \code{rot_start}-\code{rot_end} count
-when \code{clip_to_rotation = TRUE} (the default from 1.2.0). SHMI <= 1.1.0
-counted every day of an episode, including days outside the rotation,
-against the rotation's season lengths, so a season's proportion could
-exceed 1 when episodes extended past the evaluation window.
-
-A unit in \code{rot_bounds} with no plant windows (for example a fallow
-reference site) scores 0.
+\strong{Score.} With \eqn{G} and \eqn{N} the percentage of growing- and
+non-growing-season days with living plants,
+\deqn{Cover = s G + (1 - s) N}
+where \eqn{s} is \code{growing_share} (0.860, from the SHMI calibration).
 }
 \examples{
-crop <- data.frame(
-  MGT_combo  = "field_1",
-  CD_name    = c("Corn", "Rye"),
-  crop_start = as.Date(c("2020-05-01", "2020-10-15")),
-  crop_end   = as.Date(c("2020-09-30", "2020-12-31"))
-)
-rot_bounds <- data.frame(
-  MGT_combo = "field_1",
-  rot_start = as.Date("2020-01-01"),
-  rot_end   = as.Date("2020-12-31")
-)
-compute_cover(crop, rot_bounds)
+crop <- data.frame(MGT_combo = "field_1", CD_name = c("Corn", "Rye"),
+                   crop_start = as.Date(c("2020-05-01", "2020-10-15")),
+                   crop_end   = as.Date(c("2020-09-30", "2020-12-31")))
+rot_bounds <- data.frame(MGT_combo = "field_1",
+                         rot_start = as.Date("2020-01-01"),
+                         rot_end   = as.Date("2020-12-31"))
+climate <- data.frame(MGT_combo = "field_1")
+climate[sprintf("tavg_\%02d", 1:12)] <- as.list(c(-5, -3, 3, 10, 16, 21, 24, 23, 18, 11, 4, -2))
+climate[sprintf("prec_\%02d", 1:12)] <- as.list(c(30, 30, 50, 80, 100, 110, 100, 90, 80, 60, 50, 35))
+compute_cover(crop, rot_bounds, climate)
 
 }
 \seealso{
-\code{\link[=compute_cover_components]{compute_cover_components()}}, \code{\link[=build_shmi]{build_shmi()}}, \code{\link[=compute_diversity]{compute_diversity()}}
+\code{\link[=get_shmi_climate]{get_shmi_climate()}}, \code{\link[=build_shmi]{build_shmi()}}
 }

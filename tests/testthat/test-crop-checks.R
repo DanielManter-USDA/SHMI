@@ -62,12 +62,25 @@ test_that("placeholder species names are flagged", {
                   c("Species 1", "unknown"))
 })
 
-test_that("annual episodes longer than 400 days are flagged; winter annuals are not", {
+test_that("overlong annual episodes are flagged; winter annuals are not", {
   rb2 <- data.frame(MGT_combo = "u1", rot_start = as.Date("2016-01-01"),
-                    rot_end = as.Date("2017-12-31"))
-  crop <- rbind(crop_row("Rye",    "cover", "2016-10-05"),                       # no end -> rot_end
+                    rot_end = as.Date("2018-03-31"))
+  crop <- rbind(crop_row("Rye",    "cover", "2016-10-05"),                       # no end -> rot_end: 543 days (> 480 for cover)
                 crop_row("Canola", "cash",  "2016-08-20", "2017-08-20"))         # 366 days
   res <- SHMI:::.build_crop_windows(crop, rb2)
   long <- res$assumptions$name[res$assumptions$type == "annual_long_episode"]
   expect_equal(long, "Rye")
+})
+
+test_that("cover crops kept over winter get a longer limit than cash crops", {
+  crop <- rbind(
+    crop_row("Clover", "Cover",  "2017-04-01"),                       # no end: runs to the corn
+    crop_row("Corn",   "Annual", "2018-05-15", "2018-10-01"))         # 410 days: normal for a cover crop
+  expect_false("annual_long_episode" %in% types(SHMI:::.build_crop_windows(crop, rb)))
+  cash <- rbind(
+    crop_row("Corn",    "Annual", "2017-05-01"),                      # forgotten harvest date
+    crop_row("Soybean", "Annual", "2018-06-10", "2018-10-01"))        # 406 days: flagged
+  expect_true("annual_long_episode" %in% types(SHMI:::.build_crop_windows(cash, rb)))
+  long_cover <- crop_row("Clover", "Cover", "2017-03-01", NA, "2018-08-01")   # 519 days: flagged
+  expect_true("annual_long_episode" %in% types(SHMI:::.build_crop_windows(long_cover, rb)))
 })

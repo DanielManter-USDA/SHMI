@@ -7,17 +7,23 @@
 \title{SHMI: Soil Health Management Index}
 \description{
 Computes the Soil Health Management Index (SHMI) from management records
-entered in a standard Excel workbook. SHMI is a 0-100 composite of four
-sub-indices:
+entered in a standard Excel workbook. SHMI is a 0-100 weighted sum of four
+sub-indices, each also 0-100:
 }
 \details{
 \itemize{
-\item \strong{Cover}: season-weighted proportion of days with living plants.
-\item \strong{Diversity}: rotation-scale crop diversity.
-\item \strong{Inverse disturbance}: soil disturbance from tillage, by the EPA
-soil-mixing model or STIR.
-\item \strong{Organic inputs}: organic amendments and animal integration.
+\item \strong{Cover} (weight 0.400): share of days with living plants in the
+growing and non-growing seasons, set by each unit's climate.
+\item \strong{Organic inputs} (0.317): share of years with an organic amendment or
+grazing animals.
+\item \strong{Diversity} (0.153): average number of plant species per year.
+\item \strong{Inverse disturbance} (0.130): how little the soil was tilled,
+computed as in USDA's Tillage Disturbance Index for Soil Carbon (T-DISC).
 }
+
+The weights were calibrated against measured soil health on 354 US plots
+at 74 sites of the North American Project to Evaluate Soil Health
+Measurements (NAPESHM); see \code{\link[=shmi_weights]{shmi_weights()}}.
 }
 \section{Workflow}{
 
@@ -27,37 +33,42 @@ soil-mixing model or STIR.
 the path of the installed example.
 \item \code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}} reads and validates the workbook, converts crop
 records into species episodes, and records every assumption it makes.
+\item \code{\link[=get_shmi_climate]{get_shmi_climate()}} provides monthly climate normals for each unit,
+which set Cover's growing season.
 \item \code{\link[=build_shmi]{build_shmi()}} computes the four sub-indices and SHMI.
 \item \code{\link[=plot_shmi_gauge]{plot_shmi_gauge()}} and \code{\link[=plot_shmi_lollipop]{plot_shmi_lollipop()}} display the results.
 }
 
 The sub-indices can also be computed directly with \code{\link[=compute_cover]{compute_cover()}},
-\code{\link[=compute_diversity]{compute_diversity()}}, \code{\link[=compute_disturbance]{compute_disturbance()}}, and \code{\link[=compute_orginput]{compute_orginput()}}.
+\code{\link[=compute_diversity]{compute_diversity()}}, \code{\link[=compute_disturbance]{compute_disturbance()}} and \code{\link[=compute_orginput]{compute_orginput()}},
+or all at once with \code{\link[=shmi_components]{shmi_components()}}.
 }
 
 \section{Design principles}{
 
 \itemize{
 \item \strong{Missing records mean "did not happen".} No disturbance record means
-no disturbance (InvDist = 100); no crop means no cover; no amendment
-means no organic input.
-\item \strong{The evaluation window is set by the data or by overrides.} Rotation
-bounds span the first to the last recorded event unless
-\code{start_date_override} / \code{end_date_override} are given to
-\code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}}.
+no disturbance (InvDist = 100); no crop means no cover; no amendment or
+animal record means no organic input.
+\item \strong{The evaluation window is set by the data or by overrides.} Each unit
+is scored from 1 January of its first year with a record to 31 December
+of its last, unless \code{start_date_override} / \code{end_date_override} or
+\code{end_at_sample_date} are given to \code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}}. All four
+sub-indices use the same window.
 \item \strong{Assumptions are reported, not hidden.} Every imputed date and every
 value that could not be converted is listed in
 \code{prepare_shmi_inputs()$assumptions}.
 }
 }
 
-\section{Settings}{
+\section{Official scores}{
 
-By default, \code{\link[=build_shmi]{build_shmi()}} uses the official national settings ("locked
-mode"). With \code{expert_mode = TRUE}, weights and parameters can be changed,
-but the resulting scores are not comparable to the national SHMI scale.
-Each result records the settings used, the package version, and a
-timestamp.
+\code{\link[=build_shmi]{build_shmi()}} uses the official weights and computes tillage intensity
+as T-DISC does, with implement values from T-DISC (\code{\link[=tdisc_implements]{tdisc_implements()}},
+\code{\link[=tdisc_mapping]{tdisc_mapping()}}) unless the records or a user table give others (STIR
+values can be scored with \code{dist_meth = "STIR"}). Custom weights can be supplied for research; those
+scores are flagged in the result (\code{official = FALSE}). Each result records
+the weights, the tillage scale, the package version and a timestamp.
 }
 
 \seealso{

@@ -1,143 +1,78 @@
 ---
-title: "Organic Inputs Sub‑index"
+title: "Organic Inputs Subindex"
 ---
 
-Amendments + Animals (Weighted Annual Frequency)
+Share of Years with an Organic Amendment or Grazing Animals
 
 ## **Overview**
 
-The SHMI Organic Inputs subindex quantifies the **frequency of biological inputs**—organic amendments and animal presence—across the rotation. Each rotation year is assigned a weighted organic‑input presence based on user‑specified weights for amendments and animals. The final score is scaled to **0–100**, where higher values indicate more frequent biological inputs.
-
-This sub‑index captures management practices that add organic matter, stimulate microbial activity, and contribute to soil biological functioning.
-
----
-
-## **1. Rotation‑Year Grid**
-
-For each management unit \( i \), a sequence of rotation years is constructed:
-
-\[
-\text{year} \in \{\text{rot_start_yr}_i, \ldots, \text{rot_end_yr}_i\}
-\]
-
-This defines the evaluation window for organic inputs.
+The Organic Inputs subindex measures how often organic matter is returned to
+the soil from outside the crop: manure, compost or similar amendments, or
+grazing animals. The score is the share of years with either, from 0 to 100.
 
 ---
 
-## **2. Amendment Events**
+## **1. Rotation years**
 
-Organic amendments are identified from the amendment table:
-
-- Only rows with \( \text{SA_cat} = \text{"Organic"} \) contribute.
-- Amendment years are extracted as:
+For each management unit \(i\), the years of the evaluation window are
 
 \[
-\text{year} = \text{year}(\text{SA_date})
+y \in \{\text{rot\_start\_yr}_i, \ldots, \text{rot\_end\_yr}_i\}
 \]
-
-Each amendment year is marked:
-
-\[
-\text{amend_present}_{i,y} = 1
-\]
-
-All other years receive 0.
 
 ---
 
-## **3. Animal Events**
+## **2. Years with an input**
 
-Animal presence is identified from the animal table:
+- **Amendment years**: years with at least one amendment of category
+  `"Organic"` (`SA_cat`), dated by `SA_date`.
+- **Animal years**: every calendar year overlapped by a grazing period, from
+  `AD_start_date` to `AD_end_date`. A period without an end date counts in its
+  start year only.
+
+A year counts if it has an amendment **or** animals (or both):
 
 \[
-\text{year} = \text{year}(\text{AD_start_date})
+\text{input}_{i,y} =
+\begin{cases}
+1 & \text{if year } y \text{ has an organic amendment or animals} \\
+0 & \text{otherwise}
+\end{cases}
 \]
 
-Each year with animal presence is marked:
-
-\[
-\text{ani_present}_{i,y} = 1
-\]
-
-All other years receive 0.
+Only presence is scored, not amounts.
 
 ---
 
-## **4. Weighted Organic‑Input Presence**
-
-For each rotation year:
+## **3. Score**
 
 \[
-\text{weighted\_input}_{i,y}
-= w_{\text{amend}} \cdot \text{amend_present}_{i,y}
-+ w_{\text{animal}} \cdot \text{ani_present}_{i,y}
+\text{OrgInput}_i = 100 \times \frac{1}{Y_i} \sum_{y} \text{input}_{i,y}
 \]
 
-Default weights:
-
-- \( w_{\text{amend}} = 1 \)  
-- \( w_{\text{animal}} = 1 \)
-
-Weights allow tuning based on local priorities or empirical optimization.
-
----
-
-## **5. Rotation‑Average Input Frequency**
-
-Let \( Y_i \) be the number of rotation years for management unit \( i \).  
-Total weighted inputs across the rotation:
-
-\[
-\text{total_weighted}_i = \sum_{y} \text{weighted_input}_{i,y}
-\]
-
-Annualized frequency:
-
-\[
-\text{events_per_year}_i
-= \frac{\text{total_weighted}_i}{Y_i}
-\]
-
-If \( Y_i = 0 \), the value defaults to 0.
-
----
-
-## **6. Scaling to 0–100**
-
-If all management units have zero events:
-
-\[
-\text{OrgInputs}_i = 0
-\]
-
-Otherwise, values are rescaled to \([0,100]\) using a min–max transformation:
-
-\[
-\text{OrgInputs}_i = 100 \times
-\frac{\text{events_per_year}_i - \min(\text{events_per_year})}
-{\max(\text{events_per_year}) - \min(\text{events_per_year})}
-\]
-
-This ensures comparability across systems with different event frequencies.
+A unit with no organic amendments or animals scores 0.
 
 ---
 
 ## **Interpretation**
 
-- **0** → No organic amendments or animal presence across the rotation  
-- **100** → Highest observed frequency of biological inputs  
-- Weights allow emphasizing amendments, animals, or both  
-- Captures management intensity related to organic matter and biological activity  
+- **0**: no organic amendments or grazing in any year.
+- **50**: inputs in half of the years.
+- **100**: an amendment or grazing every year.
+- Amendments and animals count equally: a grazed but unamended system and an
+  amended but ungrazed one can both reach 100. In the calibration, Organic
+  Inputs carried the largest share of soil-health signal unique to any one
+  sub-index.
 
 ---
 
 ## **Output**
 
-A data frame with one row per management unit:
+`compute_orginput()` returns one row per management unit:
 
-<div style="width: 40%;">
-| MGT_combo | OrgInputs |
-|:---------:|:---------:|
-| …         | 0–100   |
-</div>
----
+| MGT_combo | OrgInput |
+|-----------|----------|
+| …         | 0–100    |
+
+`compute_orginput_components()` also returns the share of years with
+amendments, with animals, and with either.

@@ -1,7 +1,7 @@
 Package: SHMI
 Type: Package
 Title: Soil Health Management Index (SHMI)
-Version: 1.2.0
+Version: 1.0.0
 Authors@R: 
     c(
       person("Daniel", "Manter", 
@@ -11,20 +11,23 @@ Authors@R:
              role = "aut",
              email = "jennifer.moore2@usda.gov")
     )
-Description: Implements the Soil Health Management Index (SHMI), a 
-    rotation-scale indicator of management intensity and ecological function. 
-    The package harmonizes crop windows, expands daily cover and disturbance 
-    events, summarizes organic inputs, and computes standardized pillar scores 
-    for cover, diversity, disturbance, and biological amendments. Functions 
-    support reproducible workflows for research, monitoring, and reporting.
+Description: Implements the Soil Health Management Index (SHMI), a 0-100
+    score of how strongly a field's management record supports soil health.
+    It reads a standard Excel workbook of crop, tillage, amendment and animal
+    records, and combines four sub-indices: living cover in the growing and
+    non-growing seasons set by each site's climate, organic inputs, plant
+    species richness and inverse tillage disturbance, with weights calibrated
+    against measured soil health on US research sites. Every assumption made
+    while reading the records is reported.
 License: MIT + file LICENSE
 Encoding: UTF-8
 URL: https://danielmanter-usda.github.io/SHMI/, https://github.com/DanielManter-USDA/SHMI
 BugReports: https://github.com/DanielManter-USDA/SHMI/issues
 Suggests: 
-    callr,
+    geodata,
     knitr,
     rmarkdown,
+    terra,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
@@ -36,7 +39,6 @@ Imports:
     gridExtra,
     janitor,
     lubridate,
-    purrr,
     readxl,
     stats,
     tibble,

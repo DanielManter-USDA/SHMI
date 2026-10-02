@@ -1,0 +1,74 @@
+CD_name,role,residue_key
+Corn,harvested,Corn (grain)
+Soybean,harvested,Soybean
+Soybean,terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+"Wheat, Winter",harvested,"Small grains (wheat, barley, oats, triticale, rye grain)"
+"Wheat, Winter",terminated,"Cover: other small grains (wheat, oats, triticale, barley)"
+Wheat,harvested,"Small grains (wheat, barley, oats, triticale, rye grain)"
+Wheat,terminated,"Cover: other small grains (wheat, oats, triticale, barley)"
+"Wheat, Spring",harvested,"Small grains (wheat, barley, oats, triticale, rye grain)"
+Oats,terminated,"Cover: other small grains (wheat, oats, triticale, barley)"
+Oats,harvested,"Small grains (wheat, barley, oats, triticale, rye grain)"
+Rye,terminated,Cover: cereal rye
+Rye,harvested,"Small grains (wheat, barley, oats, triticale, rye grain)"
+Sorghum,harvested,Sorghum (grain)
+Sorghum,terminated,"Cover: sorghum-sudan, sunn hemp"
+8-species,terminated,"Cover: mixtures (N-species, 'Legume')"
+Cotton,harvested,Cotton
+Triticale,harvested,"Small grains (wheat, barley, oats, triticale, rye grain)"
+Triticale,terminated,"Cover: other small grains (wheat, oats, triticale, barley)"
+"Clover, Red",terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+"Clover, Red",harvested,forage stubble
+Alfalfa,terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+Peanut,harvested,Peanut
+Vetch,terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+Barley,harvested,"Small grains (wheat, barley, oats, triticale, rye grain)"
+Legume,terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+"Beans, Snap",harvested,"Vegetables (snap bean, squash, broccoli, tomato)"
+"Vetch, Common",harvested,forage stubble
+"Vetch, Common",terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+Safflower,harvested,Safflower
+"Beans, Dry",harvested,"Dry beans, peas, chickpea, lentil (grain)"
+Bahiagrass,harvested,forage stubble
+Radish,terminated,"Cover: brassicas (radish, turnip, rapeseed, canola)"
+Clover,terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+Clover,harvested,forage stubble
+"Clover, Crimson",terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+Canola,harvested,Canola / rapeseed (grain)
+Canola,terminated,"Cover: brassicas (radish, turnip, rapeseed, canola)"
+Chickpea,harvested,"Dry beans, peas, chickpea, lentil (grain)"
+"Rye, Cereal",terminated,Cover: cereal rye
+"Squash, Acorn",harvested,"Vegetables (snap bean, squash, broccoli, tomato)"
+Sunflower,terminated,"Cover: mixtures (N-species, 'Legume')"
+Sunflower,harvested,Sunflower
+"Pea, Field",harvested,"Dry beans, peas, chickpea, lentil (grain)"
+Orchardgrass,terminated,"Cover: annual ryegrass, millet"
+Sugarbeet,harvested,Potato / sugarbeet
+Potato,harvested,Potato / sugarbeet
+Broccoli,harvested,"Vegetables (snap bean, squash, broccoli, tomato)"
+"Squash, Winter",harvested,"Vegetables (snap bean, squash, broccoli, tomato)"
+"Pea, Winter",terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+"Millet, Proso",terminated,"Cover: annual ryegrass, millet"
+"Canola, Winter",terminated,"Cover: brassicas (radish, turnip, rapeseed, canola)"
+"Pea, Forage",terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+"Rye, Winter",terminated,Cover: cereal rye
+"Beans, Bell",terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+"Beans, Bell",harvested,"Dry beans, peas, chickpea, lentil (grain)"
+"Vetch, Lana",terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+"Vetch, Lana",harvested,forage stubble
+Tomato,harvested,"Vegetables (snap bean, squash, broccoli, tomato)"
+Pea,harvested,"Dry beans, peas, chickpea, lentil (grain)"
+"Fescue, Tall",harvested,forage stubble
+"Sorghum, Sudan",terminated,"Cover: sorghum-sudan, sunn hemp"
+"Sorghum, Sudan",harvested,Sorghum (grain)
+"Ryegrass, Annual",terminated,"Cover: annual ryegrass, millet"
+"Vetch, Hairy",terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+Buckwheat,terminated,Cover: buckwheat
+"Pea, Dry",harvested,"Dry beans, peas, chickpea, lentil (grain)"
+Sunnhemp,harvested,"Cover: sorghum-sudan, sunn hemp"
+Cowpea,terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+Lentils,terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+Rapeseed,terminated,"Cover: brassicas (radish, turnip, rapeseed, canola)"
+"Turnip, Pasja",terminated,"Cover: brassicas (radish, turnip, rapeseed, canola)"
+"Vetch, Purple",terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"
+"Clover, Berseem",terminated,"Cover: legumes (vetch, clovers, peas, cowpea, lentil)"

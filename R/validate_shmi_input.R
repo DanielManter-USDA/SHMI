@@ -198,7 +198,7 @@ validate_shmi_input <- function(shmi_inputs, dist_meth = NULL) {
     return(list(errors = errors, warnings = warnings))
   }
 
-  if (is.null(dist) || nrow(dist) == 0 || !"SD_mixeff" %in% names(dist)) {
+  if (is.null(dist) || nrow(dist) == 0) {
     return(list(errors = errors, warnings = warnings))
   }
 
@@ -207,56 +207,52 @@ validate_shmi_input <- function(shmi_inputs, dist_meth = NULL) {
     paste0(paste(utils::head(ids, n), collapse = "; "),
            if (length(ids) > n) paste0(" (+", length(ids) - n, " more)") else "")
   }
+  num <- function(k) if (k %in% names(dist)) suppressWarnings(as.numeric(dist[[k]])) else rep(NA_real_, nrow(dist))
+  mixeff <- num("SD_mixeff"); depth <- num("SD_depth")
+  equip  <- if ("SD_equip" %in% names(dist)) !is.na(dist$SD_equip) & trimws(dist$SD_equip) != "" else rep(FALSE, nrow(dist))
 
-  mixeff <- dist$SD_mixeff
-  active <- !is.na(mixeff) & mixeff > 0
+  if (any(mixeff < 0, na.rm = TRUE)) errors <- c(errors, "SD_mixeff contains negative values.")
+  if (any(depth < 0, na.rm = TRUE))  errors <- c(errors, "SD_depth contains negative values; depths are in inches.")
 
   if (dist_meth == "EPA") {
-
-    # Depth column must exist and be numeric
-    if (!"SD_depth" %in% names(dist) || all(is.na(dist$SD_depth[active]))) {
-      if (any(active)) {
-        errors <- c(errors, paste0(
-          "dist_meth = 'EPA' requires SD_depth, but it is missing or blank for all ",
-          sum(active), " disturbance pass(es). Fill in SD_depth (inches) or use ",
-          "dist_meth = 'STIR' (expert mode)."
-        ))
-      }
-    } else {
-
-      if (!is.numeric(dist$SD_depth)) {
-        errors <- c(errors, "SD_depth must be numeric for EPA disturbance calculations.")
-      }
-
-      # Row-level: passes that disturb soil but have no depth
-      miss_depth <- active & is.na(dist$SD_depth)
-      if (any(miss_depth)) {
-        errors <- c(errors, paste0(
-          "dist_meth = 'EPA' requires SD_depth for every disturbance pass: ",
-          sum(miss_depth), " pass(es) have SD_mixeff but no SD_depth. First affected: ",
-          first_rows(miss_depth)
-        ))
-      }
-    }
-
-    # Mixing efficiency must be a proportion
+    # SD_mixeff and SD_depth are overrides of the implement's T-DISC values
     over <- !is.na(mixeff) & mixeff > 1
     if (any(over)) {
       errors <- c(errors, paste0(
-        "dist_meth = 'EPA' expects SD_mixeff in [0, 1], but ", sum(over),
-        " pass(es) exceed 1 (values like these look like STIR). Use ",
-        "dist_meth = 'STIR' or convert to mixing proportions. First affected: ",
-        first_rows(over)
-      ))
+        "SD_mixeff holds mixing efficiencies (0-1), but ", sum(over), " pass(es) exceed 1; ",
+        "values like these look like STIR. Put STIR values in SD_stir (and use dist_meth = 'STIR' ",
+        "to score with them), or leave SD_mixeff blank to use the implement's T-DISC value. ",
+        "First affected: ", first_rows(over)))
+    }
+    unusable <- !equip & !(!is.na(mixeff) & !is.na(depth))
+    if (any(unusable)) {
+      errors <- c(errors, paste0(
+        "dist_meth = 'EPA' needs, for every pass, an implement name (SD_equip) or both ",
+        "SD_mixeff and SD_depth: ", sum(unusable), " pass(es) have neither. First affected: ",
+        first_rows(unusable)))
+    }
+    deep <- !is.na(depth) & depth > 20
+    if (any(deep)) {
+      warnings <- c(warnings, paste0(
+        sum(deep), " pass(es) have SD_depth > 20 inches; SD_depth is in inches, and depths are ",
+        "capped at 30 cm (11.8 in). First affected: ", first_rows(deep)))
     }
   }
 
   if (dist_meth == "STIR") {
-    if (any(active) && all(mixeff[active] <= 1)) {
+    stir <- .stir_values(dist)
+    miss <- is.na(stir)
+    if (any(miss)) {
+      errors <- c(errors, paste0(
+        "dist_meth = 'STIR' needs a STIR value (SD_stir) for every pass: ", sum(miss),
+        " pass(es) have none. First affected: ", first_rows(miss)))
+    }
+    if (any(stir < 0, na.rm = TRUE)) errors <- c(errors, "SD_stir contains negative values.")
+    active <- !is.na(stir) & stir > 0
+    if (any(active) && all(stir[active] <= 1)) {
       warnings <- c(warnings, paste0(
-        "dist_meth = 'STIR' but every non-zero SD_mixeff is <= 1. These look like ",
-        "EPA mixing proportions rather than STIR values; check the disturbance method."
-      ))
+        "dist_meth = 'STIR' but every non-zero STIR value is <= 1. These look like ",
+        "mixing efficiencies rather than STIR values; check the disturbance method."))
     }
   }
 

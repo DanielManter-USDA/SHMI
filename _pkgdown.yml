@@ -47,10 +47,14 @@ navbar:
         - text: "---"
         - text: "Core Workflow"
           href: "reference/index.html#core-workflow"
+        - text: "Tillage (T-DISC)"
+          href: "reference/index.html#tillage-t-disc"
+        - text: "Climate"
+          href: "reference/index.html#climate"
         - text: "Sub-index Functions"
           href: "reference/index.html#subindex-functions"
-        - text: "Calibration and Diagnostics"
-          href: "reference/index.html#calibration-and-diagnostics"
+        - text: "Components"
+          href: "reference/index.html#components"
         - text: "Helper Functions"
           href: "reference/index.html#helper-functions"
         - text: "Validation Functions"
@@ -68,7 +72,24 @@ reference:
   - title: "Core Workflow"
     contents:
       - prepare_shmi_inputs
+      - get_shmi_climate
       - build_shmi
+      - shmi_weights
+
+  - title: "Tillage (T-DISC)"
+    desc: >
+      USDA T-DISC implement values and operation names used to compute tillage
+      intensity.
+    contents:
+      - tdisc_implements
+      - tdisc_mapping
+
+  - title: "Climate"
+    desc: >
+      Monthly climate normals and the growing-season months they define for
+      Cover.
+    contents:
+      - growing_months
 
   - title: "Sub-index Functions"
     contents:
@@ -77,16 +98,14 @@ reference:
       - compute_disturbance
       - compute_orginput
 
-  - title: "Calibration and Diagnostics"
+  - title: "Components"
     desc: >
-      Linear components of Cover and Organic Inputs, used to evaluate or
-      estimate SHMI weights, and a report of records affected by the
-      evaluation window.
+      All four sub-indices at once, and the monthly and yearly components of
+      Cover and Organic Inputs, for calibration or inspection.
     contents:
-      - compute_shmi_components
-      - compute_cover_components
+      - shmi_components
+      - compute_cover_monthly
       - compute_orginput_components
-      - shmi_window_report
 
   - title: "Helper Functions"
     contents:

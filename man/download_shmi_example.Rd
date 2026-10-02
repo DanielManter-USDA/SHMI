@@ -30,7 +30,9 @@ To use the installed copy without saving a file, see
 \dontrun{
 my_file <- download_shmi_example()
 inputs  <- prepare_shmi_inputs(my_file)
-result  <- build_shmi(inputs)
+climate <- get_shmi_climate(data.frame(MGT_combo = inputs$mgt$MGT_combo,
+                                       lon = -105.08, lat = 40.59))
+result  <- build_shmi(inputs, climate)
 head(result$indicator_df)
 }
 

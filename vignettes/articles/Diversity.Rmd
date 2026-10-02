@@ -2,136 +2,72 @@
 title: "Crop Diversity Subindex"
 ---
 
-Rotation‑Scale, Entropy‑Based Hill Diversity
+Average Annual Plant Species Richness
 
 ## **Overview**
 
-The SHMI Diversity subindex quantifies the diversity of crops grown across an entire rotation, accounting for both **species identity** and **time in the field**. Diversity is computed using **entropy‑based Hill numbers**, which generalize richness, Shannon entropy, and Simpson entropy into a unified framework.
-
-The algorithm expands crop mixtures, sums plant‑days across all years of the rotation, computes species proportions, and applies the selected Hill‑number order (default: **Simpson entropy**, \( q = 2 \)).  
-The final score is scaled to **0–100** using a user‑specified theoretical maximum (default: **max_div = 8**).
-
----
-
-## **1. Daily Plant‑Days**
-
-Daily crop presence is summarized for each management unit \( i \), crop sequence number, crop name, and year:
-
-\[
-\text{days}_{i,j,y} = \sum_{d} \text{crop_present}_{i,j,y,d}
-\]
-
-where:
-
-- \( i \) = management unit  
-- \( j \) = crop or mixture  
-- \( y \) = year  
-- \( d \) = day  
-
-Records with missing crop sequence numbers are excluded.
+The Diversity subindex counts how many plant species grow in a field each
+year, averaged over the years of the record. A cover crop or a seed mix
+raises it in the years it grows. The score runs from 0 to 100.
 
 ---
 
-## **2. Mixture Expansion**
+## **1. Species**
 
-Crop mixtures are expanded into individual species:
+Each distinct crop name is a species (extra whitespace ignored). Before
+counting:
 
-- Mixtures like `"A + B"` become species A and B  
-- Placeholder mixtures like `"3-species"` become  
-  \( \text{species}_1, \text{species}_2, \text{species}_3 \)
-
-After expansion, each species inherits the plant‑days of the mixture.
-
-Fallow is treated as zero diversity:
-
-\[
-\text{days} = 0 \quad \text{if species = "fallow"}
-\]
+- placeholder mixtures such as `"8-species"`, `"8 spp"` or
+  `"8-species mix"` count as that many species;
+- names joined by `"+"` (`"A + B"`) are split into separate species;
+- rows named `"fallow"`, `"none"` or `"bare"` are not plants.
 
 ---
 
-## **3. Rotation‑Scale Plant‑Days**
+## **2. Annual richness**
 
-Plant‑days are summed across all years of the rotation:
-
-\[
-\text{days}_{i,s} = \sum_{y} \text{days}_{i,s,y}
-\]
-
-Species proportions are then computed:
+For each calendar year \(y\) in the evaluation window of management unit
+\(i\), the richness \(R_{i,y}\) is the number of species present on any day of
+that year. The average annual richness is
 
 \[
-p_{i,s} = \frac{\text{days}_{i,s}}{\sum_{s'} \text{days}_{i,s'}}
+\bar{R}_i = \frac{1}{Y_i} \sum_{y=1}^{Y_i} R_{i,y}
 \]
+
+where \(Y_i\) is the number of calendar years in the window.
 
 ---
 
-## **4. Entropy‑Based Hill Diversity**
-
-The diversity metric \( D \) depends on the Hill‑number order \( q \):
-
-### **Richness (q = 0)**  
-\[
-D = \sum I(p_s > 0)
-\]
-
-### **Shannon entropy (q = 1)**  
-\[
-D = -\sum p_s \log p_s
-\]
-
-### **Simpson entropy (q = 2, default)**  
-\[
-D = -\log \left( \sum p_s^2 \right)
-\]
-
-The result is capped at the theoretical maximum:
+## **3. Scaling to 0–100**
 
 \[
-D \leftarrow \min(D, \text{max_div})
+\text{Diversity}_i = 100 \times \min\left(\frac{\bar{R}_i - 1}{8 - 1},\; 1\right)
 \]
 
----
-
-## **5. Scaling to 0–100**
-
-Richness is scaled linearly:
-
-\[
-\text{Diversity}_{\text{raw}} = \frac{D}{\text{max_div}}
-\]
-
-Entropy‑based metrics are scaled by the log of the maximum:
-
-\[
-\text{Diversity}_{\text{raw}} = \frac{D}{\log(\text{max_div})}
-\]
-
-Final score:
-
-\[
-\text{Diversity} = 100 \times \min(\text{Diversity}_{\text{raw}}, 1)
-\]
+One species a year scores 0, and eight or more species a year score 100. A
+year without any plants counts as zero species, so a bare fallow scores 0.
 
 ---
 
 ## **Interpretation**
 
-- **0** → Monoculture rotation (or fallow‑only)  
-- **100** → Maximum theoretical diversity (e.g., 8 equally represented species)  
-- Entropy‑based metrics reward both **richness** and **evenness**  
-- Mixture crops contribute proportionally to diversity  
+- **0**: one species per year, such as continuous corn or a corn–soybean
+  rotation.
+- **14**: two species per year, such as a cash crop followed by a single-species
+  cover crop every year.
+- **100**: eight or more species per year, such as a diverse cover-crop mix or a
+  species-rich perennial stand.
+- Crop rotation across years is not credited: corn–soybean scores like
+  continuous corn. In the calibration, rotation measures received no weight
+  once living cover was accounted for; perennial systems have no rotation but
+  the healthiest soils.
 
 ---
 
 ## **Output**
 
-A data frame with one row per management unit:
+`compute_diversity()` returns one row per management unit:
 
-<div style="width: 40%;">
-| MGT_combo | Diversity |
-|-----------|-----------|
-| …         | 0–100     |
-</div>
----
-
+| MGT_combo | Diversity | Richness |
+|-----------|-----------|----------|
+| …         | 0–100     | species per year |

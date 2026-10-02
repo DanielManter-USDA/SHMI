@@ -1,0 +1,22 @@
+residue_key,residue_class,residue_Mg_ha,alpha_ha_Mg,mass_30pct_Mg_ha,alpha_source
+Corn (grain),"large, non-fragile",9.31,0.205,1.74,"RUSLE2 doc 10.2: modern corn, 60% at 4000 lb/ac (Stott 1995)"
+Sorghum (grain),"large, non-fragile",6.185,0.339,1.052,class: large non-fragile (RUSLE2 core corn value)
+"Small grains (wheat, barley, oats, triticale, rye grain)","moderate, moderately fragile",5.704,0.516,0.691,"RUSLE2 doc 10.2: wheat straw, 58% at 1500 lb/ac"
+Sunflower,"large, non-fragile",5.18,0.339,1.052,class: large non-fragile (RUSLE2 core corn value)
+Cotton,"large, non-fragile",6.06,0.339,1.052,class: large non-fragile (RUSLE2 core corn value)
+Soybean,"small, fragile",4.08,0.53,0.673,"RUSLE2 doc 10.2: Midwest soybean, 30% at 600 lb/ac"
+Peanut,"small, fragile",4.5,0.53,0.673,class: small fragile (RUSLE2 Midwest soybean value)
+Canola / rapeseed (grain),"small, fragile",3,0.53,0.673,class: small fragile (RUSLE2 Midwest soybean value)
+"Dry beans, peas, chickpea, lentil (grain)","small, fragile",2.42,0.53,0.673,class: small fragile (RUSLE2 Midwest soybean value)
+Safflower,"moderate, moderately fragile",3,0.516,0.691,class: moderately fragile (RUSLE2 wheat value)
+"Vegetables (snap bean, squash, broccoli, tomato)","small, fragile",2.5,0.53,0.673,class: small fragile (RUSLE2 Midwest soybean value)
+Potato / sugarbeet,"small, fragile",2,0.53,0.673,class: small fragile (RUSLE2 Midwest soybean value)
+Cover: cereal rye,"moderate, moderately fragile",4,0.516,0.691,class: moderately fragile (RUSLE2 wheat value)
+"Cover: other small grains (wheat, oats, triticale, barley)","moderate, moderately fragile",3,0.516,0.691,class: moderately fragile (RUSLE2 wheat value)
+"Cover: annual ryegrass, millet","moderate, moderately fragile",2.5,0.516,0.691,class: moderately fragile (RUSLE2 wheat value)
+"Cover: sorghum-sudan, sunn hemp","large, non-fragile",5,0.339,1.052,class: large non-fragile (RUSLE2 core corn value)
+"Cover: legumes (vetch, clovers, peas, cowpea, lentil)","small, fragile",2.5,0.53,0.673,class: small fragile (RUSLE2 Midwest soybean value)
+"Cover: brassicas (radish, turnip, rapeseed, canola)","small, fragile",2.5,0.53,0.673,class: small fragile (RUSLE2 Midwest soybean value)
+Cover: buckwheat,"small, fragile",2,0.53,0.673,class: small fragile (RUSLE2 Midwest soybean value)
+"Cover: mixtures (N-species, 'Legume')","moderate, moderately fragile",3.5,0.516,0.691,class: moderately fragile (RUSLE2 wheat value)
+forage stubble,"small, fragile",0.5,0.53,0.673,"assumed: stubble after an annual forage cut (0.5 Mg/ha), small fragile class"

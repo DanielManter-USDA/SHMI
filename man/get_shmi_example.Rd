@@ -7,7 +7,7 @@
 get_shmi_example()
 }
 \value{
-The path to \code{SHMI_example_1.xlsx} in the installed package.
+The path to \code{SHMI_example.xlsx} in the installed package.
 }
 \description{
 Returns the path of the completed example workbook installed with the
@@ -24,7 +24,14 @@ settings. To get a copy you can open in Excel, use
 }
 \examples{
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
-result <- build_shmi(inputs)
+
+# Monthly climate normals for each unit; get_shmi_climate() downloads these
+# from WorldClim given coordinates. Typical temperate values, entered by hand:
+climate <- data.frame(MGT_combo = inputs$mgt$MGT_combo)
+climate[sprintf("tavg_\%02d", 1:12)] <- as.list(c(-5, -3, 3, 10, 16, 21, 24, 23, 18, 11, 4, -2))
+climate[sprintf("prec_\%02d", 1:12)] <- as.list(c(20, 25, 50, 70, 110, 115, 95, 85, 70, 50, 35, 25))
+
+result <- build_shmi(inputs, climate)
 result$indicator_df
 
 }

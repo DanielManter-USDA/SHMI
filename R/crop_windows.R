@@ -60,6 +60,10 @@
 #'   imputation) are flagged as \code{annual_long_episode}. The default (400)
 #'   leaves room for winter annuals planted in late summer and harvested the
 #'   following summer.
+#' @param max_cover_days The same limit for crops entered as cover crops
+#'   (\code{CD_cat} "Cover"). The default (480, about 16 months) leaves room for
+#'   cover crops frost-seeded or spring-seeded into a grain, kept over winter
+#'   and killed before the next spring planting.
 #'
 #' @return A list with \code{windows} (one row per species episode) and
 #'   \code{assumptions} (one row per imputation or data check).
@@ -69,7 +73,8 @@
                                 rot_bounds,
                                 perennial_cats = c("perennial", "woody perennial"),
                                 max_multi_harvest_days = 365,
-                                max_annual_days = 400) {
+                                max_annual_days = 400,
+                                max_cover_days = 480) {
 
   crop <- crop %>%
     dplyr::mutate(
@@ -155,6 +160,9 @@
   # Harmonize category and finalize columns
   # ------------------------------------------------------------------
   # Missing/unrecognized categories were treated as annual (and flagged)
+  # cover crops get their own long-episode limit, so note them before
+  # categories are harmonized (Cover and Cash both become Annual)
+  windows$.cover <- tolower(trimws(as.character(windows$CD_cat))) %in% "cover"
   windows <- windows %>%
     dplyr::mutate(
       CD_cat = dplyr::coalesce(.normalize_cat(CD_cat, perennial_cats), "Annual")
@@ -164,15 +172,18 @@
     dplyr::mutate(episode_id = dplyr::row_number()) %>%
     dplyr::ungroup() %>%
     dplyr::select(MGT_combo, episode_id, CD_cat, CD_name,
-                  crop_start, crop_end, start_imputed, end_imputed)
+                  crop_start, crop_end, start_imputed, end_imputed, .cover)
 
-  # Annual episodes longer than max_annual_days (after imputation) usually
-  # mean a missing end date or a perennial stand coded as annual
+  # Annual episodes longer than max_annual_days (max_cover_days for cover
+  # crops), after imputation, usually mean a missing end date or a perennial
+  # stand coded as annual
   long_flags <- windows %>%
     dplyr::filter(CD_cat == "Annual",
-                  as.numeric(crop_end - crop_start) + 1 > max_annual_days) %>%
+                  as.numeric(crop_end - crop_start) + 1 >
+                    ifelse(.cover, max_cover_days, max_annual_days)) %>%
     dplyr::transmute(MGT_combo, CD_name, crop_start, crop_end,
                      type = "annual_long_episode")
+  windows$.cover <- NULL
 
   assumptions <- dplyr::bind_rows(ep_flags, row_flags, long_flags) %>%
     dplyr::transmute(MGT_combo, source = "crop", name = CD_name,
@@ -399,7 +410,11 @@
     dplyr::filter(end_imputed) %>%
     dplyr::select(.row, MGT_combo, CD_name, crop_start, crop_end) %>%
     dplyr::inner_join(intense, by = "MGT_combo", relationship = "many-to-many") %>%
-    dplyr::filter(till_date > crop_start, till_date < crop_end) %>%
+    dplyr::filter(till_date > crop_start, till_date < crop_end)
+  # summarise() evaluates min() once on an empty group to learn the column
+  # type, which warns; nothing to do anyway when no crop is affected
+  if (nrow(hits) == 0) return(out)
+  hits <- hits %>%
     dplyr::group_by(.row, MGT_combo, CD_name, crop_start, crop_end) %>%
     dplyr::summarise(new_end = min(till_date),
                      day_intensity = intensity[which.min(till_date)], .groups = "drop")
@@ -432,7 +447,9 @@
   hits <- w %>%
     dplyr::inner_join(dist %>% dplyr::filter(!is.na(SD_date)) %>% dplyr::select(MGT_combo, SD_date),
                       by = "MGT_combo", relationship = "many-to-many") %>%
-    dplyr::filter(SD_date > crop_start, SD_date <= crop_end) %>%
+    dplyr::filter(SD_date > crop_start, SD_date <= crop_end)
+  if (nrow(hits) == 0) return(.empty_assumptions())
+  hits <- hits %>%
     dplyr::group_by(MGT_combo, CD_name, crop_start, crop_end) %>%
     dplyr::summarise(first_dist = min(SD_date), .groups = "drop")
   if (nrow(hits) == 0) return(.empty_assumptions())
@@ -570,7 +587,7 @@
     "Placeholder species name; each distinct name counts as a separate",
     "species in Diversity. Replace with the real species name."),
   annual_long_episode = paste(
-    "Annual crop episode is longer than 400 days. Usually a missing",
+    "Annual crop episode is longer than 400 days (480 for a cover crop). Usually a missing",
     "harvest/termination date, or a stand kept for more than one growing",
     "season that should be coded perennial."),
   end_intensive_tillage = paste(

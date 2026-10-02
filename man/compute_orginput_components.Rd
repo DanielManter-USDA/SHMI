@@ -2,14 +2,9 @@
 % Please edit documentation in R/shmi_components.R
 \name{compute_orginput_components}
 \alias{compute_orginput_components}
-\title{Components of the Organic Inputs sub-index}
+\title{Years with organic amendments and animals}
 \usage{
-compute_orginput_components(
-  rot_bounds,
-  amend,
-  animal,
-  animal_presence = c("start", "span")
-)
+compute_orginput_components(rot_bounds, amend, animal)
 }
 \arguments{
 \item{rot_bounds}{Rotation bounds with \code{MGT_combo}, \code{rot_start_yr},
@@ -17,21 +12,14 @@ compute_orginput_components(
 
 \item{amend}{Amendment events with \code{MGT_combo}, \code{SA_date}, \code{SA_cat}.}
 
-\item{animal}{Animal events with \code{MGT_combo}, \code{AD_start_date} and, for
-\code{animal_presence = "span"}, \code{AD_end_date}.}
-
-\item{animal_presence}{\code{"start"} (SHMI <= 1.1.0): a year has animals only
-if an animal period \emph{starts} in it, so a grazing period spanning several
-years counts once. \code{"span"}: every calendar year overlapped by
-\code{AD_start_date}-\code{AD_end_date} counts; periods without an end date count
-in their start year only.}
+\item{animal}{Animal events with \code{MGT_combo}, \code{AD_start_date},
+\code{AD_end_date}. Every calendar year overlapped by an animal period counts;
+periods without an end date count in their start year only.}
 }
 \value{
-A tibble with \code{MGT_combo}, \code{p_amend}, \code{p_animal}, \code{n_years}, one
-row per unit in \code{rot_bounds}.
+A tibble with \code{MGT_combo}, \code{p_amend}, \code{p_animal}, \code{p_any} (share of
+years with an organic amendment or animals, or both) and \code{n_years}.
 }
 \description{
-Returns the proportion of rotation years with an organic amendment and
-with animals. \code{\link[=compute_orginput]{compute_orginput()}} is
-\eqn{100 (w_a p_{amend} + w_n p_{animal}) / (w_a + w_n)}.
+Years with organic amendments and animals
 }

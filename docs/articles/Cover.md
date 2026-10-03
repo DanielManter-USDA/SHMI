@@ -1,0 +1,102 @@
+# Cover Subindex
+
+Living Plants in the Growing and Non-Growing Seasons
+
+## **Overview**
+
+The Cover subindex measures how much of the year living plants cover the
+soil. Days are split into a **growing** and a **non-growing** season
+defined by each site’s climate, and the growing season counts more. The
+score runs from 0 to 100.
+
+------------------------------------------------------------------------
+
+### **1. Plant days**
+
+Every crop episode (from planting to harvest or termination) is a window
+of living cover, except rows named `"fallow"`, `"none"` or `"bare"`.
+Overlapping windows (mixtures, relays, cover crops interseeded into a
+growing crop) are merged, so each day counts once:
+
+``` math
+
+\text{plant}_{i,d} =
+\begin{cases}
+1 & \text{if any living crop is present on day } d \\
+0 & \text{otherwise}
+\end{cases}
+```
+
+Only days inside the unit’s evaluation window count. Plant days and
+window days are then pooled by calendar month across years:
+$`\text{plant}_{i,m}`$ and $`\text{days}_{i,m}`$ for months
+$`m = 1, \ldots, 12`$.
+
+------------------------------------------------------------------------
+
+### **2. Growing and non-growing months**
+
+From each unit’s long-term monthly climate normals (mean temperature
+$`T_m`$ in °C and precipitation $`P_m`$ in mm), a month is in the
+**growing season** when it is warm enough and, unless the unit is
+irrigated, not dry:
+
+``` math
+
+m \in G_i \iff T_m \ge 5 \;\text{ and }\; \left(\text{irrigated}_i \text{ or } P_m \ge 2\,T_m\right)
+```
+
+The dryness test is the Bagnouls-Gaussen rule: a month is dry when its
+precipitation in mm is less than twice its mean temperature in °C. Other
+months form the non-growing season $`N_i`$.
+[`get_shmi_climate()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_climate.md)
+provides the normals from WorldClim 2.1 (1970-2000), and
+[`growing_months()`](https://danielmanter-usda.github.io/SHMI/reference/growing_months.md)
+shows which months qualify.
+
+------------------------------------------------------------------------
+
+### **3. Seasonal cover**
+
+``` math
+
+G\text{-cover}_i = 100 \, \frac{\sum_{m \in G_i} \text{plant}_{i,m}}{\sum_{m \in G_i} \text{days}_{i,m}}
+\qquad
+N\text{-cover}_i = 100 \, \frac{\sum_{m \in N_i} \text{plant}_{i,m}}{\sum_{m \in N_i} \text{days}_{i,m}}
+```
+
+If a unit has no months in one season (for example, a warm, irrigated
+site where every month is growing), that season takes the other season’s
+value.
+
+------------------------------------------------------------------------
+
+### **4. Final Cover score**
+
+``` math
+
+\text{Cover}_i = 0.860 \; G\text{-cover}_i + 0.140 \; N\text{-cover}_i
+```
+
+The growing-season share, 0.860, was estimated in the SHMI calibration
+(95% range 0.78-0.99).
+
+------------------------------------------------------------------------
+
+### **Interpretation**
+
+- **0**: bare soil all year (or fallow only).
+- **100**: living plants every day of both seasons.
+- A summer annual alone scores mainly through the growing season; a
+  cover crop or a perennial adds the non-growing season.
+
+------------------------------------------------------------------------
+
+### **Output**
+
+[`compute_cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.md)
+returns one row per management unit:
+
+| MGT_combo | Cover | Cover_growing | Cover_nongrowing |
+|:---------:|:-----:|:-------------:|:----------------:|
+|     …     | 0–100 |     0–100     |      0–100       |

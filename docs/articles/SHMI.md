@@ -1,0 +1,89 @@
+# Soil Health Management Index (SHMI)
+
+Weighted Sum of Four Management Sub-indices
+
+## **Overview**
+
+The Soil Health Management Index (SHMI) combines **Cover**, **Organic
+Inputs**, **Diversity** and **Inverse Disturbance** into a single 0–100
+score, using weights calibrated against measured soil health.
+
+------------------------------------------------------------------------
+
+## **1. The formula**
+
+For management unit $`i`$:
+
+``` math
+
+\text{SHMI}_i = 0.400\,\text{Cover}_i + 0.317\,\text{OrgInput}_i + 0.153\,\text{Diversity}_i + 0.130\,\text{InvDist}_i
+```
+
+| Sub-index           | Weight | 95% range across 1,000 calibration fits |
+|---------------------|--------|-----------------------------------------|
+| Cover               | 0.400  | 0.29 – 0.48                             |
+| Organic Inputs      | 0.317  | 0.24 – 0.36                             |
+| Diversity           | 0.153  | 0.08 – 0.33                             |
+| Inverse Disturbance | 0.130  | 0.10 – 0.16                             |
+
+The weights sum to 1, so $`0 \le \text{SHMI}_i \le 100`$. Within Cover,
+the growing season counts 0.860.
+[`shmi_weights()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_weights.md)
+returns the official weights.
+
+------------------------------------------------------------------------
+
+## **2. How `build_shmi()` computes it**
+
+1.  **Validation.** The inputs from
+    [`prepare_shmi_inputs()`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md)
+    are checked: required tables and columns, valid dates, unique
+    `MGT_combo`, and tillage values that suit the tillage scale.
+2.  **Tillage.** Computed as in USDA’s T-DISC tool, from implement
+    mixing efficiencies and depths (from the pass, a user table, or
+    T-DISC); STIR records with `dist_meth = "STIR"`.
+3.  **Sub-indices.**
+    [`shmi_components()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_components.md)
+    computes the four sub-indices over each unit’s evaluation window,
+    using the monthly climate for Cover. Missing records mean the
+    practice did not happen.
+4.  **Combination.** The weighted sum above.
+
+------------------------------------------------------------------------
+
+## **3. Official and custom scores**
+
+Scores are **official** when the official weights are used, with either
+tillage scale. Custom weights (for research or scenario analysis) are
+rescaled to sum to 1, and the result is flagged `official = FALSE`.
+
+------------------------------------------------------------------------
+
+## **4. Output**
+
+[`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
+returns a list. Its `indicator_df` has one row per management unit:
+
+| MGT_combo | SHMI | Cover | OrgInput | Diversity | InvDist | Cover_growing | Cover_nongrowing | Richness |
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| … | 0–100 | 0–100 | 0–100 | 0–100 | 0–100 | 0–100 | 0–100 | species per year |
+
+plus the unit’s study, farm, field and treatment. The list also records
+`weights`, `dist_meth`, `official`, `shmi_version` and `timestamp`.
+
+------------------------------------------------------------------------
+
+## **Interpretation**
+
+- **Higher scores** mean management more supportive of soil health: more
+  of the year under living cover, more frequent organic inputs, more
+  plant species each year, and less tillage.
+- **Ceilings.** A unit scoring 0 on one sub-index cannot exceed 100 × (1
+  − that weight): with no organic inputs, at most 68.3.
+- **Precision.** For US sites not used in calibration, SHMI explained
+  about a quarter of the differences in measured soil health and ranked
+  practices in the right order at 82% of sites; a single prediction is
+  typically within about 13 soil-health points. It is most informative
+  for comparing practices at the same site.
+- **Scope.** Calibrated on US systems; recalibrate before use in other
+  regions.

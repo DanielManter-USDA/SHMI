@@ -1,0 +1,120 @@
+# Inverse Disturbance Subindex
+
+Tillage Intensity as Computed by USDA’s T-DISC
+
+## **Overview**
+
+The Inverse Disturbance subindex measures how little the soil is tilled.
+SHMI computes tillage intensity exactly as USDA’s **Tillage Disturbance
+Index for Soil Carbon (T-DISC)** does, following the cropland chapter of
+USDA’s *Quantifying Greenhouse Gas Fluxes in Agriculture and Forestry:
+Methods for Entity-Scale Inventory*. 100 means no tillage; 0 means
+maximum disturbance. Each unit also receives T-DISC’s tillage
+designation: no-till (NT), reduced till (RT) or conventional till (CT).
+
+------------------------------------------------------------------------
+
+## **1. Crop intervals and tillage windows**
+
+Each cash crop defines a **crop interval**, from the day after the
+previous cash crop’s harvest to its own harvest. Within it, every
+tillage pass falls in one of five windows, set by its date relative to
+planting (P):
+
+| Window            | Timing                        |
+|-------------------|-------------------------------|
+| Field preparation | up to 56 days before P        |
+| Before planting   | 55 – 7 days before P          |
+| Planting          | 6 – 0 days before P           |
+| After planting    | after P, outside harvest days |
+| Harvest           | harvest day(s)                |
+
+Days outside every cash-crop interval (years without a cash crop, or the
+end of the record after the last harvest) form one interval per calendar
+year, with a single window.
+
+------------------------------------------------------------------------
+
+## **2. Window intensity**
+
+Each implement has a **mixing efficiency** $`m`$ (0–1) and a **depth**
+$`d`$ (cm, capped at 30). Within a window, implements are applied from
+shallowest to deepest (ties: least to most intensive), each mixing its
+share of the soil still unmixed:
+
+``` math
+
+S_k = S_{k-1} + m_k \left(d_k - S_{k-1}\right)
+```
+
+so overlapping disturbance is not counted twice. The window’s intensity
+is $`S / 30`$.
+
+**Where the values come from**, in order of priority:
+
+1.  the pass’s own `SD_mixeff` (0–1) and `SD_depth` (inches);
+2.  a table supplied with `implements =` (`implement`,
+    `mixing_efficiency`, `depth_cm`), which replaces or adds implements;
+3.  T-DISC’s own values for the implement named in `SD_equip`
+    ([`tdisc_implements()`](https://danielmanter-usda.github.io/SHMI/reference/tdisc_implements.md)),
+    directly or through its operation names
+    ([`tdisc_mapping()`](https://danielmanter-usda.github.io/SHMI/reference/tdisc_mapping.md)).
+    An operation T-DISC translates into several implements counts as
+    several passes.
+
+**STIR records** (`dist_meth = "STIR"`) use the same intervals and
+windows: a window’s intensity is its summed STIR divided by 135,
+truncated to 1. The value 135 makes STIR ratings best match T-DISC
+ratings on the NAPESHM data.
+
+------------------------------------------------------------------------
+
+## **3. Interval rating and score**
+
+An interval’s **rating** is the maximum of its window intensities
+(T-DISC’s crop-interval rating). It is placed in an EPA Tier-3 class and
+replaced by the class’s upper bound:
+
+| Class | TI up to            | Class | TI up to |
+|-------|---------------------|-------|----------|
+| Z     | 0.001 (scores as 0) | F     | 0.162    |
+| A     | 0.01                | G     | 0.202    |
+| B     | 0.04                | H     | 0.252    |
+| C     | 0.075               | I     | 0.268    |
+| D     | 0.111               | J     | 0.449    |
+| E     | 0.144               | K     | 1        |
+
+``` math
+
+\text{InvDist}_{\text{interval}} = 100 \left(1 - TI^{\text{class}}\right)
+```
+
+and the unit’s InvDist is the mean over its intervals, weighted by
+interval length. T-DISC’s designation follows from the rating: NT up to
+0.075, RT up to 0.252, CT above. Because the score depends only on the
+class, a farmer or researcher without detailed records can report which
+class a system falls in.
+
+------------------------------------------------------------------------
+
+## **Interpretation**
+
+- **100**: no tillage in any interval.
+- **0**: every interval includes a window of conventional tillage at
+  full intensity.
+- A single heavy disking (0.8 mixing efficiency at 15 cm, intensity
+  0.40) places its interval in class J, scoring 55.
+
+------------------------------------------------------------------------
+
+## **Output**
+
+[`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md)
+returns one row per management unit:
+
+| MGT_combo | InvDist | TI  | designation  | n_intervals |
+|-----------|---------|-----|--------------|-------------|
+| …         | 0–100   | 0–1 | NT / RT / CT | count       |
+
+With `details = TRUE`, the result also carries each crop interval’s
+dates, rating, class value, score and designation.

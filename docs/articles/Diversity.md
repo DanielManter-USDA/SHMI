@@ -1,0 +1,75 @@
+# Crop Diversity Subindex
+
+Average Annual Plant Species Richness
+
+## **Overview**
+
+The Diversity subindex counts how many plant species grow in a field
+each year, averaged over the years of the record. A cover crop or a seed
+mix raises it in the years it grows. The score runs from 0 to 100.
+
+------------------------------------------------------------------------
+
+## **1. Species**
+
+Each distinct crop name is a species (extra whitespace ignored). Before
+counting:
+
+- placeholder mixtures such as `"8-species"`, `"8 spp"` or
+  `"8-species mix"` count as that many species;
+- names joined by `"+"` (`"A + B"`) are split into separate species;
+- rows named `"fallow"`, `"none"` or `"bare"` are not plants.
+
+------------------------------------------------------------------------
+
+## **2. Annual richness**
+
+For each calendar year $`y`$ in the evaluation window of management unit
+$`i`$, the richness $`R_{i,y}`$ is the number of species present on any
+day of that year. The average annual richness is
+
+``` math
+
+\bar{R}_i = \frac{1}{Y_i} \sum_{y=1}^{Y_i} R_{i,y}
+```
+
+where $`Y_i`$ is the number of calendar years in the window.
+
+------------------------------------------------------------------------
+
+## **3. Scaling to 0–100**
+
+``` math
+
+\text{Diversity}_i = 100 \times \min\left(\frac{\bar{R}_i - 1}{8 - 1},\; 1\right)
+```
+
+One species a year scores 0, and eight or more species a year score 100.
+A year without any plants counts as zero species, so a bare fallow
+scores 0.
+
+------------------------------------------------------------------------
+
+## **Interpretation**
+
+- **0**: one species per year, such as continuous corn or a corn–soybean
+  rotation.
+- **14**: two species per year, such as a cash crop followed by a
+  single-species cover crop every year.
+- **100**: eight or more species per year, such as a diverse cover-crop
+  mix or a species-rich perennial stand.
+- Crop rotation across years is not credited: corn–soybean scores like
+  continuous corn. In the calibration, rotation measures received no
+  weight once living cover was accounted for; perennial systems have no
+  rotation but the healthiest soils.
+
+------------------------------------------------------------------------
+
+## **Output**
+
+[`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md)
+returns one row per management unit:
+
+| MGT_combo | Diversity | Richness         |
+|-----------|-----------|------------------|
+| …         | 0–100     | species per year |

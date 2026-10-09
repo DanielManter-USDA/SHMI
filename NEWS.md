@@ -81,7 +81,21 @@ recalibrate.
 -   scores each unit from 1 January of its first year with a record to
     31 December of its last, or over fixed dates, or up to each unit's
     soil sampling date;
--   optionally converts yields and nitrogen rates to kg/ha.
+-   optionally converts yields to kg/ha;
+-   optionally converts nitrogen rates (fertilizer and organic sources)
+    to kg N/ha and assigns them to the crop they were applied for
+    (`calc_n_rate = TRUE`). Each application counts toward the first
+    cash or perennial harvest after it, so a crop's N runs from the
+    previous harvest (the unit's first from the start of its record) to
+    its own harvest, and fall manure or fertilizer applied after
+    harvest goes to the next crop. Cover crops and fallow do not end a
+    crop's window. `$n_rate` gives one row per unit and harvest
+    (`crop_year`, `harvest_date`, `crop`, `N_kg_ha`); `crop_year` is the
+    year of the harvest and matches `$yield$year`. Calendar-year totals
+    are in `$n_rate_calendar`, and `$n_applications` lists each
+    application with its calendar and crop year. N applied after a
+    unit's last harvest, and units without harvest dates (which fall
+    back to calendar years), are reported in `$assumptions`.
 
 Missing records mean a practice did not happen: no tillage, no cover or
 no organic input.

@@ -579,11 +579,13 @@ prepare_shmi_inputs <- function(path,
 
   if (calc_n_rate) {
     cli::cli_progress_step("Computing N rates...")
-    n_out       <- .prepare_n_rate(amend)
-    n_rate      <- n_out$n_rate
-    assumptions <- dplyr::bind_rows(assumptions, n_out$assumptions)
+    n_out           <- .prepare_n_rate(amend, crop, rot_bounds)
+    n_rate          <- n_out$n_rate
+    n_rate_calendar <- n_out$n_rate_calendar
+    n_applications  <- n_out$n_applications
+    assumptions     <- dplyr::bind_rows(assumptions, n_out$assumptions)
   } else {
-    n_rate <- NULL
+    n_rate <- n_rate_calendar <- n_applications <- NULL
   }
 
   # Keep assumptions only for units that remain after overrides/exclusions
@@ -615,6 +617,8 @@ prepare_shmi_inputs <- function(path,
     animal     = animal,
     yield       = yield,
     n_rate      = n_rate,
+    n_rate_calendar = n_rate_calendar,
+    n_applications  = n_applications,
     assumptions = assumptions
   )
   attr(inputs, "rotation_window") <- rotation_window

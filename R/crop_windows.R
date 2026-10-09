@@ -544,7 +544,9 @@
   n_not_numeric               = "check",
   n_unknown_units             = "check",
   n_missing_units             = "check",
-  n_rate_implausible          = "check"
+  n_rate_implausible          = "check",
+  n_after_last_harvest        = "assumption",
+  n_no_harvest_dates          = "check"
 )
 
 .assumption_messages <- c(
@@ -621,8 +623,14 @@
   n_missing_units = "SA_N has no units; N not converted. The annual total for this year is incomplete.",
   n_rate_implausible = paste(
     "Converted N rate exceeds 1,000 kg N/ha. Check SA_N and SA_units:",
-    "SA_units may describe the product rate rather than the N amount.")
-)
+    "SA_units may describe the product rate rather than the N amount."),
+  n_after_last_harvest = paste(
+    "N applied after the unit's last recorded harvest; it has no crop yet and",
+    "is not in n_rate (it is in n_rate_calendar)."),
+  n_no_harvest_dates = paste(
+    "Unit has no harvest or termination dates for cash or perennial crops;",
+    "N rates by crop fall back to calendar years. Add harvest dates.")
+  )
 
 # Add level and message to an assumptions table and order its columns
 .add_assumption_text <- function(df, keep = character(0)) {

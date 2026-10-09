@@ -18,5 +18,7 @@ utils::globalVariables(c(
   "start", "end", "start_imputed", "end_imputed", "TI_raw", "idx", "p",
   ".cat", "cands", "day_intensity", "day_sum", "depth_cm", "first_dist",
   "first_event", "intensity", "last_event", "n", "new_end", "old_end", "till_date",
-  "me", "stir", "date", ".end", ".cover"
+  "me", "stir", "date", ".end", ".cover",
+  ".id", "cat", "crop", "crop_year", "harvest_date", "N_kg_ha_yr",
+  "n_unconverted", "SA_source", "SA_units"
 ))

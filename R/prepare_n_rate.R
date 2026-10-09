@@ -21,6 +21,10 @@
 #'         `n_unconverted` counts the rest.
 #'   \item A unit without any harvest dates falls back to calendar years
 #'         (`crop_year` = year of application) and is reported.
+#'   \item The first crop in a unit's record has no previous harvest, so its
+#'         window opens at `rot_start` and N applied before the record began
+#'         (for example the previous fall) is missing; `first_in_record` marks
+#'         it and it is reported, so analyses can set it aside.
 #' }
 #'
 #' The calendar-year totals of earlier versions are kept as `n_rate_calendar`.
@@ -31,7 +35,8 @@
 #' @param rot_bounds Final rotation bounds (after overrides).
 #' @param max_plausible_kg_ha Converted N rates above this are flagged.
 #' @return A list with `n_rate` (one row per unit and harvest: `crop_year`,
-#'   `harvest_date`, `crop`, `N_kg_ha`, `n_events`, `n_unconverted`),
+#'   `harvest_date`, `crop`, `window_start`, `first_in_record`, `N_kg_ha`,
+#'   `n_events`, `n_unconverted`),
 #'   `n_rate_calendar` (one row per unit and calendar year, as before:
 #'   `year`, `N_kg_ha_yr`, `n_events`, `n_unconverted`), `n_applications`
 #'   (one row per amendment with N: `SA_date`, `year`, `crop_year`,
@@ -66,9 +71,18 @@
     dplyr::filter(harvest_date >= rot_start, harvest_date <= rot_end) %>%
     dplyr::group_by(MGT_combo, harvest_date) %>%
     dplyr::summarize(
-      crop = paste(sort(unique(trimws(as.character(CD_name)))), collapse = " + "),
+      crop      = paste(sort(unique(trimws(as.character(CD_name)))), collapse = " + "),
+      rot_start = dplyr::first(rot_start),
       .groups = "drop"
-    )
+    ) %>%
+    dplyr::arrange(MGT_combo, harvest_date) %>%
+    dplyr::group_by(MGT_combo) %>%
+    dplyr::mutate(
+      window_start   = dplyr::coalesce(dplyr::lag(harvest_date), rot_start),   # N on a harvest day goes to the next crop
+      first_in_record = dplyr::row_number() == 1        # window opens at rot_start
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(-rot_start)
 
   # ---- assign each application to the first harvest after it -------------------
   a <- a %>%
@@ -82,7 +96,7 @@
     dplyr::group_by(.id) %>%
     dplyr::slice_min(harvest_date, n = 1, with_ties = FALSE) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.id, harvest_date, crop)
+    dplyr::select(.id, harvest_date, crop, window_start, first_in_record)
 
   no_harv_units <- setdiff(unique(a$MGT_combo), unique(harv$MGT_combo))
 
@@ -102,7 +116,7 @@
 
   n_rate <- a %>%
     dplyr::filter(!is.na(crop_year)) %>%
-    dplyr::group_by(MGT_combo, crop_year, harvest_date, crop) %>%
+    dplyr::group_by(MGT_combo, crop_year, harvest_date, crop, window_start, first_in_record) %>%
     dplyr::summarize(
       N_kg_ha       = sum_n(N_kg_ha),
       n_events      = dplyr::n(),
@@ -128,7 +142,7 @@
   # ---- assumptions ------------------------------------------------------------------
   src <- if ("SA_source" %in% names(a)) as.character(a$SA_source) else rep(NA_character_, nrow(a))
 
-  flags <- tibble::tibble(
+  flags_n <- tibble::tibble(
     MGT_combo  = a$MGT_combo,
     source     = "n_rate",
     name       = src,
@@ -146,7 +160,17 @@
       TRUE                                           ~ NA_character_
     )
   ) %>%
-    dplyr::filter(!is.na(type)) %>%
+    dplyr::filter(!is.na(type))
+
+  # first crop in each unit's record: N applied before the record began (for
+  # example the previous fall) is not in the data, so its total may be low
+  first_crop <- n_rate %>%
+    dplyr::filter(first_in_record %in% TRUE) %>%
+    dplyr::transmute(MGT_combo, source = "n_rate", name = crop,
+                     date_start = window_start, date_end = harvest_date,
+                     type = "n_first_crop_in_record")
+
+  flags <- dplyr::bind_rows(flags_n, first_crop) %>%
     .add_assumption_text()
 
   list(n_rate = n_rate, n_rate_calendar = n_rate_calendar,

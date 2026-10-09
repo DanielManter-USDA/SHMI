@@ -541,6 +541,7 @@
   yield_unknown_units         = "check",
   yield_missing_units         = "check",
   yield_no_value              = "check",
+  n_first_crop_in_record      = "check",
   n_not_numeric               = "check",
   n_unknown_units             = "check",
   n_missing_units             = "check",
@@ -616,6 +617,7 @@
   yield_unknown_units = "Yield units not recognized; not converted. Raw value kept in CD_yield.",
   yield_missing_units = "Yield value has no units; not converted. Raw value kept in CD_yield.",
   yield_no_value = "Yield value is not numeric; not converted. Raw value kept in CD_yield.",
+  n_first_crop_in_record = "Calculated N rate may not reflect previous year's applications (e.g., fall)",
   n_not_numeric = "SA_N is not numeric; N not converted. The annual total for this year is incomplete.",
   n_unknown_units = paste(
     "SA_units not recognized for SA_N (e.g. volume or per-plot units);",

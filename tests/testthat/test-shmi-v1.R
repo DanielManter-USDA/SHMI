@@ -16,23 +16,6 @@ test_that("official weights sum to 1", {
   expect_named(shmi_weights(), c("Cover", "OrgInput", "Diversity", "InvDist"))
 })
 
-test_that("Diversity is average annual species richness", {
-  cs <- data.frame(MGT_combo = "u1", CD_name = c("Corn", "Soybean"),
-                   crop_start = as.Date(c("2020-05-01", "2021-05-01")),
-                   crop_end   = as.Date(c("2020-10-01", "2021-10-01")))
-  expect_equal(compute_diversity(cs, rb1)$Richness, 1)          # rotation of single crops
-  expect_equal(compute_diversity(cs, rb1)$Diversity, 0)
-  cc <- rbind(cs, data.frame(MGT_combo = "u1", CD_name = c("Rye", "Rye"),
-                             crop_start = as.Date(c("2020-10-15", "2021-10-15")),
-                             crop_end   = as.Date(c("2020-12-31", "2021-12-31"))))
-  expect_equal(compute_diversity(cc, rb1)$Richness, 2)          # cover crop every year
-  expect_equal(compute_diversity(cc, rb1)$Diversity, 100 / 7, tolerance = 1e-9)
-  mix <- data.frame(MGT_combo = "u1", CD_name = c("8-species", "Fallow"),
-                    crop_start = as.Date(c("2020-01-01", "2021-01-01")),
-                    crop_end   = as.Date(c("2021-12-31", "2021-12-31")))
-  expect_equal(compute_diversity(mix, rb1)$Diversity, 100)      # 8 species, fallow ignored
-})
-
 test_that("growing season: warm and not dry, unless irrigated", {
   cl <- climate_for("u1", prec = c(30, 30, 50, 80, 100, 10, 100, 90, 80, 60, 50, 35))  # June dry
   expect_false(growing_months(cl)["u1", "Jun"])

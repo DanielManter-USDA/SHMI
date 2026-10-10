@@ -18,7 +18,7 @@
 #' **Score.** With \eqn{G} and \eqn{N} the percentage of growing- and
 #' non-growing-season days with living plants,
 #' \deqn{Cover = s G + (1 - s) N}
-#' where \eqn{s} is `growing_share` (0.860, from the SHMI calibration).
+#' where \eqn{s} is `growing_share` (0.797, from the SHMI calibration).
 #'
 #' @param crop Species episodes with `MGT_combo`, `CD_name`, `crop_start` and
 #'   `crop_end`, as in `prepare_shmi_inputs()$crop`.
@@ -49,7 +49,7 @@
 #' compute_cover(crop, rot_bounds, climate)
 #'
 #' @export
-compute_cover <- function(crop, rot_bounds, climate, grow_temp = 5, growing_share = 0.860) {
+compute_cover <- function(crop, rot_bounds, climate, grow_temp = 5, growing_share = 0.797) {
   if (!is.numeric(growing_share) || length(growing_share) != 1 || growing_share < 0 || growing_share > 1)
     stop("growing_share must be a single number between 0 and 1.", call. = FALSE)
   mc  <- compute_cover_monthly(crop, rot_bounds)

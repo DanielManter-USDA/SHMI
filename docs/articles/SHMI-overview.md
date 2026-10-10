@@ -80,8 +80,9 @@ With the installed example:
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 names(inputs)
-#>  [1] "rot_bounds"  "mgt"         "crop"        "harvests"    "dist"       
-#>  [6] "amend"       "animal"      "yield"       "n_rate"      "assumptions"
+#>  [1] "rot_bounds"      "mgt"             "crop"            "harvests"       
+#>  [5] "dist"            "amend"           "animal"          "yield"          
+#>  [9] "n_rate"          "n_rate_calendar" "n_applications"  "assumptions"
 head(inputs$crop)
 #> # A tibble: 6 × 8
 #>   MGT_combo        episode_id CD_cat CD_name crop_start crop_end   start_imputed
@@ -270,14 +271,14 @@ result$indicator_df
 #> # A tibble: 8 × 16
 #>   MGT_combo  MGT_study MGT_farm MGT_field MGT_trt irrigated  SHMI Cover OrgInput
 #>   <chr>      <chr>     <chr>    <chr>     <chr>   <lgl>     <dbl> <dbl>    <dbl>
-#> 1 MLSH_ARDE… MLSH      ARDEC    200A      DMP-Ma… TRUE       67.1  70.0      100
-#> 2 MLSH_ARDE… MLSH      ARDEC    200A      DMP-Ma… TRUE       67.1  70.0      100
-#> 3 MLSH_ARDE… MLSH      ARDEC    200A      DMP-N0  TRUE       35.4  70.0        0
-#> 4 MLSH_ARDE… MLSH      ARDEC    200A      DMP-N1… TRUE       35.4  70.0        0
-#> 5 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N0 TRUE       41.0  70.0        0
-#> 6 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       41.0  70.0        0
-#> 7 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       41.0  70.0        0
-#> 8 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       41.0  70.0        0
+#> 1 MLSH_ARDE… MLSH      ARDEC    200A      DMP-Ma… TRUE       65.5  64.9      100
+#> 2 MLSH_ARDE… MLSH      ARDEC    200A      DMP-Ma… TRUE       65.5  64.9      100
+#> 3 MLSH_ARDE… MLSH      ARDEC    200A      DMP-N0  TRUE       33.4  64.9        0
+#> 4 MLSH_ARDE… MLSH      ARDEC    200A      DMP-N1… TRUE       33.4  64.9        0
+#> 5 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N0 TRUE       38.4  64.9        0
+#> 6 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0
+#> 7 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0
+#> 8 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0
 #> # ℹ 7 more variables: Diversity <dbl>, InvDist <dbl>, Cover_growing <dbl>,
 #> #   Cover_nongrowing <dbl>, Richness <dbl>, TI_tillage <dbl>,
 #> #   tillage_designation <chr>
@@ -343,14 +344,14 @@ compute_cover(inputs$crop, inputs$rot_bounds, climate)
 #> # A tibble: 8 × 4
 #>   MGT_combo                   Cover Cover_growing Cover_nongrowing
 #>   <chr>                       <dbl>         <dbl>            <dbl>
-#> 1 MLSH_ARDEC_200A_DMP-Manure   70.0          81.4                0
-#> 2 MLSH_ARDEC_200A_DMP-Manure+  70.0          81.4                0
-#> 3 MLSH_ARDEC_200A_DMP-N0       70.0          81.4                0
-#> 4 MLSH_ARDEC_200A_DMP-N160     70.0          81.4                0
-#> 5 MLSH_ARDEC_200A_Rot1-N0      70.0          81.4                0
-#> 6 MLSH_ARDEC_200A_Rot1-N120    70.0          81.4                0
-#> 7 MLSH_ARDEC_200A_Rot1-N180    70.0          81.4                0
-#> 8 MLSH_ARDEC_200A_Rot1-N60     70.0          81.4                0
+#> 1 MLSH_ARDEC_200A_DMP-Manure   64.9          81.4                0
+#> 2 MLSH_ARDEC_200A_DMP-Manure+  64.9          81.4                0
+#> 3 MLSH_ARDEC_200A_DMP-N0       64.9          81.4                0
+#> 4 MLSH_ARDEC_200A_DMP-N160     64.9          81.4                0
+#> 5 MLSH_ARDEC_200A_Rot1-N0      64.9          81.4                0
+#> 6 MLSH_ARDEC_200A_Rot1-N120    64.9          81.4                0
+#> 7 MLSH_ARDEC_200A_Rot1-N180    64.9          81.4                0
+#> 8 MLSH_ARDEC_200A_Rot1-N60     64.9          81.4                0
 compute_diversity(inputs$crop, inputs$rot_bounds)
 #> # A tibble: 8 × 3
 #>   MGT_combo                   Diversity Richness
@@ -420,7 +421,7 @@ compute_cover(crop, rot_bounds, climate_1)
 #> # A tibble: 1 × 4
 #>   MGT_combo Cover Cover_growing Cover_nongrowing
 #>   <chr>     <dbl>         <dbl>            <dbl>
-#> 1 field_1    73.1          76.9             50.2
+#> 1 field_1    71.4          76.9             50.2
 ```
 
 **Diversity** counts the species present each year: corn and rye in
@@ -432,7 +433,7 @@ compute_diversity(crop, rot_bounds)
 #> # A tibble: 1 × 3
 #>   MGT_combo Diversity Richness
 #>   <chr>         <dbl>    <dbl>
-#> 1 field_1        14.3        2
+#> 1 field_1        28.6        3
 ```
 
 **Inverse disturbance** is computed as in USDA’s T-DISC tool. Each cash

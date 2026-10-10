@@ -4,7 +4,7 @@
 \alias{compute_cover}
 \title{Compute the Cover sub-index}
 \usage{
-compute_cover(crop, rot_bounds, climate, grow_temp = 5, growing_share = 0.86)
+compute_cover(crop, rot_bounds, climate, grow_temp = 5, growing_share = 0.797)
 }
 \arguments{
 \item{crop}{Species episodes with \code{MGT_combo}, \code{CD_name}, \code{crop_start} and
@@ -45,7 +45,7 @@ season takes the other's value.
 \strong{Score.} With \eqn{G} and \eqn{N} the percentage of growing- and
 non-growing-season days with living plants,
 \deqn{Cover = s G + (1 - s) N}
-where \eqn{s} is \code{growing_share} (0.860, from the SHMI calibration).
+where \eqn{s} is \code{growing_share} (0.797, from the SHMI calibration).
 }
 \examples{
 crop <- data.frame(MGT_combo = "field_1", CD_name = c("Corn", "Rye"),

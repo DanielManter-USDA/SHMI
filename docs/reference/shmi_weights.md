@@ -22,5 +22,5 @@ summing to 1.
 ``` r
 shmi_weights()
 #>     Cover  OrgInput Diversity   InvDist 
-#>     0.400     0.317     0.153     0.130 
+#>     0.414     0.321     0.150     0.115 
 ```

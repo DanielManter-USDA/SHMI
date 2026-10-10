@@ -195,8 +195,9 @@ the companion crop’s harvest.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">inputs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs</a></span><span class="op">(</span><span class="fu"><a href="../reference/get_shmi_example.html">get_shmi_example</a></span><span class="op">(</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">)</span></span>
-<span><span class="co">#&gt;  [1] "rot_bounds"  "mgt"         "crop"        "harvests"    "dist"       </span></span>
-<span><span class="co">#&gt;  [6] "amend"       "animal"      "yield"       "n_rate"      "assumptions"</span></span>
+<span><span class="co">#&gt;  [1] "rot_bounds"      "mgt"             "crop"            "harvests"       </span></span>
+<span><span class="co">#&gt;  [5] "dist"            "amend"           "animal"          "yield"          </span></span>
+<span><span class="co">#&gt;  [9] "n_rate"          "n_rate_calendar" "n_applications"  "assumptions"</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">crop</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 8</span></span></span>
 <span><span class="co">#&gt;   MGT_combo        episode_id CD_cat CD_name crop_start crop_end   start_imputed</span></span>
@@ -409,14 +410,14 @@ entered by hand:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 16</span></span></span>
 <span><span class="co">#&gt;   MGT_combo  MGT_study MGT_farm MGT_field MGT_trt irrigated  SHMI Cover OrgInput</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDE… MLSH      ARDEC    200A      DMP-Ma… TRUE       67.1  70.0      100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDE… MLSH      ARDEC    200A      DMP-Ma… TRUE       67.1  70.0      100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDE… MLSH      ARDEC    200A      DMP-N0  TRUE       35.4  70.0        0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDE… MLSH      ARDEC    200A      DMP-N1… TRUE       35.4  70.0        0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N0 TRUE       41.0  70.0        0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       41.0  70.0        0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       41.0  70.0        0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       41.0  70.0        0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDE… MLSH      ARDEC    200A      DMP-Ma… TRUE       65.5  64.9      100</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDE… MLSH      ARDEC    200A      DMP-Ma… TRUE       65.5  64.9      100</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDE… MLSH      ARDEC    200A      DMP-N0  TRUE       33.4  64.9        0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDE… MLSH      ARDEC    200A      DMP-N1… TRUE       33.4  64.9        0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N0 TRUE       38.4  64.9        0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 7 more variables: Diversity &lt;dbl&gt;, InvDist &lt;dbl&gt;, Cover_growing &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   Cover_nongrowing &lt;dbl&gt;, Richness &lt;dbl&gt;, TI_tillage &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   tillage_designation &lt;chr&gt;</span></span></span></code></pre></div>
@@ -485,14 +486,14 @@ practices.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 4</span></span></span>
 <span><span class="co">#&gt;   MGT_combo                   Cover Cover_growing Cover_nongrowing</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure   70.0          81.4                0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+  70.0          81.4                0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0       70.0          81.4                0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160     70.0          81.4                0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0      70.0          81.4                0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120    70.0          81.4                0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180    70.0          81.4                0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60     70.0          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure   64.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+  64.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0       64.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160     64.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0      64.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120    64.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180    64.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60     64.9          81.4                0</span></span>
 <span><span class="fu"><a href="../reference/compute_diversity.html">compute_diversity</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">crop</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">rot_bounds</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 3</span></span></span>
 <span><span class="co">#&gt;   MGT_combo                   Diversity Richness</span></span>
@@ -557,7 +558,7 @@ non-growing season:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
 <span><span class="co">#&gt;   MGT_combo Cover Cover_growing Cover_nongrowing</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> field_1    73.1          76.9             50.2</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> field_1    71.4          76.9             50.2</span></span></code></pre></div>
 <p><strong>Diversity</strong> counts the species present each year: corn
 and rye in 2019, rye and soybean in 2020, so two species a year. One
 species a year scores 0 and eight or more score 100:</p>
@@ -566,7 +567,7 @@ species a year scores 0 and eight or more score 100:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 3</span></span></span>
 <span><span class="co">#&gt;   MGT_combo Diversity Richness</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> field_1        14.3        2</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> field_1        28.6        3</span></span></code></pre></div>
 <p><strong>Inverse disturbance</strong> is computed as in USDA’s T-DISC
 tool. Each cash crop defines a crop interval, ending at its harvest;
 passes are grouped into tillage windows around planting; and the

@@ -36,7 +36,7 @@ test_that("Cover weights the growing and non-growing seasons", {
   cv <- compute_cover(crop, rb, cl)
   expect_equal(cv$Cover_growing, 100)
   expect_equal(cv$Cover_nongrowing, 0)
-  expect_equal(cv$Cover, 86.0)
+  expect_equal(cv$Cover, 79.7)
   expect_error(compute_cover(crop, rb, climate_for("other")), "No climate")
 })
 

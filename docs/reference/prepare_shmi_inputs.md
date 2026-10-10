@@ -193,22 +193,22 @@ converted are `NA`, not zero. Unconverted values are listed in
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [338ms]
+#> ✔ Validating inputs... [888ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [338ms]
+#> ✔ Reading Excel file... [797ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [36ms]
+#> ✔ Calculating rotation lengths... [64ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [232ms]
+#> ✔ Calculating crop start/end dates... [443ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [18ms]
+#> ✔ Applying overrides... [29ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [70ms]
+#> ✔ Re-calculating rotation lengths... [133ms]
 #> 
 
 # What was assumed, and what should be reviewed?
@@ -224,22 +224,22 @@ inputs_2022_23 <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE,
                                       start_date_override = "2022-01-01",
                                       end_date_override   = "2023-12-31")
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [342ms]
+#> ✔ Validating inputs... [734ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [334ms]
+#> ✔ Reading Excel file... [781ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [29ms]
+#> ✔ Calculating rotation lengths... [67ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [222ms]
+#> ✔ Calculating crop start/end dates... [444ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [25ms]
+#> ✔ Applying overrides... [54ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [64ms]
+#> ✔ Re-calculating rotation lengths... [142ms]
 #> 
 inputs_2022_23$rot_bounds
 #> # A tibble: 8 × 5

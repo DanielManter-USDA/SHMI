@@ -12,7 +12,7 @@ First public release.
 
 SHMI scores a field's management record from 0 to 100:
 
-SHMI = 0.400 Cover + 0.317 OrgInput + 0.153 Diversity + 0.130 InvDist
+SHMI = 0.414 Cover + 0.321 OrgInput + 0.150 Diversity + 0.115 InvDist
 
 Each sub-index also runs from 0 to 100.
 
@@ -20,8 +20,8 @@ Each sub-index also runs from 0 to 100.
     and non-growing seasons, set by its climate. A month is in the
     growing season when its mean temperature is at least 5 °C and,
     unless the unit is irrigated, its precipitation (mm) is at least
-    twice its temperature (°C). The growing season counts 0.860 and the
-    rest of the year 0.140.
+    twice its temperature (°C). The growing season counts 0.797 and the
+    rest of the year 0.203.
 -   **Organic Inputs**: share of years with an organic amendment or
     grazing animals. Grazing counts in every calendar year a grazing
     period spans.
@@ -55,7 +55,7 @@ cross-validated fit was unchanged, and the other weights were fitted
 under that constraint. For
 sites held out of the fitting, SHMI explained about a quarter of the
 differences in soil health and ranked practices in the right order at
-82% of sites. SHMI is calibrated for US systems; other regions should
+84% of sites. SHMI is calibrated for US systems; other regions should
 recalibrate.
 
 ## The workbook

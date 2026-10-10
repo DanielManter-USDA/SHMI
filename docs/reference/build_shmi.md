@@ -2,8 +2,8 @@
 
 Computes the Soil Health Management Index (SHMI) for each management
 unit (`MGT_combo`) from prepared inputs and monthly climate normals:
-\$\$SHMI = 0.400\\Cover + 0.317\\OrgInput + 0.153\\Diversity +
-0.130\\InvDist\$\$
+\$\$SHMI = 0.414\\Cover + 0.321\\OrgInput + 0.150\\Diversity +
+0.115\\InvDist\$\$
 
 ## Usage
 

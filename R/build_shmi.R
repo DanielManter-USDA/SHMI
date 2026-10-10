@@ -11,7 +11,7 @@
 #' shmi_weights()
 #' @export
 shmi_weights <- function() {
-  c(Cover = 0.400, OrgInput = 0.317, Diversity = 0.153, InvDist = 0.130)
+  c(Cover = 0.414, OrgInput = 0.321, Diversity = 0.150, InvDist = 0.115)
 }
 
 
@@ -19,7 +19,7 @@ shmi_weights <- function() {
 #'
 #' Computes the Soil Health Management Index (SHMI) for each management unit
 #' (`MGT_combo`) from prepared inputs and monthly climate normals:
-#' \deqn{SHMI = 0.400\,Cover + 0.317\,OrgInput + 0.153\,Diversity + 0.130\,InvDist}
+#' \deqn{SHMI = 0.414\,Cover + 0.321\,OrgInput + 0.150\,Diversity + 0.115\,InvDist}
 #'
 #' * **Cover**: share of days with living plants in the growing and
 #'   non-growing seasons, set by each unit's climate ([compute_cover()]).

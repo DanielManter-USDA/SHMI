@@ -501,6 +501,26 @@
                                       type = "no_crop_records"))
 }
 
+# Check: a unit's sample date falls after the rotation window's end (i.e.,
+# after the last recorded management event, or after an override/sample
+# combination determined the window). The window is never extended to cover
+# this gap (see @section Rotation window and overrides in
+# prepare_shmi_inputs()); this only records that the gap exists, so the
+# person reviewing `assumptions` knows that period is not represented by any
+# score. Changes no windows.
+.check_sample_date_gap <- function(rot_bounds, mgt_dates) {
+  if (is.null(mgt_dates) || nrow(mgt_dates) == 0) return(.empty_assumptions())
+  g <- rot_bounds %>%
+    dplyr::select(MGT_combo, rot_end) %>%
+    dplyr::left_join(mgt_dates, by = "MGT_combo") %>%
+    dplyr::filter(!is.na(MGT_sample_date), MGT_sample_date > rot_end)
+  if (nrow(g) == 0) return(.empty_assumptions())
+  g %>%
+    dplyr::transmute(MGT_combo, source = "crop", name = NA_character_,
+                     date_start = rot_end, date_end = MGT_sample_date,
+                     type = "sample_date_gap")
+}
+
 # Days covered by the union of a set of date intervals (overlaps count once)
 .union_days <- function(start, end) {
   ok <- !is.na(start) & !is.na(end)
@@ -534,13 +554,14 @@
   end_window_light_tillage  = "check",
   start_imputed_candidates  = "check",
   no_crop_records           = "check",
+  sample_date_gap           = "check",
   end_before_start          = "check",
   row_no_dates              = "check",
   yield_bushels_not_converted = "check",
   yield_bushels_test_weight   = "assumption",
   yield_unknown_units         = "check",
   yield_missing_units         = "check",
-  yield_no_value              = "check",
+  yield_no_value               = "check",
   n_first_crop_in_record      = "check",
   n_not_numeric               = "check",
   n_unknown_units             = "check",
@@ -606,6 +627,12 @@
   no_crop_records = paste(
     "Unit has management records but no crop records; it is scored as bare",
     "soil. Add crops, or confirm the unit was fallow."),
+  sample_date_gap = paste(
+    "The sample date is after the end of the rotation window (the last",
+    "recorded management event, or an override/sample-date combination);",
+    "the window is not extended to cover this gap, so that period is not",
+    "represented in any sub-index. Add management records closer to the",
+    "sample date if they exist."),
   end_before_start = "End date was before start date; window set to a single day. Check dates.",
   row_no_dates = "Row has no plant, harvest, or termination date and was ignored.",
   yield_bushels_not_converted = paste(
@@ -632,7 +659,7 @@
   n_no_harvest_dates = paste(
     "Unit has no harvest or termination dates for cash or perennial crops;",
     "N rates by crop fall back to calendar years. Add harvest dates.")
-  )
+)
 
 # Add level and message to an assumptions table and order its columns
 .add_assumption_text <- function(df, keep = character(0)) {

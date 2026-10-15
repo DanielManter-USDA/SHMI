@@ -44,7 +44,9 @@ prepare_shmi_inputs(
 
 - end_at_sample_date:
 
-  Logical. Cut each unit's records off at its `MGT_sample_date`.
+  Logical. Shorten each unit's window to end at its `MGT_sample_date` if
+  that is earlier than the window's end; never extends the window. See
+  *Rotation window and overrides*.
 
 - max_rot_range:
 
@@ -167,9 +169,18 @@ after the start override is scored as having no cover, tillage, or
 inputs before its first record, following the missing-record rule.
 Because Organic Inputs and Inverse Disturbance are scored by calendar
 year, overrides are best placed on year boundaries; other dates trigger
-a message. With `end_at_sample_date = TRUE`, each unit is cut off at its
-`MGT_sample_date` (from the `Mgt_Unit` sheet); units without a sample
-date are kept uncut and reported.
+a message.
+
+With `end_at_sample_date = TRUE`, each unit's window is shortened to end
+at its `MGT_sample_date` (from the `Mgt_Unit` sheet) if that falls
+before the window's end as otherwise determined by `rotation_window` and
+any overrides; it is never extended past that window, in either
+`rotation_window` mode. When `end_date_override` is also given, the
+smaller of the two end dates is used. A unit's sample date falling after
+its window end (e.g., because its last recorded management event is well
+before it was sampled) is left as a gap and flagged in `assumptions`
+(`sample_date_gap`); units without a sample date are kept uncut and
+reported.
 
 ## Yield and nitrogen rate
 
@@ -193,22 +204,22 @@ converted are `NA`, not zero. Unconverted values are listed in
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [888ms]
+#> ✔ Validating inputs... [873ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [797ms]
+#> ✔ Reading Excel file... [827ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [64ms]
+#> ✔ Calculating rotation lengths... [68ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [443ms]
+#> ✔ Calculating crop start/end dates... [442ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [29ms]
+#> ✔ Applying overrides... [38ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [133ms]
+#> ✔ Re-calculating rotation lengths... [165ms]
 #> 
 
 # What was assumed, and what should be reviewed?
@@ -224,22 +235,22 @@ inputs_2022_23 <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE,
                                       start_date_override = "2022-01-01",
                                       end_date_override   = "2023-12-31")
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [734ms]
+#> ✔ Validating inputs... [836ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [781ms]
+#> ✔ Reading Excel file... [764ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [67ms]
+#> ✔ Calculating rotation lengths... [69ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [444ms]
+#> ✔ Calculating crop start/end dates... [459ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [54ms]
+#> ✔ Applying overrides... [52ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [142ms]
+#> ✔ Re-calculating rotation lengths... [153ms]
 #> 
 inputs_2022_23$rot_bounds
 #> # A tibble: 8 × 5

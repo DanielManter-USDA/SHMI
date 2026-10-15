@@ -41,19 +41,19 @@ inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ✔ Validating inputs... [1.4s]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [844ms]
+#> ✔ Reading Excel file... [710ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [94ms]
+#> ✔ Calculating rotation lengths... [99ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [515ms]
+#> ✔ Calculating crop start/end dates... [490ms]
 #> 
 #> ℹ Applying overrides...
 #> ✔ Applying overrides... [36ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [141ms]
+#> ✔ Re-calculating rotation lengths... [152ms]
 #> 
 
 # Monthly climate normals for each unit; get_shmi_climate() downloads these
@@ -64,13 +64,13 @@ climate[sprintf("prec_%02d", 1:12)] <- as.list(c(20, 25, 50, 70, 110, 115, 95, 8
 
 result <- build_shmi(inputs, climate)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [18ms]
+#> ✔ Validating inputs... [17ms]
 #> 
 #> ℹ Computing sub-indices...
-#> ✔ Computing sub-indices... [530ms]
+#> ✔ Computing sub-indices... [513ms]
 #> 
 #> ℹ Combining...
-#> ✔ Combining... [55ms]
+#> ✔ Combining... [49ms]
 #> 
 result$indicator_df
 #> # A tibble: 8 × 16

@@ -29,8 +29,9 @@ out.}
 \item{start_date_override, end_date_override}{Optional start and end of the
 evaluation window (a \code{Date} or a string such as \code{"2018-01-01"}).}
 
-\item{end_at_sample_date}{Logical. Cut each unit's records off at its
-\code{MGT_sample_date}.}
+\item{end_at_sample_date}{Logical. Shorten each unit's window to end at its
+\code{MGT_sample_date} if that is earlier than the window's end; never
+extends the window. See \emph{Rotation window and overrides}.}
 
 \item{max_rot_range}{Maximum plausible rotation length in years; longer
 spans stop with an error, since they usually indicate a mistyped date.}
@@ -142,9 +143,18 @@ the start override is scored as having no cover, tillage, or inputs
 before its first record, following the missing-record rule. Because
 Organic Inputs and Inverse Disturbance are scored by calendar year,
 overrides are best placed on year boundaries; other dates trigger a
-message. With \code{end_at_sample_date = TRUE}, each unit is cut off at its
-\code{MGT_sample_date} (from the \code{Mgt_Unit} sheet); units without a sample
-date are kept uncut and reported.
+message.
+
+With \code{end_at_sample_date = TRUE}, each unit's window is shortened to end
+at its \code{MGT_sample_date} (from the \code{Mgt_Unit} sheet) if that falls before
+the window's end as otherwise determined by \code{rotation_window} and any
+overrides; it is never extended past that window, in either
+\code{rotation_window} mode. When \code{end_date_override} is also given, the
+smaller of the two end dates is used. A unit's sample date falling after
+its window end (e.g., because its last recorded management event is well
+before it was sampled) is left as a gap and flagged in \code{assumptions}
+(\code{sample_date_gap}); units without a sample date are kept uncut and
+reported.
 }
 
 \section{Yield and nitrogen rate}{

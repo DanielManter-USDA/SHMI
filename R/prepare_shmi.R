@@ -61,9 +61,18 @@
 #' before its first record, following the missing-record rule. Because
 #' Organic Inputs and Inverse Disturbance are scored by calendar year,
 #' overrides are best placed on year boundaries; other dates trigger a
-#' message. With `end_at_sample_date = TRUE`, each unit is cut off at its
-#' `MGT_sample_date` (from the `Mgt_Unit` sheet); units without a sample
-#' date are kept uncut and reported.
+#' message.
+#'
+#' With `end_at_sample_date = TRUE`, each unit's window is shortened to end
+#' at its `MGT_sample_date` (from the `Mgt_Unit` sheet) if that falls before
+#' the window's end as otherwise determined by `rotation_window` and any
+#' overrides; it is never extended past that window, in either
+#' `rotation_window` mode. When `end_date_override` is also given, the
+#' smaller of the two end dates is used. A unit's sample date falling after
+#' its window end (e.g., because its last recorded management event is well
+#' before it was sampled) is left as a gap and flagged in `assumptions`
+#' (`sample_date_gap`); units without a sample date are kept uncut and
+#' reported.
 #'
 #' @section Yield and nitrogen rate:
 #' With `calc_yield = TRUE`, each harvest row with a yield is converted to
@@ -79,8 +88,9 @@
 #' @param verbose Logical. Print progress and a summary of assumptions.
 #' @param start_date_override,end_date_override Optional start and end of the
 #'   evaluation window (a `Date` or a string such as `"2018-01-01"`).
-#' @param end_at_sample_date Logical. Cut each unit's records off at its
-#'   `MGT_sample_date`.
+#' @param end_at_sample_date Logical. Shorten each unit's window to end at its
+#'   `MGT_sample_date` if that is earlier than the window's end; never
+#'   extends the window. See *Rotation window and overrides*.
 #' @param rotation_window `"calendar"` (default) or `"events"` (SHMI
 #'   <= 1.1.0 behaviour); see *Rotation window and overrides*.
 #' @param tillage_end Scale for the intensive-tillage end rule: `"auto"`
@@ -203,6 +213,7 @@ prepare_shmi_inputs <- function(path,
     janitor::remove_empty("rows") %>%
     dplyr::filter(!(MGT_combo %in% exclude))
 
+  mgt_dates <- NULL
   if (end_at_sample_date) {
     if (!"MGT_sample_date" %in% names(mgt)) {
       stop("end_at_sample_date = TRUE requires an MGT_sample_date column in Mgt_Unit.",
@@ -512,7 +523,7 @@ prepare_shmi_inputs <- function(path,
     rot_bounds <- event_span %>%
       dplyr::transmute(MGT_combo, rot_start = first_event, rot_end = last_event)
   } else {
-    # calendar-year window, or exactly the override / sample dates
+    # calendar-year window, or exactly the override dates
     rot_bounds <- event_span %>%
       mutate(
         rot_start = if (!is.null(start_date_override)) start_date_override else
@@ -520,15 +531,21 @@ prepare_shmi_inputs <- function(path,
         rot_end   = if (!is.null(end_date_override)) end_date_override else
           as.Date(paste0(lubridate::year(last_event), "-12-31"))
       )
-    if (end_at_sample_date) {
-      rot_bounds <- rot_bounds %>%
-        left_join(mgt_dates, by = "MGT_combo") %>%
-        mutate(rot_end = dplyr::if_else(is.na(MGT_sample_date), rot_end,
-                                        pmin(rot_end, MGT_sample_date))) %>%
-        select(-MGT_sample_date)
-    }
-    rot_bounds <- rot_bounds %>% select(MGT_combo, rot_start, rot_end)
   }
+
+  # Sample date: applies the same way regardless of rotation_window, and
+  # only ever shortens the window (never extends it past the window
+  # otherwise determined above). If end_date_override is also set, the
+  # smaller of the two end dates wins.
+  if (end_at_sample_date) {
+    rot_bounds <- rot_bounds %>%
+      left_join(mgt_dates, by = "MGT_combo") %>%
+      mutate(rot_end = dplyr::if_else(is.na(MGT_sample_date), rot_end,
+                                      pmin(rot_end, MGT_sample_date))) %>%
+      select(-MGT_sample_date)
+  }
+
+  rot_bounds <- rot_bounds %>% select(MGT_combo, rot_start, rot_end)
 
   rot_bounds <- rot_bounds %>%
     mutate(
@@ -556,13 +573,15 @@ prepare_shmi_inputs <- function(path,
   # Data checks on the final windows (change no scores):
   #   crops still running to the window end despite lighter tillage,
   #   annual crops with an imputed planting date (candidate dates listed),
-  #   units with management records but no crops
+  #   units with management records but no crops,
+  #   units whose sample date falls after their window end
   # ------------------------------------------------------------
   assumptions <- dplyr::bind_rows(
     assumptions,
     .check_light_tillage_end(crop_windows, dist, rot_bounds),
     .check_imputed_start(crop_windows, dist),
-    .check_no_crops(rot_bounds, crop_windows)
+    .check_no_crops(rot_bounds, crop_windows),
+    .check_sample_date_gap(rot_bounds, mgt_dates)
   )
 
   # ------------------------------------------------------------

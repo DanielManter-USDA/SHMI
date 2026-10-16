@@ -2,14 +2,17 @@
 % Please edit documentation in R/build_shmi.R
 \name{build_shmi}
 \alias{build_shmi}
-\title{Compute SHMI scores}
+\title{Compute SHMI and SHMI+ scores}
 \usage{
 build_shmi(
   shmi_inputs,
   climate,
   weights = NULL,
   dist_meth = c("EPA", "STIR", "auto"),
-  implements = NULL
+  implements = NULL,
+  growing_share = NULL,
+  graze_gap = NULL,
+  amend_gap = NULL
 )
 }
 \arguments{
@@ -22,8 +25,7 @@ Mgt_Unit. Irrigation comes from Mgt_Unit (\code{MGT_irr_cat}) unless the table
 has its own \code{irrigated} column.}
 
 \item{weights}{Optional named vector of custom weights (\code{Cover},
-\code{OrgInput}, \code{Diversity}, \code{InvDist}), rescaled to sum to 1. Scores with
-custom weights are not comparable to the official SHMI scale.}
+\code{Diversity}, \code{InvDist}), rescaled to sum to 1.}
 
 \item{dist_meth}{Tillage scale: \code{"EPA"} (default; each pass's mixing
 efficiency and depth, or its implement's T-DISC values), \code{"STIR"} (STIR
@@ -33,36 +35,48 @@ otherwise EPA). Both are scored with T-DISC's crop intervals and windows.}
 \item{implements}{Optional user implement table (\code{implement},
 \code{mixing_efficiency}, \code{depth_cm}) overriding T-DISC's values for named
 implements; see \code{\link[=compute_disturbance]{compute_disturbance()}}.}
+
+\item{growing_share, graze_gap, amend_gap}{Optional custom values of the
+calibrated constants (see \code{\link[=shmi_parameters]{shmi_parameters()}}), each between 0 and 1.
+Scores computed with any custom weight or constant are flagged
+\code{official = FALSE} and are not comparable to the official scale.}
 }
 \value{
 A list with \code{indicator_df} (one row per unit: \code{MGT_combo}, any
-management metadata, \code{SHMI}, \code{Cover}, \code{OrgInput}, \code{Diversity},
-\code{InvDist}, \code{Cover_growing}, \code{Cover_nongrowing}, \code{Richness}),
-\code{weights}, \code{dist_meth} (the tillage scale used), \code{official} (\code{TRUE}
-unless custom weights were used),
+management metadata, \code{SHMI}, \code{SHMI_plus}, \code{Amend_bonus}, \code{Cover},
+\code{Diversity}, \code{InvDist}, then \code{Cover_growing}, \code{Cover_nongrowing},
+\code{Diversity_plants} (before the grazing credit), \code{Richness}, \code{p_amend},
+\code{p_animal}, \code{TI_tillage} and \code{tillage_designation}), \code{weights},
+\code{parameters} (all constants used), \code{dist_meth} (the tillage scale used),
+\code{official} (\code{TRUE} unless a custom weight or constant was used),
 \code{shmi_version} and \code{timestamp} (plus \code{expert_mode} and \code{settings_used},
 kept for code written against SHMI < 1.0).
 }
 \description{
-Computes the Soil Health Management Index (SHMI) for each management unit
-(\code{MGT_combo}) from prepared inputs and monthly climate normals:
-\deqn{SHMI = 0.414\,Cover + 0.321\,OrgInput + 0.150\,Diversity + 0.115\,InvDist}
+Computes two scores for each management unit (\code{MGT_combo}) from prepared
+inputs and monthly climate normals:
+\deqn{SHMI = 0.687\,Cover + 0.150\,Diversity + 0.163\,InvDist}
+\deqn{SHMI+ = SHMI + 0.60\,p_{amend}\,(100 - SHMI)}
 }
 \details{
 \itemize{
 \item \strong{Cover}: share of days with living plants in the growing and
 non-growing seasons, set by each unit's climate (\code{\link[=compute_cover]{compute_cover()}}).
-\item \strong{OrgInput}: share of years with an organic amendment or grazing
-animals (\code{\link[=compute_orginput]{compute_orginput()}}).
-\item \strong{Diversity}: average annual plant species richness
-(\code{\link[=compute_diversity]{compute_diversity()}}).
+\item \strong{Diversity}: plant species richness over 4-year spans
+(\code{\link[=compute_diversity]{compute_diversity()}}), raised by grazing animals: grazing in a share
+\eqn{p_{animal}} of years closes \eqn{0.25\,p_{animal}} of the gap to 100.
 \item \strong{InvDist}: inverse tillage disturbance, computed as in USDA's T-DISC
 from implement mixing efficiencies and depths, or from STIR
 (\code{\link[=compute_disturbance]{compute_disturbance()}}).
+\item \strong{SHMI+} adds the amendment bonus, \code{Amend_bonus}: organic amendments in
+a share \eqn{p_{amend}} of years close \eqn{0.60\,p_{amend}} of the gap
+between SHMI and 100. SHMI describes the field's own plant and tillage
+management; SHMI+ adds carbon brought in from outside. A unit without
+amendments has SHMI+ = SHMI.
 }
 
-Every sub-index and SHMI run from 0 to 100. A missing record means the
-practice did not happen.
+Every sub-index and both scores run from 0 to 100. A missing record means
+the practice did not happen.
 }
 \examples{
 \dontrun{
@@ -74,5 +88,5 @@ result$indicator_df
 }
 \seealso{
 \code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}}, \code{\link[=get_shmi_climate]{get_shmi_climate()}}, \code{\link[=shmi_components]{shmi_components()}},
-\code{\link[=plot_shmi_gauge]{plot_shmi_gauge()}}, \code{\link[=plot_shmi_lollipop]{plot_shmi_lollipop()}}
+\code{\link[=shmi_parameters]{shmi_parameters()}}, \code{\link[=plot_shmi_gauge]{plot_shmi_gauge()}}, \code{\link[=plot_shmi_lollipop]{plot_shmi_lollipop()}}
 }

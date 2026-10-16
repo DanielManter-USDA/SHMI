@@ -25,8 +25,8 @@ weighted and scaled 0-100."><meta property="og:image" content="https://danielman
     <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
     <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
     <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs Index</a></li>
-    <li><a class="dropdown-item" href="../articles/SHMI.html">Final SHMI Index</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (SHMI+)</a></li>
+    <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI+</a></li>
   </ul></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
@@ -63,7 +63,13 @@ weighted and scaled 0-100.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_cover</span><span class="op">(</span><span class="va">crop</span>, <span class="va">rot_bounds</span>, <span class="va">climate</span>, grow_temp <span class="op">=</span> <span class="fl">5</span>, growing_share <span class="op">=</span> <span class="fl">0.797</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_cover</span><span class="op">(</span></span>
+<span>  <span class="va">crop</span>,</span>
+<span>  <span class="va">rot_bounds</span>,</span>
+<span>  <span class="va">climate</span>,</span>
+<span>  grow_temp <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  growing_share <span class="op">=</span> <span class="fu"><a href="shmi_parameters.html">shmi_parameters</a></span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">growing_share</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -114,7 +120,7 @@ season takes the other's value.</p>
 <p><strong>Score.</strong> With \(G\) and \(N\) the percentage of growing- and
 non-growing-season days with living plants,
 $$Cover = s G + (1 - s) N$$
-where \(s\) is <code>growing_share</code> (0.797, from the SHMI calibration).</p>
+where \(s\) is <code>growing_share</code> (0.760, from the SHMI calibration; see <code><a href="shmi_parameters.html">shmi_parameters()</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -136,7 +142,7 @@ where \(s\) is <code>growing_share</code> (0.797, from the SHMI calibration).</p
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   MGT_combo Cover Cover_growing Cover_nongrowing</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> field_1    71.5          79.4             40.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> field_1    70.0          79.4             40.1</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

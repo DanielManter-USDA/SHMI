@@ -1,12 +1,13 @@
-#' Plot gauges of SHMI and its sub-indices for one management unit
+#' Plot gauges of SHMI, SHMI+ and the sub-indices for one management unit
 #'
-#' Draws five vertical gauges, for Cover, Diversity, Inverse Disturbance,
-#' Organic Inputs, and overall SHMI. Each gauge shows the 0-100 scale in five
-#' bands ("very low" to "very high") with a pointer at the unit's score.
+#' Draws vertical gauges for Cover, Diversity, Inverse Disturbance, SHMI and,
+#' when the data have `SHMI_plus`, SHMI+ (SHMI with the organic amendment
+#' bonus). Each gauge shows the 0-100 scale in five bands ("very low" to
+#' "very high") with a pointer at the unit's score.
 #'
-#' @param shmi A data frame of scores with `SHMI`, `Cover`, `Diversity`,
-#'   `InvDist`, and `OrgInput`, and `MGT_combo` if units are selected by name,
-#'   such as `build_shmi()$indicator_df`.
+#' @param shmi A data frame of scores with `SHMI`, `Cover`, `Diversity` and
+#'   `InvDist`, optionally `SHMI_plus`, and `MGT_combo` if units are selected
+#'   by name, such as `build_shmi()$indicator_df`.
 #' @param MGT_combo Optional management unit to plot. Overrides `row`.
 #' @param row Row of `shmi` to plot when `MGT_combo` is not given.
 #'
@@ -16,8 +17,8 @@
 #' @seealso [plot_shmi_lollipop()], [build_shmi()]
 #'
 #' @examples
-#' scores <- data.frame(MGT_combo = "field_1", SHMI = 62.3, Cover = 71.2,
-#'                      Diversity = 45.0, InvDist = 88.9, OrgInput = 33.1)
+#' scores <- data.frame(MGT_combo = "field_1", SHMI = 62.3, SHMI_plus = 73.6,
+#'                      Cover = 71.2, Diversity = 45.0, InvDist = 88.9)
 #' plot_shmi_gauge(scores)
 #'
 #' @export
@@ -27,13 +28,10 @@ plot_shmi_gauge <- function(shmi,
 
   # ---- Selection logic ----
   if (!is.null(MGT_combo)) {
-
     if (!"MGT_combo" %in% names(shmi)) {
       stop("Column `MGT_combo` not found in `shmi`.", call. = FALSE)
     }
-
     idx <- which(shmi$MGT_combo == MGT_combo)
-
     if (length(idx) == 0) {
       stop("No rows match MGT_combo = '", MGT_combo, "'.", call. = FALSE)
     }
@@ -41,7 +39,6 @@ plot_shmi_gauge <- function(shmi,
       stop("Multiple rows match MGT_combo = '", MGT_combo,
            "'. Please ensure uniqueness.", call. = FALSE)
     }
-
   } else {
     if (row < 1 || row > nrow(shmi)) {
       stop("`row` is out of bounds.", call. = FALSE)
@@ -50,25 +47,16 @@ plot_shmi_gauge <- function(shmi,
   }
 
   # Extract selected row
-  x <- shmi[idx, , drop = FALSE]
+  x <- as.data.frame(shmi[idx, , drop = FALSE])
 
   # ---- Validate required columns ----
-  req <- c("SHMI", "Cover", "Diversity", "InvDist", "OrgInput")
+  req <- c("SHMI", "Cover", "Diversity", "InvDist")
   missing <- setdiff(req, names(x))
   if (length(missing) > 0) {
     stop("Missing required columns: ", paste(missing, collapse = ", "),
          call. = FALSE)
   }
-
-  # Round values
-  x <- x |>
-    dplyr::mutate(
-      SHMI      = round(SHMI, 1),
-      Cover     = round(Cover, 1),
-      Diversity = round(Diversity, 1),
-      InvDist   = round(InvDist, 1),
-      OrgInput = round(OrgInput, 1)
-    )
+  has_plus <- "SHMI_plus" %in% names(x)
 
   # ---- Score bins ----
   scores <- factor(
@@ -99,13 +87,21 @@ plot_shmi_gauge <- function(shmi,
       )
   }
 
-  # ---- Helper to build each panel ----
-  panel <- function(value, xlab) {
-    base_plot() +
-      .gauge_pointer(x, value) +
+  # ---- One gauge; band labels on the last one ----
+  panel <- function(value, xlab, band_labels = FALSE) {
+    v <- data.frame(value = round(value, 1))
+    p <- base_plot()
+    if (band_labels) {
+      p <- p + ggplot2::geom_text(
+        ggplot2::aes(label = scores, x = 1.6, y = seq(10, 90, by = 20)),
+        size = 5, angle = 90
+      )
+    }
+    p +
+      .gauge_pointer(v, v$value) +
       ggplot2::geom_label(
         inherit.aes = FALSE,
-        data = x,
+        data = v,
         ggplot2::aes(x = 1, y = value, label = value),
         size = 6, colour = "black"
       ) +
@@ -116,32 +112,15 @@ plot_shmi_gauge <- function(shmi,
       ))
   }
 
-  p1 <- panel(x$Cover,     "\nCover")
-  p2 <- panel(x$Diversity, "\nDiversity")
-  p3 <- panel(x$InvDist,   "Inverse\nDisturbance")
-  p4 <- panel(x$OrgInput,   "\nOrgInput")
+  panels <- list(
+    panel(x$Cover,     "\nCover"),
+    panel(x$Diversity, "\nDiversity"),
+    panel(x$InvDist,   "Inverse\nDisturbance"),
+    panel(x$SHMI,      "\nSHMI", band_labels = !has_plus)
+  )
+  if (has_plus) panels <- c(panels, list(panel(x$SHMI_plus, "\nSHMI+", band_labels = TRUE)))
 
-  # ---- Overall SHMI panel ----
-  p5 <- base_plot() +
-    ggplot2::geom_text(
-      ggplot2::aes(label = scores, x = 1.6, y = seq(10, 90, by = 20)),
-      size = 5, angle = 90
-    ) +
-    .gauge_pointer(x, x$SHMI) +
-    ggplot2::geom_label(
-      inherit.aes = FALSE,
-      data = x,
-      ggplot2::aes(x = 1, y = SHMI, label = SHMI),
-      size = 6, colour = "black"
-    ) +
-    ggplot2::scale_x_discrete(position = "top") +
-    ggplot2::labs(x = "Overall\nSHMI", y = NULL) +
-    ggplot2::theme(plot.background = ggplot2::element_rect(
-      fill = "grey80", color = "grey80"
-    ))
-
-  # ---- Arrange 1x5 ----
-  gridExtra::grid.arrange(p1, p2, p3, p4, p5, nrow = 1)
+  gridExtra::grid.arrange(grobs = panels, nrow = 1)
 }
 
 

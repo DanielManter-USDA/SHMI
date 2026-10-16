@@ -38,22 +38,22 @@ Other SHMI helper functions:
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [1.4s]
+#> ✔ Validating inputs... [1.6s]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [710ms]
+#> ✔ Reading Excel file... [1.1s]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [99ms]
+#> ✔ Calculating rotation lengths... [134ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [490ms]
+#> ✔ Calculating crop start/end dates... [562ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [36ms]
+#> ✔ Applying overrides... [40ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [152ms]
+#> ✔ Re-calculating rotation lengths... [186ms]
 #> 
 
 # Monthly climate normals for each unit; get_shmi_climate() downloads these
@@ -64,27 +64,28 @@ climate[sprintf("prec_%02d", 1:12)] <- as.list(c(20, 25, 50, 70, 110, 115, 95, 8
 
 result <- build_shmi(inputs, climate)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [17ms]
+#> ✔ Validating inputs... [23ms]
 #> 
 #> ℹ Computing sub-indices...
-#> ✔ Computing sub-indices... [513ms]
+#> ✔ Computing sub-indices... [654ms]
 #> 
 #> ℹ Combining...
-#> ✔ Combining... [49ms]
+#> ✔ Combining... [57ms]
 #> 
 result$indicator_df
-#> # A tibble: 8 × 16
-#>   MGT_combo  MGT_study MGT_farm MGT_field MGT_trt irrigated  SHMI Cover OrgInput
-#>   <chr>      <chr>     <chr>    <chr>     <chr>   <lgl>     <dbl> <dbl>    <dbl>
-#> 1 MLSH_ARDE… MLSH      ARDEC    200A      DMP-Ma… TRUE       65.5  64.9      100
-#> 2 MLSH_ARDE… MLSH      ARDEC    200A      DMP-Ma… TRUE       65.5  64.9      100
-#> 3 MLSH_ARDE… MLSH      ARDEC    200A      DMP-N0  TRUE       33.4  64.9        0
-#> 4 MLSH_ARDE… MLSH      ARDEC    200A      DMP-N1… TRUE       33.4  64.9        0
-#> 5 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N0 TRUE       38.4  64.9        0
-#> 6 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0
-#> 7 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0
-#> 8 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0
-#> # ℹ 7 more variables: Diversity <dbl>, InvDist <dbl>, Cover_growing <dbl>,
-#> #   Cover_nongrowing <dbl>, Richness <dbl>, TI_tillage <dbl>,
-#> #   tillage_designation <chr>
+#> # A tibble: 8 × 20
+#>   MGT_combo       MGT_study MGT_farm MGT_field MGT_trt irrigated  SHMI SHMI_plus
+#>   <chr>           <chr>     <chr>    <chr>     <chr>   <lgl>     <dbl>     <dbl>
+#> 1 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-Ma… TRUE       51.8      80.7
+#> 2 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-Ma… TRUE       51.8      80.7
+#> 3 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-N0  TRUE       51.8      51.8
+#> 4 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-N1… TRUE       51.8      51.8
+#> 5 MLSH_ARDEC_200… MLSH      ARDEC    200A      Rot1-N0 TRUE       58.8      58.8
+#> 6 MLSH_ARDEC_200… MLSH      ARDEC    200A      Rot1-N… TRUE       58.8      58.8
+#> 7 MLSH_ARDEC_200… MLSH      ARDEC    200A      Rot1-N… TRUE       58.8      58.8
+#> 8 MLSH_ARDEC_200… MLSH      ARDEC    200A      Rot1-N… TRUE       58.8      58.8
+#> # ℹ 12 more variables: Amend_bonus <dbl>, Cover <dbl>, Diversity <dbl>,
+#> #   InvDist <dbl>, Cover_growing <dbl>, Cover_nongrowing <dbl>,
+#> #   Diversity_plants <dbl>, Richness <dbl>, p_amend <dbl>, p_animal <dbl>,
+#> #   TI_tillage <dbl>, tillage_designation <chr>
 ```

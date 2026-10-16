@@ -47,7 +47,7 @@
 #' depend on management. With `rotation_window = "calendar"` (default from
 #' 1.2.0) it runs from 1 January of the first year with a record to
 #' 31 December of the last. Bare periods before the first and after the last
-#' recorded event are therefore scored as bare, and all four sub-indices
+#' recorded event are therefore scored as bare, and all sub-indices
 #' share the same window. `rotation_window = "events"` reproduces
 #' SHMI <= 1.1.0, where the window ran from the first to the last recorded
 #' event; that excluded leading and trailing bare periods from the Cover

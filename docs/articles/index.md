@@ -12,7 +12,7 @@
   Subindex](https://danielmanter-usda.github.io/SHMI/articles/Diversity.md):
 - [Inverse Disturbance
   Subindex](https://danielmanter-usda.github.io/SHMI/articles/Disturbance.md):
-- [Organic Inputs
-  Subindex](https://danielmanter-usda.github.io/SHMI/articles/OrgInputs.md):
-- [Soil Health Management Index
-  (SHMI)](https://danielmanter-usda.github.io/SHMI/articles/SHMI.md):
+- [Organic Inputs and
+  SHMI+](https://danielmanter-usda.github.io/SHMI/articles/OrgInputs.md):
+- [SHMI and
+  SHMI+](https://danielmanter-usda.github.io/SHMI/articles/SHMI.md):

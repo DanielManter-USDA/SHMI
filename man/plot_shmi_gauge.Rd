@@ -2,14 +2,14 @@
 % Please edit documentation in R/plot_shmi_gauge.R
 \name{plot_shmi_gauge}
 \alias{plot_shmi_gauge}
-\title{Plot gauges of SHMI and its sub-indices for one management unit}
+\title{Plot gauges of SHMI, SHMI+ and the sub-indices for one management unit}
 \usage{
 plot_shmi_gauge(shmi, MGT_combo = NULL, row = 1)
 }
 \arguments{
-\item{shmi}{A data frame of scores with \code{SHMI}, \code{Cover}, \code{Diversity},
-\code{InvDist}, and \code{OrgInput}, and \code{MGT_combo} if units are selected by name,
-such as \code{build_shmi()$indicator_df}.}
+\item{shmi}{A data frame of scores with \code{SHMI}, \code{Cover}, \code{Diversity} and
+\code{InvDist}, optionally \code{SHMI_plus}, and \code{MGT_combo} if units are selected
+by name, such as \code{build_shmi()$indicator_df}.}
 
 \item{MGT_combo}{Optional management unit to plot. Overrides \code{row}.}
 
@@ -20,13 +20,14 @@ Draws the plot and invisibly returns the arranged grob from
 \code{\link[gridExtra:grid.arrange]{gridExtra::grid.arrange()}}.
 }
 \description{
-Draws five vertical gauges, for Cover, Diversity, Inverse Disturbance,
-Organic Inputs, and overall SHMI. Each gauge shows the 0-100 scale in five
-bands ("very low" to "very high") with a pointer at the unit's score.
+Draws vertical gauges for Cover, Diversity, Inverse Disturbance, SHMI and,
+when the data have \code{SHMI_plus}, SHMI+ (SHMI with the organic amendment
+bonus). Each gauge shows the 0-100 scale in five bands ("very low" to
+"very high") with a pointer at the unit's score.
 }
 \examples{
-scores <- data.frame(MGT_combo = "field_1", SHMI = 62.3, Cover = 71.2,
-                     Diversity = 45.0, InvDist = 88.9, OrgInput = 33.1)
+scores <- data.frame(MGT_combo = "field_1", SHMI = 62.3, SHMI_plus = 73.6,
+                     Cover = 71.2, Diversity = 45.0, InvDist = 88.9)
 plot_shmi_gauge(scores)
 
 }

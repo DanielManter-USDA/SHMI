@@ -2,7 +2,7 @@
 % Please edit documentation in R/orginputs.R
 \name{compute_orginput}
 \alias{compute_orginput}
-\title{Compute the Organic Inputs sub-index}
+\title{Organic Inputs score (superseded)}
 \usage{
 compute_orginput(rot_bounds, amend, animal)
 }
@@ -21,14 +21,17 @@ in \code{rot_bounds}.
 }
 \description{
 Share of years with an organic amendment or grazing animals, scaled 0-100.
+This was SHMI 1.0's fourth sub-index. It is no longer part of SHMI:
+grazing now raises Diversity and organic amendments raise SHMI to SHMI+
+(see \code{\link[=build_shmi]{build_shmi()}} and \code{\link[=compute_orginput_components]{compute_orginput_components()}}). It is kept so
+code written for SHMI 1.0 still runs.
 }
 \details{
 For every calendar year from \code{rot_start_yr} to \code{rot_end_yr}, a year counts
 if it has an amendment with \code{SA_cat == "Organic"}, or animals: every
 calendar year overlapped by an animal period (\code{AD_start_date} to
 \code{AD_end_date}; a period without an end date counts in its start year).
-Only presence is scored, not amounts. A unit with no organic amendments or
-animals scores 0.
+Only presence is scored, not amounts.
 }
 \examples{
 rot_bounds <- data.frame(MGT_combo = "field_1", rot_start_yr = 2019, rot_end_yr = 2020)
@@ -39,5 +42,5 @@ compute_orginput(rot_bounds, amend, animal)   # 50: one of two years
 
 }
 \seealso{
-\code{\link[=build_shmi]{build_shmi()}}
+\code{\link[=compute_orginput_components]{compute_orginput_components()}}, \code{\link[=build_shmi]{build_shmi()}}
 }

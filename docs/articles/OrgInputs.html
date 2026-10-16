@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Organic Inputs Subindex • SHMI</title>
+<title>Organic Inputs and SHMI+ • SHMI</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -15,7 +15,7 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Organic Inputs Subindex">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Organic Inputs and SHMI+">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -43,8 +43,8 @@
     <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
     <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
     <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs Index</a></li>
-    <li><a class="dropdown-item" href="../articles/SHMI.html">Final SHMI Index</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (SHMI+)</a></li>
+    <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI+</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -80,7 +80,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Organic Inputs Subindex</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Organic Inputs and SHMI+</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/DanielManter-USDA/SHMI/blob/HEAD/vignettes/articles/OrgInputs.Rmd" class="external-link"><code>vignettes/articles/OrgInputs.Rmd</code></a></small>
@@ -89,64 +89,104 @@
 
     
     
-<p>Share of Years with an Organic Amendment or Grazing Animals</p>
+<p>Organic Amendments as a Bonus; Grazing Animals as Diversity</p>
 <div class="section level2">
 <h2 id="overview">
 <strong>Overview</strong><a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>The Organic Inputs subindex measures how often organic matter is
-returned to the soil from outside the crop: manure, compost or similar
-amendments, or grazing animals. The score is the share of years with
-either, from 0 to 100.</p>
+<p>SHMI 1.0 scored organic inputs as a fourth weighted sub-index, the
+share of years with an organic amendment or grazing animals. Because it
+was weighted, a field without manure or animals scored 0 on it, which
+read as a penalty for management that is often out of the farmer’s
+hands. Organic inputs now enter in two places:</p>
+<ul>
+<li>
+<strong>Grazing animals</strong> are part of the field’s living
+system, so they raise <strong>Diversity</strong> (see the Diversity
+article).</li>
+<li>
+<strong>Organic amendments</strong> (manure, compost) bring in
+carbon from outside the field, so they raise <strong>SHMI</strong> to
+<strong>SHMI+</strong>.</li>
+</ul>
+<p>Both terms close a share of the gap to 100, so no score can exceed
+100, and a field without amendments or animals is simply not raised.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="rotation-years">
-<strong>1. Rotation years</strong><a class="anchor" aria-label="anchor" href="#rotation-years"></a>
+<h2 id="years-with-amendments-and-with-animals">
+<strong>1. Years with amendments and with animals</strong><a class="anchor" aria-label="anchor" href="#years-with-amendments-and-with-animals"></a>
 </h2>
 <p>For each management unit
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>,
-the years of the evaluation window are</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><msub><mtext mathvariant="normal">rot_start_yr</mtext><mi>i</mi></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mtext mathvariant="normal">rot_end_yr</mtext><mi>i</mi></msub><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">
-y \in \{\text{rot\_start\_yr}_i, \ldots, \text{rot\_end\_yr}_i\}
-</annotation></semantics></math></p>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="years-with-an-input">
-<strong>2. Years with an input</strong><a class="anchor" aria-label="anchor" href="#years-with-an-input"></a>
-</h2>
+over the calendar years of its evaluation window, from
+<code>rot_start_yr</code> to <code>rot_end_yr</code>:</p>
 <ul>
 <li>
-<strong>Amendment years</strong>: years with at least one amendment
-of category <code>"Organic"</code> (<code>SA_cat</code>), dated by
-<code>SA_date</code>.</li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mrow><mi>a</mi><mi>m</mi><mi>e</mi><mi>n</mi><mi>d</mi><mo>,</mo><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">p_{amend,i}</annotation></semantics></math>:
+the share of years with at least one amendment of category
+<code>"Organic"</code> (<code>SA_cat</code>), dated by
+<code>SA_date</code>;</li>
 <li>
-<strong>Animal years</strong>: every calendar year overlapped by a
-grazing period, from <code>AD_start_date</code> to
-<code>AD_end_date</code>. A period without an end date counts in its
-start year only.</li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mrow><mi>a</mi><mi>n</mi><mi>i</mi><mi>m</mi><mi>a</mi><mi>l</mi><mo>,</mo><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">p_{animal,i}</annotation></semantics></math>:
+the share of years overlapped by a grazing period, from
+<code>AD_start_date</code> to <code>AD_end_date</code>. A period without
+an end date counts in its start year only.</li>
 </ul>
-<p>A year counts if it has an amendment <strong>or</strong> animals (or
-both):</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">input</mtext><mrow><mi>i</mi><mo>,</mo><mi>y</mi></mrow></msub><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mn>1</mn></mtd><mtd columnalign="left" style="text-align: left"><mrow><mtext mathvariant="normal">if year </mtext><mspace width="0.333em"></mspace></mrow><mi>y</mi><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> has an organic amendment or animals</mtext></mrow></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mn>0</mn></mtd><mtd columnalign="left" style="text-align: left"><mtext mathvariant="normal">otherwise</mtext></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">
-\text{input}_{i,y} =
-\begin{cases}
-1 &amp; \text{if year } y \text{ has an organic amendment or animals} \\
-0 &amp; \text{otherwise}
-\end{cases}
-</annotation></semantics></math></p>
 <p>Only presence is scored, not amounts.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="score">
-<strong>3. Score</strong><a class="anchor" aria-label="anchor" href="#score"></a>
+<h2 id="the-amendment-bonus-and-shmi">
+<strong>2. The amendment bonus and SHMI+</strong><a class="anchor" aria-label="anchor" href="#the-amendment-bonus-and-shmi"></a>
 </h2>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">OrgInput</mtext><mi>i</mi></msub><mo>=</mo><mn>100</mn><mo>×</mo><mfrac><mn>1</mn><msub><mi>Y</mi><mi>i</mi></msub></mfrac><munder><mo>∑</mo><mi>y</mi></munder><msub><mtext mathvariant="normal">input</mtext><mrow><mi>i</mi><mo>,</mo><mi>y</mi></mrow></msub></mrow><annotation encoding="application/x-tex">
-\text{OrgInput}_i = 100 \times \frac{1}{Y_i} \sum_{y} \text{input}_{i,y}
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">Amend_bonus</mtext><mi>i</mi></msub><mo>=</mo><mn>0.60</mn><mspace width="0.167em"></mspace><msub><mi>p</mi><mrow><mi>a</mi><mi>m</mi><mi>e</mi><mi>n</mi><mi>d</mi><mo>,</mo><mi>i</mi></mrow></msub><mspace width="0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mn>100</mn><mo>−</mo><msub><mtext mathvariant="normal">SHMI</mtext><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="2.0em"></mspace><msub><mtext mathvariant="normal">SHMI+</mtext><mi>i</mi></msub><mo>=</mo><msub><mtext mathvariant="normal">SHMI</mtext><mi>i</mi></msub><mo>+</mo><msub><mtext mathvariant="normal">Amend_bonus</mtext><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">
+\text{Amend\_bonus}_i = 0.60\,p_{amend,i}\,(100 - \text{SHMI}_i)
+\qquad
+\text{SHMI+}_i = \text{SHMI}_i + \text{Amend\_bonus}_i
 </annotation></semantics></math></p>
-<p>A unit with no organic amendments or animals scores 0.</p>
+<p>Equivalently,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">SHMI+</mtext><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mn>0.6</mn><mi>p</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><mtext mathvariant="normal">SHMI</mtext><mo>+</mo><mn>60</mn><mi>p</mi></mrow><annotation encoding="application/x-tex">\text{SHMI+} = (1 - 0.6p)\,\text{SHMI} + 60p</annotation></semantics></math>:
+an amendment every year moves a unit 60% of the way from its SHMI to
+100.</p>
+<table class="table">
+<thead><tr class="header">
+<th>SHMI</th>
+<th>Amendments every year</th>
+<th>Half the years</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>40</td>
+<td>+36 (SHMI+ 76)</td>
+<td>+18 (58)</td>
+</tr>
+<tr class="even">
+<td>60</td>
+<td>+24 (84)</td>
+<td>+12 (72)</td>
+</tr>
+<tr class="odd">
+<td>80</td>
+<td>+12 (92)</td>
+<td>+6 (86)</td>
+</tr>
+</tbody>
+</table>
+<p>The bonus is largest where management alone scores lowest. In the
+calibration data, the soil-health gain from amendments within sites also
+shrank as SHMI rose, though not significantly.</p>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="where-the-0-60-and-0-25-come-from">
+<strong>3. Where the 0.60 and 0.25 come from</strong><a class="anchor" aria-label="anchor" href="#where-the-0-60-and-0-25-come-from"></a>
+</h2>
+<p>The sub-index weights were fitted with the amendment bonus in place,
+so SHMI+ is the calibrated score. Held-out fit was flat for amendment
+shares from 0.5 to 0.8 and grazing shares from 0.25 to 0.5; 0.60 and
+0.25 were chosen within those ranges. For sites held out of the fitting,
+SHMI+ explained 26% of the differences in soil health and SHMI 23%.</p>
 <hr>
 </div>
 <div class="section level2">
@@ -154,17 +194,13 @@ both):</p>
 <strong>Interpretation</strong><a class="anchor" aria-label="anchor" href="#interpretation"></a>
 </h2>
 <ul>
+<li>Report both scores. SHMI is the field’s own plant and tillage
+management; SHMI+ adds carbon brought in from outside.</li>
 <li>
-<strong>0</strong>: no organic amendments or grazing in any
-year.</li>
-<li>
-<strong>50</strong>: inputs in half of the years.</li>
-<li>
-<strong>100</strong>: an amendment or grazing every year.</li>
-<li>Amendments and animals count equally: a grazed but unamended system
-and an amended but ungrazed one can both reach 100. In the calibration,
-Organic Inputs carried the largest share of soil-health signal unique to
-any one sub-index.</li>
+<strong>SHMI+ = SHMI</strong>: no organic amendments in the
+window.</li>
+<li>Amendments and SHMI do not trade off one-for-one: a well-managed
+field gains less from manure than a poorly managed one.</li>
 </ul>
 <hr>
 </div>
@@ -172,20 +208,30 @@ any one sub-index.</li>
 <h2 id="output">
 <strong>Output</strong><a class="anchor" aria-label="anchor" href="#output"></a>
 </h2>
-<p><code><a href="../reference/compute_orginput.html">compute_orginput()</a></code> returns one row per management
-unit:</p>
+<p><code><a href="../reference/compute_orginput_components.html">compute_orginput_components()</a></code> returns one row per
+management unit:</p>
 <table class="table">
 <thead><tr class="header">
 <th>MGT_combo</th>
-<th>OrgInput</th>
+<th>p_amend</th>
+<th>p_animal</th>
+<th>p_any</th>
+<th>n_years</th>
 </tr></thead>
 <tbody><tr class="odd">
 <td>…</td>
-<td>0–100</td>
+<td>0–1</td>
+<td>0–1</td>
+<td>0–1</td>
+<td>years</td>
 </tr></tbody>
 </table>
-<p><code><a href="../reference/compute_orginput_components.html">compute_orginput_components()</a></code> also returns the share of
-years with amendments, with animals, and with either.</p>
+<p><code><a href="../reference/build_shmi.html">build_shmi()</a></code> returns <code>SHMI</code>,
+<code>Amend_bonus</code> and <code>SHMI_plus</code>, with
+<code>p_amend</code> and <code>p_animal</code>.
+<code><a href="../reference/compute_orginput.html">compute_orginput()</a></code> still gives the SHMI 1.0 score,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><mspace width="0.167em"></mspace><msub><mi>p</mi><mrow><mi>a</mi><mi>n</mi><mi>y</mi></mrow></msub></mrow><annotation encoding="application/x-tex">100\,p_{any}</annotation></semantics></math>,
+for code written against SHMI 1.0.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

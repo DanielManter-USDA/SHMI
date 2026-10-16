@@ -1,9 +1,9 @@
-# Plot gauges of SHMI and its sub-indices for one management unit
+# Plot gauges of SHMI, SHMI+ and the sub-indices for one management unit
 
-Draws five vertical gauges, for Cover, Diversity, Inverse Disturbance,
-Organic Inputs, and overall SHMI. Each gauge shows the 0-100 scale in
-five bands ("very low" to "very high") with a pointer at the unit's
-score.
+Draws vertical gauges for Cover, Diversity, Inverse Disturbance, SHMI
+and, when the data have `SHMI_plus`, SHMI+ (SHMI with the organic
+amendment bonus). Each gauge shows the 0-100 scale in five bands ("very
+low" to "very high") with a pointer at the unit's score.
 
 ## Usage
 
@@ -15,9 +15,9 @@ plot_shmi_gauge(shmi, MGT_combo = NULL, row = 1)
 
 - shmi:
 
-  A data frame of scores with `SHMI`, `Cover`, `Diversity`, `InvDist`,
-  and `OrgInput`, and `MGT_combo` if units are selected by name, such as
-  `build_shmi()$indicator_df`.
+  A data frame of scores with `SHMI`, `Cover`, `Diversity` and
+  `InvDist`, optionally `SHMI_plus`, and `MGT_combo` if units are
+  selected by name, such as `build_shmi()$indicator_df`.
 
 - MGT_combo:
 
@@ -40,8 +40,8 @@ Draws the plot and invisibly returns the arranged grob from
 ## Examples
 
 ``` r
-scores <- data.frame(MGT_combo = "field_1", SHMI = 62.3, Cover = 71.2,
-                     Diversity = 45.0, InvDist = 88.9, OrgInput = 33.1)
+scores <- data.frame(MGT_combo = "field_1", SHMI = 62.3, SHMI_plus = 73.6,
+                     Cover = 71.2, Diversity = 45.0, InvDist = 88.9)
 plot_shmi_gauge(scores)
 
 ```

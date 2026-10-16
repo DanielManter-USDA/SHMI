@@ -23,8 +23,8 @@
     <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
     <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
     <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs Index</a></li>
-    <li><a class="dropdown-item" href="../articles/SHMI.html">Final SHMI Index</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (SHMI+)</a></li>
+    <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI+</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
@@ -58,21 +58,23 @@
 <p>First public release.</p>
 <div class="section level3">
 <h3 id="the-index-1-0-0">The index<a class="anchor" aria-label="anchor" href="#the-index-1-0-0"></a></h3>
-<p>SHMI scores a field’s management record from 0 to 100:</p>
-<p>SHMI = 0.414 Cover + 0.321 OrgInput + 0.150 Diversity + 0.115 InvDist</p>
+<p>SHMI reports two scores from a field’s management record, both 0 to 100:</p>
+<p>SHMI = 0.687 Cover + 0.150 Diversity + 0.163 InvDist</p>
+<p>SHMI+ = SHMI + 0.60 p_amend (100 − SHMI)</p>
 <p>Each sub-index also runs from 0 to 100.</p>
 <ul><li>
-<strong>Cover</strong>: share of days with living plants in each unit’s growing and non-growing seasons, set by its climate. A month is in the growing season when its mean temperature is at least 5 °C and, unless the unit is irrigated, its precipitation (mm) is at least twice its temperature (°C). The growing season counts 0.797 and the rest of the year 0.203.</li>
+<strong>Cover</strong>: share of days with living plants in each unit’s growing and non-growing seasons, set by its climate. A month is in the growing season when its mean temperature is at least 5 °C and, unless the unit is irrigated, its precipitation (mm) is at least twice its temperature (°C). The growing season counts 0.760 and the rest of the year 0.240.</li>
 <li>
-<strong>Organic Inputs</strong>: share of years with an organic amendment or grazing animals. Grazing counts in every calendar year a grazing period spans.</li>
-<li>
-<strong>Diversity</strong>: number of plant species (cash crops, forages and cover crops) in each 4-year span of the record, sliding one year at a time and averaged (a record of 4 years or fewer is one span); 0 for one species, 100 for eight or more. A corn-soybean rotation scores 14, corn-soybean-wheat 29, and corn-soybean-wheat with a rye cover 43. <code>compute_diversity(window = 1)</code> gives species per calendar year. Placeholder mixtures such as “8-species mix” count as that many species. Diversity’s weight is fixed at 0.15 (see Calibration).</li>
+<strong>Diversity</strong>: number of plant species (cash crops, forages and cover crops) in each 4-year span of the record, sliding one year at a time and averaged (a record of 4 years or fewer is one span); 0 for one species, 100 for eight or more. A corn-soybean rotation scores 14, corn-soybean-wheat 29, and corn-soybean-wheat with a rye cover 43. <code>compute_diversity(window = 1)</code> gives species per calendar year. Placeholder mixtures such as “8-species mix” count as that many species. <strong>Grazing credit:</strong> animals grazing in a share p_animal of years close 0.25 p_animal of the gap to 100 (Diversity = plants + 0.25 p_animal (100 − plants)); every calendar year a grazing period spans counts. Diversity’s weight is fixed at 0.15 (see Calibration).</li>
 <li>
 <strong>Inverse Disturbance</strong>: tillage intensity computed exactly as USDA’s Tillage Disturbance Index for Soil Carbon (T-DISC, version 1.1.1). Each cash crop defines a crop interval; passes fall into five tillage windows around planting; implements combine within a window by the EPA soil-mixing model; and each interval is rated by its most intense window. Each unit also receives T-DISC’s designation: no-till, reduced till or conventional till. STIR records can be scored on the same intervals and windows.</li>
-</ul></div>
+<li>
+<strong>SHMI+ (amendment bonus)</strong>: organic amendments (<code>SA_cat</code> “Organic”) in a share p_amend of years close 0.60 p_amend of the gap between SHMI and 100. A unit without amendments has SHMI+ = SHMI; no score can exceed 100, and a low SHMI gains more than a high one (amendments every year add 36 points at SHMI 40, 12 at SHMI 80).</li>
+</ul><p>Organic Inputs is no longer a weighted sub-index. As a weighted sub-index it scored 0 for any field without manure or animals, which read as a penalty; grazing now raises Diversity, and amendments raise SHMI to SHMI+. <code><a href="../reference/compute_orginput.html">compute_orginput()</a></code> is kept, superseded, so SHMI 1.0 code still runs, and custom <code>weights</code> naming <code>OrgInput</code> now give an error that explains the change.</p>
+</div>
 <div class="section level3">
 <h3 id="calibration-1-0-0">Calibration<a class="anchor" aria-label="anchor" href="#calibration-1-0-0"></a></h3>
-<p>The weights were calibrated against a soil-health score built from 11 laboratory indicators, adjusted for climate and soil texture, on 354 US plots at 74 sites of the North American Project to Evaluate Soil Health Measurements (NAPESHM). Each weight is the median of 1,000 cross-validated fits. Cover/Roots and Diversity share much of their information, so their combined weight is well determined but its split is not; Diversity’s weight was fixed at 0.15, within the range where cross-validated fit was unchanged, and the other weights were fitted under that constraint. For sites held out of the fitting, SHMI explained about a quarter of the differences in soil health and ranked practices in the right order at 84% of sites. SHMI is calibrated for US systems; other regions should recalibrate.</p>
+<p>The weights were calibrated against a soil-health score built from 11 laboratory indicators, adjusted for climate and soil texture, on 354 US plots at 74 sites of the North American Project to Evaluate Soil Health Measurements (NAPESHM). They were fitted with the amendment bonus in place, so SHMI+ is the calibrated score. Each weight is the median of 1,000 cross-validated fits. Cover/Roots and Diversity share much of their information, so their combined weight is well determined but its split is not; Diversity’s weight was fixed at 0.15, within the range where cross-validated fit was unchanged, and the other weights were fitted under that constraint. The grazing share (0.25) and amendment share (0.60) were chosen where held-out fit was flat (0.25-0.5 and 0.5-0.8). For sites held out of the fitting, SHMI+ explained about a quarter of the differences in soil health (R² = 0.26) and ranked practices in the right order at 82% of sites; SHMI alone explained 0.23 and ranked 76% of sites correctly. SHMI is calibrated for US systems; other regions should recalibrate. <code><a href="../reference/shmi_parameters.html">shmi_parameters()</a></code> returns every calibrated constant, and each <code><a href="../reference/build_shmi.html">build_shmi()</a></code> result records them.</p>
 </div>
 <div class="section level3">
 <h3 id="the-workbook-1-0-0">The workbook<a class="anchor" aria-label="anchor" href="#the-workbook-1-0-0"></a></h3>
@@ -94,7 +96,7 @@
 <li>scores each unit from 1 January of its first year with a record to 31 December of its last, or over fixed dates, or up to each unit’s soil sampling date;</li>
 <li>optionally converts yields to kg/ha;</li>
 <li>optionally converts nitrogen rates (fertilizer and organic sources) to kg N/ha and assigns them to the crop they were applied for (<code>calc_n_rate = TRUE</code>). Each application counts toward the first cash or perennial harvest after it, so a crop’s N runs from the previous harvest (the unit’s first from the start of its record) to its own harvest, and fall manure or fertilizer applied after harvest goes to the next crop. Cover crops and fallow do not end a crop’s window. <code>$n_rate</code> gives one row per unit and harvest (<code>crop_year</code>, <code>harvest_date</code>, <code>crop</code>, <code>N_kg_ha</code>); <code>crop_year</code> is the year of the harvest and matches <code>$yield$year</code>. Calendar-year totals are in <code>$n_rate_calendar</code>, and <code>$n_applications</code> lists each application with its calendar and crop year. N applied after a unit’s last harvest, and units without harvest dates (which fall back to calendar years), are reported in <code>$assumptions</code>. The first crop in each unit’s record has no previous harvest, so N applied before the record began (for example the previous fall) is missing; it is marked <code>first_in_record</code> and reported.</li>
-</ul><p>Missing records mean a practice did not happen: no tillage, no cover or no organic input.</p>
+</ul><p>Missing records mean a practice did not happen: no tillage, no cover, no grazing credit or no amendment bonus.</p>
 </div>
 <div class="section level3">
 <h3 id="main-functions-1-0-0">Main functions<a class="anchor" aria-label="anchor" href="#main-functions-1-0-0"></a></h3>
@@ -103,13 +105,13 @@
 <li>
 <code><a href="../reference/get_shmi_climate.html">get_shmi_climate()</a></code>: WorldClim monthly climate normals at each unit’s coordinates (needs <code>geodata</code> and <code>terra</code>).</li>
 <li>
-<code><a href="../reference/build_shmi.html">build_shmi()</a></code>: the four sub-indices and SHMI, with the official weights (<code><a href="../reference/shmi_weights.html">shmi_weights()</a></code>) or custom weights for research.</li>
+<code><a href="../reference/build_shmi.html">build_shmi()</a></code>: the sub-indices, SHMI and SHMI+ (<code>SHMI_plus</code>, with <code>Amend_bonus</code> between them), with the official weights and constants (<code><a href="../reference/shmi_weights.html">shmi_weights()</a></code>, <code><a href="../reference/shmi_parameters.html">shmi_parameters()</a></code>) or custom values (<code>weights</code>, <code>growing_share</code>, <code>graze_gap</code>, <code>amend_gap</code>) for research.</li>
 <li>
-<code><a href="../reference/compute_cover.html">compute_cover()</a></code>, <code><a href="../reference/compute_orginput.html">compute_orginput()</a></code>, <code><a href="../reference/compute_diversity.html">compute_diversity()</a></code>, <code><a href="../reference/compute_disturbance.html">compute_disturbance()</a></code> and <code><a href="../reference/shmi_components.html">shmi_components()</a></code>: the sub-indices on their own.</li>
+<code><a href="../reference/compute_cover.html">compute_cover()</a></code>, <code><a href="../reference/compute_diversity.html">compute_diversity()</a></code>, <code><a href="../reference/compute_disturbance.html">compute_disturbance()</a></code>, <code><a href="../reference/compute_orginput_components.html">compute_orginput_components()</a></code> and <code><a href="../reference/shmi_components.html">shmi_components()</a></code>: the sub-indices and the shares of years with amendments and animals on their own.</li>
 <li>
 <code><a href="../reference/tdisc_implements.html">tdisc_implements()</a></code> and <code><a href="../reference/tdisc_mapping.html">tdisc_mapping()</a></code>: the T-DISC implement values and operation names used for tillage; a user table (<code>implements =</code>) can replace or add to them.</li>
 <li>
-<code><a href="../reference/plot_shmi_gauge.html">plot_shmi_gauge()</a></code> and <code><a href="../reference/plot_shmi_lollipop.html">plot_shmi_lollipop()</a></code>: results for one unit or many.</li>
+<code><a href="../reference/plot_shmi_gauge.html">plot_shmi_gauge()</a></code> and <code><a href="../reference/plot_shmi_lollipop.html">plot_shmi_lollipop()</a></code>: results for one unit or many, with SHMI+ shown alongside SHMI.</li>
 </ul></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

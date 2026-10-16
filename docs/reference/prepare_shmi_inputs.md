@@ -155,11 +155,11 @@ The rotation window is the denominator of every sub-index, so it must
 not depend on management. With `rotation_window = "calendar"` (default
 from 1.2.0) it runs from 1 January of the first year with a record to 31
 December of the last. Bare periods before the first and after the last
-recorded event are therefore scored as bare, and all four sub-indices
-share the same window. `rotation_window = "events"` reproduces SHMI \<=
-1.1.0, where the window ran from the first to the last recorded event;
-that excluded leading and trailing bare periods from the Cover
-denominator and so inflated Cover, most strongly in winter and spring.
+recorded event are therefore scored as bare, and all sub-indices share
+the same window. `rotation_window = "events"` reproduces SHMI \<= 1.1.0,
+where the window ran from the first to the last recorded event; that
+excluded leading and trailing bare periods from the Cover denominator
+and so inflated Cover, most strongly in winter and spring.
 
 To evaluate a fixed period, set `start_date_override` and/or
 `end_date_override`: events outside the window are removed, crop and
@@ -204,22 +204,22 @@ converted are `NA`, not zero. Unconverted values are listed in
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [873ms]
+#> ✔ Validating inputs... [1.5s]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [827ms]
+#> ✔ Reading Excel file... [1.1s]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [68ms]
+#> ✔ Calculating rotation lengths... [63ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [442ms]
+#> ✔ Calculating crop start/end dates... [452ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [38ms]
+#> ✔ Applying overrides... [30ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [165ms]
+#> ✔ Re-calculating rotation lengths... [183ms]
 #> 
 
 # What was assumed, and what should be reviewed?
@@ -235,22 +235,22 @@ inputs_2022_23 <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE,
                                       start_date_override = "2022-01-01",
                                       end_date_override   = "2023-12-31")
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [836ms]
+#> ✔ Validating inputs... [741ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [764ms]
+#> ✔ Reading Excel file... [754ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [69ms]
+#> ✔ Calculating rotation lengths... [64ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [459ms]
+#> ✔ Calculating crop start/end dates... [486ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [52ms]
+#> ✔ Applying overrides... [59ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [153ms]
+#> ✔ Re-calculating rotation lengths... [141ms]
 #> 
 inputs_2022_23$rot_bounds
 #> # A tibble: 8 × 5

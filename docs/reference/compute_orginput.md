@@ -1,7 +1,13 @@
-# Compute the Organic Inputs sub-index
+# Organic Inputs score (superseded)
 
 Share of years with an organic amendment or grazing animals, scaled
-0-100.
+0-100. This was SHMI 1.0's fourth sub-index. It is no longer part of
+SHMI: grazing now raises Diversity and organic amendments raise SHMI to
+SHMI+ (see
+[`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
+and
+[`compute_orginput_components()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput_components.md)).
+It is kept so code written for SHMI 1.0 still runs.
 
 ## Usage
 
@@ -34,11 +40,11 @@ For every calendar year from `rot_start_yr` to `rot_end_yr`, a year
 counts if it has an amendment with `SA_cat == "Organic"`, or animals:
 every calendar year overlapped by an animal period (`AD_start_date` to
 `AD_end_date`; a period without an end date counts in its start year).
-Only presence is scored, not amounts. A unit with no organic amendments
-or animals scores 0.
+Only presence is scored, not amounts.
 
 ## See also
 
+[`compute_orginput_components()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput_components.md),
 [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
 
 ## Examples

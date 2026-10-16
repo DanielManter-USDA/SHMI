@@ -14,10 +14,11 @@ Authors@R:
 Description: Implements the Soil Health Management Index (SHMI), a 0-100
     score of how strongly a field's management record supports soil health.
     It reads a standard Excel workbook of crop, tillage, amendment and animal
-    records, and combines four sub-indices: living cover in the growing and
-    non-growing seasons set by each site's climate, organic inputs, plant
-    species richness and inverse tillage disturbance, with weights calibrated
-    against measured soil health on US research sites. Every assumption made
+    records, and combines three sub-indices: living cover in the growing and
+    non-growing seasons set by each site's climate, plant species richness
+    (raised by grazing animals) and inverse tillage disturbance, with weights
+    calibrated against measured soil health on US research sites. A second
+    score, SHMI+, adds a bonus for organic amendments. Every assumption made
     while reading the records is reported.
 License: MIT + file LICENSE
 Encoding: UTF-8

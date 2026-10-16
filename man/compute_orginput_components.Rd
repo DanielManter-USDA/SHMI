@@ -21,5 +21,7 @@ A tibble with \code{MGT_combo}, \code{p_amend}, \code{p_animal}, \code{p_any} (s
 years with an organic amendment or animals, or both) and \code{n_years}.
 }
 \description{
-Years with organic amendments and animals
+The shares of years that drive SHMI's two organic-input terms: \code{p_animal}
+raises Diversity (grazing credit) and \code{p_amend} raises SHMI to SHMI+
+(amendment bonus); see \code{\link[=build_shmi]{build_shmi()}}.
 }

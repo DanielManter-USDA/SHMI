@@ -43,8 +43,8 @@
     <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
     <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
     <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs Index</a></li>
-    <li><a class="dropdown-item" href="../articles/SHMI.html">Final SHMI Index</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (SHMI+)</a></li>
+    <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI+</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -93,24 +93,28 @@
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
 <p>The Soil Health Management Index (SHMI) turns a record of field
-management into a single 0-100 score. It combines four sub-indices, each
-also scored 0-100, with weights calibrated against measured soil
-health:</p>
+management into 0-100 scores. <strong>SHMI</strong> combines three
+sub-indices, each also scored 0-100, with weights calibrated against
+measured soil health:</p>
 <ul>
 <li>
-<strong>Cover</strong> (weight 0.40): the share of days with living
+<strong>Cover</strong> (weight 0.687): the share of days with living
 plants in the growing and non-growing seasons, set by the site’s
 climate.</li>
 <li>
-<strong>Organic inputs (OrgInput)</strong> (0.32): the share of
-years with an organic amendment or grazing animals.</li>
+<strong>Diversity</strong> (0.150): the number of plant species in
+each 4-year span of the record. Grazing animals raise it: grazing every
+year closes a quarter of the gap to 100.</li>
 <li>
-<strong>Diversity</strong> (0.15): the average number of plant
-species per year.</li>
-<li>
-<strong>Inverse disturbance (InvDist)</strong> (0.13): how little
+<strong>Inverse disturbance (InvDist)</strong> (0.163): how little
 the soil was tilled; 100 means no tillage.</li>
 </ul>
+<p><strong>SHMI+</strong> adds organic amendments (manure, compost),
+carbon brought in from outside the field. An amendment every year closes
+60% of the gap between SHMI and 100; in half the years, 30%:</p>
+<p>SHMI+ = SHMI + 0.60 × p_amend × (100 − SHMI)</p>
+<p>A unit without amendments has SHMI+ = SHMI, and no score can exceed
+100.</p>
 <p>This vignette walks through the standard workflow: fill in the Excel
 workbook, prepare the inputs, add climate, compute SHMI, and review the
 results.</p>
@@ -407,28 +411,35 @@ entered by hand:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">inputs</span>, <span class="va">climate</span><span class="op">)</span></span>
 <span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 16</span></span></span>
-<span><span class="co">#&gt;   MGT_combo  MGT_study MGT_farm MGT_field MGT_trt irrigated  SHMI Cover OrgInput</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDE… MLSH      ARDEC    200A      DMP-Ma… TRUE       65.5  64.9      100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDE… MLSH      ARDEC    200A      DMP-Ma… TRUE       65.5  64.9      100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDE… MLSH      ARDEC    200A      DMP-N0  TRUE       33.4  64.9        0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDE… MLSH      ARDEC    200A      DMP-N1… TRUE       33.4  64.9        0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N0 TRUE       38.4  64.9        0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 7 more variables: Diversity &lt;dbl&gt;, InvDist &lt;dbl&gt;, Cover_growing &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   Cover_nongrowing &lt;dbl&gt;, Richness &lt;dbl&gt;, TI_tillage &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   tillage_designation &lt;chr&gt;</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 20</span></span></span>
+<span><span class="co">#&gt;   MGT_combo       MGT_study MGT_farm MGT_field MGT_trt irrigated  SHMI SHMI_plus</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-Ma… TRUE       51.8      80.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-Ma… TRUE       51.8      80.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-N0  TRUE       51.8      51.8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-N1… TRUE       51.8      51.8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200… MLSH      ARDEC    200A      Rot1-N0 TRUE       58.8      58.8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200… MLSH      ARDEC    200A      Rot1-N… TRUE       58.8      58.8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200… MLSH      ARDEC    200A      Rot1-N… TRUE       58.8      58.8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200… MLSH      ARDEC    200A      Rot1-N… TRUE       58.8      58.8</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 12 more variables: Amend_bonus &lt;dbl&gt;, Cover &lt;dbl&gt;, Diversity &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   InvDist &lt;dbl&gt;, Cover_growing &lt;dbl&gt;, Cover_nongrowing &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   Diversity_plants &lt;dbl&gt;, Richness &lt;dbl&gt;, p_amend &lt;dbl&gt;, p_animal &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   TI_tillage &lt;dbl&gt;, tillage_designation &lt;chr&gt;</span></span></span></code></pre></div>
 <p><code>indicator_df</code> has one row per management unit, with
-<code>SHMI</code>, <code>Cover</code>, <code>OrgInput</code>,
-<code>Diversity</code> and <code>InvDist</code>, the two parts of Cover
-(<code>Cover_growing</code>, <code>Cover_nongrowing</code>), the average
-number of species per year (<code>Richness</code>), and the unit’s
-study, farm, field and treatment. The result also records the weights,
-the tillage scale used (<code>dist_meth</code>), whether the scores are
-official, the package version and a timestamp.</p>
+<code>SHMI</code>, <code>SHMI_plus</code> and the amendment bonus
+between them (<code>Amend_bonus</code>); the sub-indices
+<code>Cover</code>, <code>Diversity</code> and <code>InvDist</code>; the
+two parts of Cover (<code>Cover_growing</code>,
+<code>Cover_nongrowing</code>); Diversity before the grazing credit
+(<code>Diversity_plants</code>) and the average number of species per
+4-year span (<code>Richness</code>); the shares of years with an organic
+amendment (<code>p_amend</code>) and with animals
+(<code>p_animal</code>); and the unit’s study, farm, field and
+treatment. The result also records the weights and constants
+(<code>parameters</code>), the tillage scale used
+(<code>dist_meth</code>), whether the scores are official, the package
+version and a timestamp.</p>
 <p><strong>Tillage.</strong> <code><a href="../reference/build_shmi.html">build_shmi()</a></code> computes tillage
 intensity as USDA’s Tillage Disturbance Index for Soil Carbon (T-DISC)
 does: per crop interval, from each pass’s mixing efficiency and depth.
@@ -444,16 +455,17 @@ The result also gives each unit’s T-DISC tillage designation (NT, RT or
 CT).</p>
 </div>
 <div class="section level2">
-<h2 id="custom-weights">5. Custom weights<a class="anchor" aria-label="anchor" href="#custom-weights"></a>
+<h2 id="custom-weights-and-constants">5. Custom weights and constants<a class="anchor" aria-label="anchor" href="#custom-weights-and-constants"></a>
 </h2>
-<p>For research or scenario analysis, the weights can be changed. They
-are rescaled to sum to 1, and the scores are flagged as not
+<p>For research or scenario analysis, the weights, the growing-season
+share in Cover, and the grazing and amendment shares can be changed.
+Weights are rescaled to sum to 1, and the scores are flagged as not
 official:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result_equal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">inputs</span>, <span class="va">climate</span>,</span>
-<span>                           weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Cover <span class="op">=</span> <span class="fl">0.25</span>, OrgInput <span class="op">=</span> <span class="fl">0.25</span>,</span>
-<span>                                       Diversity <span class="op">=</span> <span class="fl">0.25</span>, InvDist <span class="op">=</span> <span class="fl">0.25</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/shmi_weights.html">shmi_weights</a></span><span class="op">(</span><span class="op">)</span>   <span class="co"># the official weights</span></span></code></pre></div>
+<span>                           weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Cover <span class="op">=</span> <span class="fl">1</span>, Diversity <span class="op">=</span> <span class="fl">1</span>, InvDist <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">result_nobonus</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_shmi.html">build_shmi</a></span><span class="op">(</span><span class="va">inputs</span>, <span class="va">climate</span>, amend_gap <span class="op">=</span> <span class="fl">0</span>, graze_gap <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/shmi_parameters.html">shmi_parameters</a></span><span class="op">(</span><span class="op">)</span>   <span class="co"># the official weights and constants</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="how-missing-records-are-scored">6. How missing records are scored<a class="anchor" aria-label="anchor" href="#how-missing-records-are-scored"></a>
@@ -470,8 +482,8 @@ management records but no crop records is flagged
 (<code>no_crop_records</code>), so a forgotten crop sheet is not
 mistaken for a fallow.</li>
 <li>
-<strong>No amendment or animal records</strong> means no organic
-inputs, so OrgInput = 0.</li>
+<strong>No amendment or animal records</strong> means no amendment
+bonus (SHMI+ = SHMI) and no grazing credit in Diversity.</li>
 </ul>
 <p>Record every tillage pass, planting, harvest, and amendment for the
 period being evaluated, so that gaps in the records are not mistaken for
@@ -486,14 +498,14 @@ practices.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 4</span></span></span>
 <span><span class="co">#&gt;   MGT_combo                   Cover Cover_growing Cover_nongrowing</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure   64.9          81.4                0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+  64.9          81.4                0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0       64.9          81.4                0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160     64.9          81.4                0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0      64.9          81.4                0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120    64.9          81.4                0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180    64.9          81.4                0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60     64.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure   61.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+  61.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0       61.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160     61.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0      61.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120    61.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180    61.9          81.4                0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60     61.9          81.4                0</span></span>
 <span><span class="fu"><a href="../reference/compute_diversity.html">compute_diversity</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">crop</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">rot_bounds</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 3</span></span></span>
 <span><span class="co">#&gt;   MGT_combo                   Diversity Richness</span></span>
@@ -518,18 +530,18 @@ practices.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120     100   0     NT                    6</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180     100   0     NT                    6</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60      100   0     NT                    6</span></span>
-<span><span class="fu"><a href="../reference/compute_orginput.html">compute_orginput</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">rot_bounds</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">amend</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">animal</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 2</span></span></span>
-<span><span class="co">#&gt;   MGT_combo                   OrgInput</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure       100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+      100</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0             0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160           0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0            0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120          0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180          0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60           0</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/compute_orginput_components.html">compute_orginput_components</a></span><span class="op">(</span><span class="va">inputs</span><span class="op">$</span><span class="va">rot_bounds</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">amend</span>, <span class="va">inputs</span><span class="op">$</span><span class="va">animal</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 5</span></span></span>
+<span><span class="co">#&gt;   MGT_combo                   p_amend p_animal p_any n_years</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> MLSH_ARDEC_200A_DMP-Manure        1        0     1       5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> MLSH_ARDEC_200A_DMP-Manure+       1        0     1       5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> MLSH_ARDEC_200A_DMP-N0            0        0     0       5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> MLSH_ARDEC_200A_DMP-N160          0        0     0       5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> MLSH_ARDEC_200A_Rot1-N0           0        0     0       5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> MLSH_ARDEC_200A_Rot1-N120         0        0     0       5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> MLSH_ARDEC_200A_Rot1-N180         0        0     0       5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> MLSH_ARDEC_200A_Rot1-N60          0        0     0       5</span></span></code></pre></div>
 <p>The functions also accept small tables built by hand, which is a
 quick way to see how each one responds to a change in management. Here
 is one field over two years: corn followed by a cereal rye cover crop,
@@ -558,10 +570,11 @@ non-growing season:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 4</span></span></span>
 <span><span class="co">#&gt;   MGT_combo Cover Cover_growing Cover_nongrowing</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> field_1    71.4          76.9             50.2</span></span></code></pre></div>
-<p><strong>Diversity</strong> counts the species present each year: corn
-and rye in 2019, rye and soybean in 2020, so two species a year. One
-species a year scores 0 and eight or more score 100:</p>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> field_1    70.5          76.9             50.2</span></span></code></pre></div>
+<p><strong>Diversity</strong> counts the species in each 4-year span;
+this two-year record is one span, with three species (corn, rye,
+soybean). One species scores 0 and eight or more score 100, so three
+species score 29:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/compute_diversity.html">compute_diversity</a></span><span class="op">(</span><span class="va">crop</span>, <span class="va">rot_bounds</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 3</span></span></span>
@@ -608,27 +621,32 @@ replaced with your own:</p>
 <span><span class="co">#&gt;   MGT_combo  InvDist        TI designation n_intervals</span></span>
 <span><span class="co">#&gt; 1   field_1 91.96224 0.0779845          RT           3</span></span></code></pre></div>
 <p><strong>Organic inputs</strong>: manure applied in one of the two
-years, and no animals:</p>
+years, and no animals. <code>p_amend</code> (0.5) sets the amendment
+bonus and <code>p_animal</code> (0) the grazing credit:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">amend</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>MGT_combo <span class="op">=</span> <span class="st">"field_1"</span>,</span>
 <span>                     SA_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2019-04-01"</span><span class="op">)</span>, SA_cat <span class="op">=</span> <span class="st">"Organic"</span><span class="op">)</span></span>
 <span><span class="va">animal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>MGT_combo <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>                     AD_start_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                     AD_end_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/compute_orginput.html">compute_orginput</a></span><span class="op">(</span><span class="va">rot_bounds</span>, <span class="va">amend</span>, <span class="va">animal</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 2</span></span></span>
-<span><span class="co">#&gt;   MGT_combo OrgInput</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> field_1         50</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/compute_orginput_components.html">compute_orginput_components</a></span><span class="op">(</span><span class="va">rot_bounds</span>, <span class="va">amend</span>, <span class="va">animal</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 5</span></span></span>
+<span><span class="co">#&gt;   MGT_combo p_amend p_animal p_any n_years</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> field_1       0.5        0   0.5       2</span></span></code></pre></div>
+<p>With manure in half the years, a unit with SHMI 50 gains 0.60 × 0.5 ×
+(100 − 50) = 15 points, for SHMI+ 65. Grazing every year would raise
+Diversity from 29 to 29 + 0.25 × (100 − 29) = 46.</p>
 </div>
 <div class="section level2">
 <h2 id="plotting-results">8. Plotting results<a class="anchor" aria-label="anchor" href="#plotting-results"></a>
 </h2>
-<p>One unit, with a gauge for each sub-index and for overall SHMI:</p>
+<p>One unit, with a gauge for each sub-index, SHMI and SHMI+:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_shmi_gauge.html">plot_shmi_gauge</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span>, row <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="SHMI-overview_files/figure-html/plot-gauge-1.png" class="r-plt" alt="" width="768"></p>
-<p>Many units, overall SHMI sorted by score:</p>
+<p>Many units, sorted: each line runs to SHMI (blue) and on to SHMI+
+(orange) when the unit received amendments:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_shmi_lollipop.html">plot_shmi_lollipop</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span><span class="op">)</span></span></code></pre></div>
 <p><img src="SHMI-overview_files/figure-html/plot-lollipop-1.png" class="r-plt" alt="" width="672"></p>
@@ -639,15 +657,18 @@ years, and no animals:</p>
 <h2 id="interpreting-shmi">9. Interpreting SHMI<a class="anchor" aria-label="anchor" href="#interpreting-shmi"></a>
 </h2>
 <p>Higher scores indicate management that is more supportive of soil
-health: more of the year under living cover, more frequent organic
-inputs, more plant species each year, and less tillage.</p>
-<p>When comparing units, keep the weights in mind. A unit that scores 0
-on one sub-index cannot score above 100 × (1 − that sub-index’s weight):
-a system with no organic inputs, for example, can reach at most 68.3
-however well it does otherwise. Looking at the four sub-indices
-alongside SHMI shows which practices drive a unit’s score. SHMI is most
-informative for comparing practices at the same site; a single score
-predicted for a new site is typically within about 13 soil-health
+health: more of the year under living cover, more plant species (and
+grazing), less tillage and, for SHMI+, more frequent organic
+amendments.</p>
+<p>Report both scores. SHMI describes the field’s own plant and tillage
+management; SHMI+ adds carbon brought in from outside, which matters for
+soil health but depends on access to manure or compost. SHMI+ is the
+score calibrated against soil health; the two are equal without
+amendments. The amendment bonus is largest for a low SHMI: amendments
+every year add 36 points at SHMI 40 but 12 at SHMI 80. Looking at the
+sub-indices alongside the scores shows which practices drive them. SHMI
+is most informative for comparing practices at the same site; a single
+score predicted for a new site is typically within about 13 soil-health
 points.</p>
 </div>
 <div class="section level2">
@@ -658,17 +679,21 @@ points.</p>
 <code><a href="../reference/prepare_shmi_inputs.html">?prepare_shmi_inputs</a></code>: workbook structure, crop-date
 rules, the assumptions table, and overrides.</li>
 <li>
-<code><a href="../reference/build_shmi.html">?build_shmi</a></code> and <code><a href="../reference/shmi_weights.html">?shmi_weights</a></code>: the index
-and its official weights.</li>
+<code><a href="../reference/build_shmi.html">?build_shmi</a></code>, <code><a href="../reference/shmi_weights.html">?shmi_weights</a></code> and
+<code><a href="../reference/shmi_parameters.html">?shmi_parameters</a></code>: SHMI, SHMI+ and their official weights
+and constants.</li>
 <li>
 <code><a href="../reference/compute_cover.html">?compute_cover</a></code>, <code><a href="../reference/growing_months.html">?growing_months</a></code>,
 <code><a href="../reference/get_shmi_climate.html">?get_shmi_climate</a></code>: Cover’s seasons and climate.</li>
 <li>
-<code><a href="../reference/compute_diversity.html">?compute_diversity</a></code>, <code><a href="../reference/compute_disturbance.html">?compute_disturbance</a></code>,
-<code><a href="../reference/compute_orginput.html">?compute_orginput</a></code>: the other sub-indices.</li>
+<code><a href="../reference/compute_diversity.html">?compute_diversity</a></code>, <code><a href="../reference/compute_disturbance.html">?compute_disturbance</a></code>:
+the other sub-indices.</li>
 <li>
-<code><a href="../reference/shmi_components.html">?shmi_components</a></code>: all four sub-indices, for calibration
-or inspection.</li>
+<code><a href="../reference/compute_orginput_components.html">?compute_orginput_components</a></code>: years with amendments and
+with animals.</li>
+<li>
+<code><a href="../reference/shmi_components.html">?shmi_components</a></code>: all sub-indices, for calibration or
+inspection.</li>
 <li>
 <code>NEWS.md</code>: what changed in each version.</li>
 </ul>

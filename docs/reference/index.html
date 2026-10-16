@@ -23,8 +23,8 @@
     <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
     <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
     <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs Index</a></li>
-    <li><a class="dropdown-item" href="../articles/SHMI.html">Final SHMI Index</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (SHMI+)</a></li>
+    <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI+</a></li>
   </ul></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
@@ -81,7 +81,7 @@
           <code><a href="build_shmi.html">build_shmi()</a></code>
 
         </dt>
-        <dd>Compute SHMI scores</dd>
+        <dd>Compute SHMI and SHMI+ scores</dd>
 
         <dt>
 
@@ -89,6 +89,13 @@
 
         </dt>
         <dd>Official SHMI weights</dd>
+
+        <dt>
+
+          <code><a href="shmi_parameters.html">shmi_parameters()</a></code>
+
+        </dt>
+        <dd>Official SHMI parameters</dd>
       </dl></div><div class="section level2">
       <h2 id="tillage-t-disc-">Tillage (T-DISC)<a class="anchor" aria-label="anchor" href="#tillage-t-disc-"></a></h2>
 
@@ -158,17 +165,10 @@
 
         </dt>
         <dd>Compute the Inverse Disturbance sub-index</dd>
-
-        <dt>
-
-          <code><a href="compute_orginput.html">compute_orginput()</a></code>
-
-        </dt>
-        <dd>Compute the Organic Inputs sub-index</dd>
       </dl></div><div class="section level2">
       <h2 id="components">Components<a class="anchor" aria-label="anchor" href="#components"></a></h2>
 
-      <div class="section-desc"><p>All four sub-indices at once, and the monthly and yearly components of Cover and Organic Inputs, for calibration or inspection.</p></div>
+      <div class="section-desc"><p>All sub-indices at once, the monthly components of Cover, and the shares of years with organic amendments and grazing animals (which set the grazing credit and the SHMI+ amendment bonus), for calibration or inspection.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -180,7 +180,7 @@
           <code><a href="shmi_components.html">shmi_components()</a></code>
 
         </dt>
-        <dd>The four SHMI sub-indices for each management unit</dd>
+        <dd>The SHMI sub-indices for each management unit</dd>
 
         <dt>
 
@@ -195,6 +195,22 @@
 
         </dt>
         <dd>Years with organic amendments and animals</dd>
+      </dl></div><div class="section level2">
+      <h2 id="superseded">Superseded<a class="anchor" aria-label="anchor" href="#superseded"></a></h2>
+
+      <div class="section-desc"><p>Kept so code written for SHMI 1.0 still runs.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="compute_orginput.html">compute_orginput()</a></code>
+
+        </dt>
+        <dd>Organic Inputs score (superseded)</dd>
       </dl></div><div class="section level2">
       <h2 id="helper-functions">Helper Functions<a class="anchor" aria-label="anchor" href="#helper-functions"></a></h2>
 
@@ -270,14 +286,14 @@
           <code><a href="plot_shmi_gauge.html">plot_shmi_gauge()</a></code>
 
         </dt>
-        <dd>Plot gauges of SHMI and its sub-indices for one management unit</dd>
+        <dd>Plot gauges of SHMI, SHMI+ and the sub-indices for one management unit</dd>
 
         <dt>
 
           <code><a href="plot_shmi_lollipop.html">plot_shmi_lollipop()</a></code>
 
         </dt>
-        <dd>Plot SHMI across management units</dd>
+        <dd>Plot SHMI and SHMI+ across management units</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

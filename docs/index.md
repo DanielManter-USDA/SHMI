@@ -21,16 +21,26 @@ standardized soil-health management scores.
 
 The **SHMI** R package provides a complete, reproducible workflow for
 computing the Soil Health Management Index (SHMI) from a standardized
-Excel workbook. SHMI is a 0-100 score built from four management
-sub-indices, each also scored 0-100:
+Excel workbook. It reports two 0-100 scores. **SHMI** scores the field’s
+own plant and tillage management from three sub-indices, each also
+scored 0-100:
 
-- **Cover** (weight 0.40): share of days with living plants in the
+- **Cover** (weight 0.687): share of days with living plants in the
   growing and non-growing seasons, set by each site’s climate
-- **Organic Inputs** (0.32): share of years with an organic amendment or
-  grazing animals
-- **Diversity** (0.15): average number of plant species per year
-- **Inverse Disturbance** (0.13): how little the soil was tilled,
+- **Diversity** (0.150): number of plant species in each 4-year span of
+  the record; grazing animals raise it, closing up to a quarter of the
+  gap to 100
+- **Inverse Disturbance** (0.163): how little the soil was tilled,
   computed as in USDA’s T-DISC tool
+
+**SHMI+** adds carbon brought in from outside the field: organic
+amendments (manure, compost) close part of the gap between SHMI and 100,
+up to 60% when applied every year:
+
+SHMI+ = SHMI + 0.60 × (share of years with an amendment) × (100 − SHMI)
+
+A field without amendments has SHMI+ = SHMI, and neither score can
+exceed 100.
 
 The package includes:
 
@@ -46,7 +56,9 @@ The package includes:
 - yield and nitrogen-rate conversion to kg/ha
 - climate-based growing seasons from WorldClim monthly normals
   ([`get_shmi_climate()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_climate.md))
-- official weights, with optional custom weights for research
+- official weights and constants
+  ([`shmi_parameters()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_parameters.md)),
+  with optional custom values for research
 - plots for single units and for comparing many units
 
 ------------------------------------------------------------------------
@@ -255,15 +267,15 @@ or from your own (`implements =`). `SD_mixeff` and `SD_depth` (inches)
 are overrides: leave them blank to use the implement’s values, or enter
 either or both to replace them. STIR values go in `SD_stir` and are
 scored with `dist_meth = "STIR"`, on the same crop intervals. Custom
-weights can be supplied for research:
+weights and constants can be supplied for research:
 
 ``` r
-result <- build_shmi(inputs, climate, weights = c(Cover = 0.25, OrgInput = 0.25,
-                                                  Diversity = 0.25, InvDist = 0.25))
+result <- build_shmi(inputs, climate, weights = c(Cover = 0.5, Diversity = 0.25, InvDist = 0.25),
+                     amend_gap = 0.5, graze_gap = 0)
 ```
 
-Scores with custom weights are flagged (`result$official` is `FALSE`)
-and are **not comparable** to the official SHMI scale.
+Scores with custom values are flagged (`result$official` is `FALSE`) and
+are **not comparable** to the official SHMI scale.
 
 **Climate and irrigation.** A month is in a unit’s growing season when
 its mean temperature is at least 5 °C and, unless the unit is irrigated,
@@ -301,30 +313,36 @@ to switch this rule off.
 
 **Missing records mean “did not happen.”** No disturbance records means
 no tillage (Inverse Disturbance = 100, as for continuous no-till); no
-crop means no cover; no amendments means no organic inputs. Record every
-tillage pass, planting, harvest, and amendment for the period being
-evaluated.
+crop means no cover; no amendments or animals means no amendment bonus
+or grazing credit. Record every tillage pass, planting, harvest, and
+amendment for the period being evaluated.
 
 **Official weights.** The weights
 ([`shmi_weights()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_weights.md))
-are the medians of 1,000 cross-validated fits of SHMI against a
-soil-health score built from 11 laboratory indicators (adjusted for
-climate and soil texture) on 354 US plots at 74 NAPESHM sites, with
-tillage computed as in USDA’s T-DISC. Within Cover, the growing season
-counts for 0.86 and the non-growing season for 0.14. Every weight was
-positive in all 1,000 fits. For sites held out of the fitting, SHMI
-explained about a quarter of the differences in soil health (R² = 0.27)
-and ranked practices in the right order at 82% of sites.
+are the medians of 1,000 cross-validated fits against a soil-health
+score built from 11 laboratory indicators (adjusted for climate and soil
+texture) on 354 US plots at 74 NAPESHM sites, with tillage computed as
+in USDA’s T-DISC. The weights were fitted with the amendment bonus in
+place, so SHMI+ is the calibrated score. Diversity’s weight was fixed at
+0.15, because Cover and Diversity carry much of the same information;
+within Cover, the growing season counts for 0.760 and the non-growing
+season for 0.240. The grazing share (0.25) and amendment share (0.60)
+were chosen where held-out fit was flat. For sites held out of the
+fitting, SHMI+ explained about a quarter of the differences in soil
+health (R² = 0.26) and ranked practices in the right order at 82% of
+sites; SHMI alone explained 0.23 and ranked 76% of sites correctly.
+[`shmi_parameters()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_parameters.md)
+returns every constant.
 
 ------------------------------------------------------------------------
 
 ## 📊 Plotting results
 
 ``` r
-# One unit: gauges for each sub-index and overall SHMI
+# One unit: gauges for each sub-index, SHMI and SHMI+
 plot_shmi_gauge(result$indicator_df, MGT_combo = "my_field_1")
 
-# Many units: overall SHMI, sorted
+# Many units: SHMI with the amendment bonus to SHMI+, sorted
 plot_shmi_lollipop(result$indicator_df)
 ```
 
@@ -365,15 +383,18 @@ plot_shmi_lollipop(result$indicator_df)
   [`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.html)
 - Inverse Disturbance:
   [`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.html)
-- Organic Inputs:
-  [`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.html)
+- Years with amendments and with animals (amendment bonus, grazing
+  credit):
+  [`compute_orginput_components()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput_components.html)
 
-### **5. Final SHMI Calculation**
+### **5. SHMI and SHMI+**
 
 - [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.html),
   with the official weights from
   [`shmi_weights()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_weights.html)
-- All four sub-indices, for calibration or inspection:
+  and constants from
+  [`shmi_parameters()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_parameters.html)
+- All sub-indices, for calibration or inspection:
   [`shmi_components()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_components.html)
 
 ### **6. Visualization**

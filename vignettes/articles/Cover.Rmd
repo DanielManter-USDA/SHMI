@@ -68,11 +68,11 @@ where every month is growing), that season takes the other season's value.
 ### **4. Final Cover score**
 
 \[
-\text{Cover}_i = 0.860 \; G\text{-cover}_i + 0.140 \; N\text{-cover}_i
+\text{Cover}_i = 0.760 \; G\text{-cover}_i + 0.240 \; N\text{-cover}_i
 \]
 
-The growing-season share, 0.860, was estimated in the SHMI calibration
-(95% range 0.78-0.99).
+The growing-season share, 0.760, was estimated in the SHMI calibration
+(95% range 0.70-0.83). `compute_cover(growing_share = )` changes it.
 
 ---
 

@@ -6,7 +6,13 @@ weighted and scaled 0-100.
 ## Usage
 
 ``` r
-compute_cover(crop, rot_bounds, climate, grow_temp = 5, growing_share = 0.797)
+compute_cover(
+  crop,
+  rot_bounds,
+  climate,
+  grow_temp = 5,
+  growing_share = shmi_parameters()$growing_share
+)
 ```
 
 ## Arguments
@@ -55,7 +61,9 @@ season, that season takes the other's value.
 
 **Score.** With \\G\\ and \\N\\ the percentage of growing- and
 non-growing-season days with living plants, \$\$Cover = s G + (1 - s)
-N\$\$ where \\s\\ is `growing_share` (0.797, from the SHMI calibration).
+N\$\$ where \\s\\ is `growing_share` (0.760, from the SHMI calibration;
+see
+[`shmi_parameters()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_parameters.md)).
 
 ## See also
 
@@ -78,5 +86,5 @@ compute_cover(crop, rot_bounds, climate)
 #> # A tibble: 1 × 4
 #>   MGT_combo Cover Cover_growing Cover_nongrowing
 #>   <chr>     <dbl>         <dbl>            <dbl>
-#> 1 field_1    71.5          79.4             40.1
+#> 1 field_1    70.0          79.4             40.1
 ```

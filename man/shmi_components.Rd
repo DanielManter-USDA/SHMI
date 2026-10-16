@@ -2,13 +2,15 @@
 % Please edit documentation in R/shmi_components.R
 \name{shmi_components}
 \alias{shmi_components}
-\title{The four SHMI sub-indices for each management unit}
+\title{The SHMI sub-indices for each management unit}
 \usage{
 shmi_components(
   shmi_inputs,
   climate,
   dist_meth = c("EPA", "STIR", "auto"),
-  implements = NULL
+  implements = NULL,
+  growing_share = shmi_parameters()$growing_share,
+  graze_gap = shmi_parameters()$graze_gap
 )
 }
 \arguments{
@@ -25,18 +27,28 @@ only STIR values are recorded).}
 \item{implements}{Optional user implement table (\code{implement},
 \code{mixing_efficiency}, \code{depth_cm}) overriding T-DISC's values; see
 \code{\link[=compute_disturbance]{compute_disturbance()}}.}
+
+\item{growing_share}{Weight of the growing season within Cover (official:
+0.760; see \code{\link[=compute_cover]{compute_cover()}}).}
+
+\item{graze_gap}{Share of the gap to 100 in Diversity closed by grazing in
+every year (official: 0.25). 0 gives plant-only Diversity.}
 }
 \value{
 A tibble with \code{MGT_combo}, \code{Cover}, \code{Cover_growing},
-\code{Cover_nongrowing}, \code{Diversity}, \code{Richness}, \code{InvDist}, \code{TI_tillage},
-\code{tillage_designation} (T-DISC: NT, RT or CT) and \code{OrgInput},
-one row per unit in \code{shmi_inputs$mgt}. Missing records mean the practice
-did not happen: no crops gives Cover and Diversity 0, no disturbance
-InvDist 100, no organic inputs OrgInput 0.
+\code{Cover_nongrowing}, \code{Diversity} (with the grazing credit),
+\code{Diversity_plants} (plants only, as \code{\link[=compute_diversity]{compute_diversity()}}), \code{Richness},
+\code{InvDist}, \code{TI_tillage}, \code{tillage_designation} (T-DISC: NT, RT or CT),
+\code{p_amend} and \code{p_animal} (shares of years with an organic amendment and
+with animals; see \code{\link[=compute_orginput_components]{compute_orginput_components()}}), one row per unit in
+\code{shmi_inputs$mgt}. Missing records mean the practice did not happen: no
+crops gives Cover and Diversity 0, no disturbance InvDist 100, no
+amendments or animals shares of 0.
 }
 \description{
-Computes Cover, Diversity, InvDist and OrgInput (all 0-100) from prepared
-inputs. \code{\link[=build_shmi]{build_shmi()}} combines them with the official weights; calling
-this function directly is useful for calibration or for inspecting the
-parts of Cover.
+Computes Cover, Diversity and InvDist (all 0-100), and the shares of years
+with organic amendments and with grazing animals, from prepared inputs.
+\code{\link[=build_shmi]{build_shmi()}} combines them into SHMI and SHMI+; calling this function
+directly is useful for calibration or for inspecting the parts of Cover
+and Diversity.
 }

@@ -35,9 +35,9 @@ navbar:
           href: "articles/Diversity.html"
         - text: "Disturbance Index"
           href: "articles/Disturbance.html"
-        - text: "Organic Inputs Index"
+        - text: "Organic Inputs (SHMI+)"
           href: "articles/OrgInputs.html"
-        - text: "Final SHMI Index"
+        - text: "SHMI and SHMI+"
           href: "articles/SHMI.html"
 
     - text: "Reference"
@@ -75,6 +75,7 @@ reference:
       - get_shmi_climate
       - build_shmi
       - shmi_weights
+      - shmi_parameters
 
   - title: "Tillage (T-DISC)"
     desc: >
@@ -96,16 +97,23 @@ reference:
       - compute_cover
       - compute_diversity
       - compute_disturbance
-      - compute_orginput
 
   - title: "Components"
     desc: >
-      All four sub-indices at once, and the monthly and yearly components of
-      Cover and Organic Inputs, for calibration or inspection.
+      All sub-indices at once, the monthly components of Cover, and the
+      shares of years with organic amendments and grazing animals (which set
+      the grazing credit and the SHMI+ amendment bonus), for calibration or
+      inspection.
     contents:
       - shmi_components
       - compute_cover_monthly
       - compute_orginput_components
+
+  - title: "Superseded"
+    desc: >
+      Kept so code written for SHMI 1.0 still runs.
+    contents:
+      - compute_orginput
 
   - title: "Helper Functions"
     contents:

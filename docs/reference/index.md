@@ -7,9 +7,11 @@
 - [`get_shmi_climate()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_climate.md)
   : Monthly climate normals for SHMI's Cover seasons
 - [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
-  : Compute SHMI scores
+  : Compute SHMI and SHMI+ scores
 - [`shmi_weights()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_weights.md)
   : Official SHMI weights
+- [`shmi_parameters()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_parameters.md)
+  : Official SHMI parameters
 
 ## Tillage (T-DISC)
 
@@ -37,20 +39,27 @@ Cover.
   : Compute the Diversity sub-index
 - [`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md)
   : Compute the Inverse Disturbance sub-index
-- [`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)
-  : Compute the Organic Inputs sub-index
 
 ## Components
 
-All four sub-indices at once, and the monthly and yearly components of
-Cover and Organic Inputs, for calibration or inspection.
+All sub-indices at once, the monthly components of Cover, and the shares
+of years with organic amendments and grazing animals (which set the
+grazing credit and the SHMI+ amendment bonus), for calibration or
+inspection.
 
 - [`shmi_components()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_components.md)
-  : The four SHMI sub-indices for each management unit
+  : The SHMI sub-indices for each management unit
 - [`compute_cover_monthly()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover_monthly.md)
   : Plant days and window days by calendar month
 - [`compute_orginput_components()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput_components.md)
   : Years with organic amendments and animals
+
+## Superseded
+
+Kept so code written for SHMI 1.0 still runs.
+
+- [`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)
+  : Organic Inputs score (superseded)
 
 ## Helper Functions
 
@@ -73,6 +82,7 @@ Cover and Organic Inputs, for calibration or inspection.
 ## Plotting Functions
 
 - [`plot_shmi_gauge()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_gauge.md)
-  : Plot gauges of SHMI and its sub-indices for one management unit
+  : Plot gauges of SHMI, SHMI+ and the sub-indices for one management
+  unit
 - [`plot_shmi_lollipop()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_lollipop.md)
-  : Plot SHMI across management units
+  : Plot SHMI and SHMI+ across management units

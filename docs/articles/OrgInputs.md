@@ -1,82 +1,96 @@
-# Organic Inputs Subindex
+# Organic Inputs and SHMI+
 
-Share of Years with an Organic Amendment or Grazing Animals
+Organic Amendments as a Bonus; Grazing Animals as Diversity
 
 ## **Overview**
 
-The Organic Inputs subindex measures how often organic matter is
-returned to the soil from outside the crop: manure, compost or similar
-amendments, or grazing animals. The score is the share of years with
-either, from 0 to 100.
+SHMI 1.0 scored organic inputs as a fourth weighted sub-index, the share
+of years with an organic amendment or grazing animals. Because it was
+weighted, a field without manure or animals scored 0 on it, which read
+as a penalty for management that is often out of the farmer’s hands.
+Organic inputs now enter in two places:
+
+- **Grazing animals** are part of the field’s living system, so they
+  raise **Diversity** (see the Diversity article).
+- **Organic amendments** (manure, compost) bring in carbon from outside
+  the field, so they raise **SHMI** to **SHMI+**.
+
+Both terms close a share of the gap to 100, so no score can exceed 100,
+and a field without amendments or animals is simply not raised.
 
 ------------------------------------------------------------------------
 
-## **1. Rotation years**
+## **1. Years with amendments and with animals**
 
-For each management unit $`i`$, the years of the evaluation window are
+For each management unit $`i`$, over the calendar years of its
+evaluation window, from `rot_start_yr` to `rot_end_yr`:
 
-``` math
-
-y \in \{\text{rot\_start\_yr}_i, \ldots, \text{rot\_end\_yr}_i\}
-```
-
-------------------------------------------------------------------------
-
-## **2. Years with an input**
-
-- **Amendment years**: years with at least one amendment of category
-  `"Organic"` (`SA_cat`), dated by `SA_date`.
-- **Animal years**: every calendar year overlapped by a grazing period,
+- $`p_{amend,i}`$: the share of years with at least one amendment of
+  category `"Organic"` (`SA_cat`), dated by `SA_date`;
+- $`p_{animal,i}`$: the share of years overlapped by a grazing period,
   from `AD_start_date` to `AD_end_date`. A period without an end date
   counts in its start year only.
-
-A year counts if it has an amendment **or** animals (or both):
-
-``` math
-
-\text{input}_{i,y} =
-\begin{cases}
-1 & \text{if year } y \text{ has an organic amendment or animals} \\
-0 & \text{otherwise}
-\end{cases}
-```
 
 Only presence is scored, not amounts.
 
 ------------------------------------------------------------------------
 
-## **3. Score**
+## **2. The amendment bonus and SHMI+**
 
 ``` math
 
-\text{OrgInput}_i = 100 \times \frac{1}{Y_i} \sum_{y} \text{input}_{i,y}
+\text{Amend\_bonus}_i = 0.60\,p_{amend,i}\,(100 - \text{SHMI}_i)
+\qquad
+\text{SHMI+}_i = \text{SHMI}_i + \text{Amend\_bonus}_i
 ```
 
-A unit with no organic amendments or animals scores 0.
+Equivalently, $`\text{SHMI+} = (1 - 0.6p)\,\text{SHMI} + 60p`$: an
+amendment every year moves a unit 60% of the way from its SHMI to 100.
+
+| SHMI | Amendments every year | Half the years |
+|------|-----------------------|----------------|
+| 40   | +36 (SHMI+ 76)        | +18 (58)       |
+| 60   | +24 (84)              | +12 (72)       |
+| 80   | +12 (92)              | +6 (86)        |
+
+The bonus is largest where management alone scores lowest. In the
+calibration data, the soil-health gain from amendments within sites also
+shrank as SHMI rose, though not significantly.
+
+------------------------------------------------------------------------
+
+## **3. Where the 0.60 and 0.25 come from**
+
+The sub-index weights were fitted with the amendment bonus in place, so
+SHMI+ is the calibrated score. Held-out fit was flat for amendment
+shares from 0.5 to 0.8 and grazing shares from 0.25 to 0.5; 0.60 and
+0.25 were chosen within those ranges. For sites held out of the fitting,
+SHMI+ explained 26% of the differences in soil health and SHMI 23%.
 
 ------------------------------------------------------------------------
 
 ## **Interpretation**
 
-- **0**: no organic amendments or grazing in any year.
-- **50**: inputs in half of the years.
-- **100**: an amendment or grazing every year.
-- Amendments and animals count equally: a grazed but unamended system
-  and an amended but ungrazed one can both reach 100. In the
-  calibration, Organic Inputs carried the largest share of soil-health
-  signal unique to any one sub-index.
+- Report both scores. SHMI is the field’s own plant and tillage
+  management; SHMI+ adds carbon brought in from outside.
+- **SHMI+ = SHMI**: no organic amendments in the window.
+- Amendments and SHMI do not trade off one-for-one: a well-managed field
+  gains less from manure than a poorly managed one.
 
 ------------------------------------------------------------------------
 
 ## **Output**
 
-[`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)
+[`compute_orginput_components()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput_components.md)
 returns one row per management unit:
 
-| MGT_combo | OrgInput |
-|-----------|----------|
-| …         | 0–100    |
+| MGT_combo | p_amend | p_animal | p_any | n_years |
+|-----------|---------|----------|-------|---------|
+| …         | 0–1     | 0–1      | 0–1   | years   |
 
-[`compute_orginput_components()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput_components.md)
-also returns the share of years with amendments, with animals, and with
-either.
+[`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
+returns `SHMI`, `Amend_bonus` and `SHMI_plus`, with `p_amend` and
+`p_animal`.
+[`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)
+still gives the SHMI 1.0 score, $`100\,p_{any}`$, for code written
+against SHMI 1.0.

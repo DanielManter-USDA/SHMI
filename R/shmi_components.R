@@ -1,9 +1,10 @@
-#' The four SHMI sub-indices for each management unit
+#' The SHMI sub-indices for each management unit
 #'
-#' Computes Cover, Diversity, InvDist and OrgInput (all 0-100) from prepared
-#' inputs. [build_shmi()] combines them with the official weights; calling
-#' this function directly is useful for calibration or for inspecting the
-#' parts of Cover.
+#' Computes Cover, Diversity and InvDist (all 0-100), and the shares of years
+#' with organic amendments and with grazing animals, from prepared inputs.
+#' [build_shmi()] combines them into SHMI and SHMI+; calling this function
+#' directly is useful for calibration or for inspecting the parts of Cover
+#' and Diversity.
 #'
 #' @param shmi_inputs A list returned by [prepare_shmi_inputs()].
 #' @param climate Monthly climate normals per `MGT_combo`; see
@@ -15,17 +16,27 @@
 #' @param implements Optional user implement table (`implement`,
 #'   `mixing_efficiency`, `depth_cm`) overriding T-DISC's values; see
 #'   [compute_disturbance()].
+#' @param growing_share Weight of the growing season within Cover (official:
+#'   0.760; see [compute_cover()]).
+#' @param graze_gap Share of the gap to 100 in Diversity closed by grazing in
+#'   every year (official: 0.25). 0 gives plant-only Diversity.
 #'
 #' @return A tibble with `MGT_combo`, `Cover`, `Cover_growing`,
-#'   `Cover_nongrowing`, `Diversity`, `Richness`, `InvDist`, `TI_tillage`,
-#'   `tillage_designation` (T-DISC: NT, RT or CT) and `OrgInput`,
-#'   one row per unit in `shmi_inputs$mgt`. Missing records mean the practice
-#'   did not happen: no crops gives Cover and Diversity 0, no disturbance
-#'   InvDist 100, no organic inputs OrgInput 0.
+#'   `Cover_nongrowing`, `Diversity` (with the grazing credit),
+#'   `Diversity_plants` (plants only, as [compute_diversity()]), `Richness`,
+#'   `InvDist`, `TI_tillage`, `tillage_designation` (T-DISC: NT, RT or CT),
+#'   `p_amend` and `p_animal` (shares of years with an organic amendment and
+#'   with animals; see [compute_orginput_components()]), one row per unit in
+#'   `shmi_inputs$mgt`. Missing records mean the practice did not happen: no
+#'   crops gives Cover and Diversity 0, no disturbance InvDist 100, no
+#'   amendments or animals shares of 0.
 #' @export
 shmi_components <- function(shmi_inputs, climate, dist_meth = c("EPA", "STIR", "auto"),
-                            implements = NULL) {
+                            implements = NULL, growing_share = shmi_parameters()$growing_share,
+                            graze_gap = shmi_parameters()$graze_gap) {
   dist_meth <- .resolve_dist_meth(shmi_inputs$dist, match.arg(dist_meth))
+  if (!is.numeric(graze_gap) || length(graze_gap) != 1 || !is.finite(graze_gap) || graze_gap < 0 || graze_gap > 1)
+    stop("graze_gap must be a single number between 0 and 1.", call. = FALSE)
   need <- c("mgt", "rot_bounds", "crop", "dist", "amend", "animal")
   miss <- setdiff(need, names(shmi_inputs))
   if (length(miss)) stop("shmi_inputs lacks: ", paste(miss, collapse = ", "), call. = FALSE)
@@ -37,23 +48,26 @@ shmi_components <- function(shmi_inputs, climate, dist_meth = c("EPA", "STIR", "
   # irrigation from the workbook (Mgt_Unit) unless the climate table gives its own
   if (!"irrigated" %in% names(climate) && "irrigated" %in% names(mgt))
     climate <- dplyr::left_join(climate, mgt[, c("MGT_combo", "irrigated")], by = "MGT_combo")
-  cover <- compute_cover(crop, rb, climate)
-  div   <- compute_diversity(crop, rb)
+  cover <- compute_cover(crop, rb, climate, growing_share = growing_share)
+  div   <- compute_diversity(crop, rb) %>% dplyr::rename(Diversity_plants = "Diversity")
   inv   <- compute_disturbance(shmi_inputs$dist, rb, crop = crop, harvests = shmi_inputs$harvests,
                                dist_meth = dist_meth, implements = implements) %>%
     dplyr::select("MGT_combo", "InvDist", TI_tillage = "TI", tillage_designation = "designation")
-  org   <- compute_orginput(rb, shmi_inputs$amend, shmi_inputs$animal)
+  org   <- compute_orginput_components(rb, shmi_inputs$amend, shmi_inputs$animal) %>%
+    dplyr::select("MGT_combo", "p_amend", "p_animal")
 
   dplyr::distinct(mgt, .data$MGT_combo) %>%
     dplyr::left_join(cover, by = "MGT_combo") %>%
     dplyr::left_join(div,   by = "MGT_combo") %>%
     dplyr::left_join(inv,   by = "MGT_combo") %>%
     dplyr::left_join(org,   by = "MGT_combo") %>%
-    dplyr::mutate(dplyr::across(c("Cover", "Cover_growing", "Cover_nongrowing", "Diversity",
-                                  "Richness", "OrgInput"), ~ tidyr::replace_na(.x, 0)),
+    dplyr::mutate(dplyr::across(c("Cover", "Cover_growing", "Cover_nongrowing", "Diversity_plants",
+                                  "Richness", "p_amend", "p_animal"), ~ tidyr::replace_na(.x, 0)),
                   InvDist = tidyr::replace_na(.data$InvDist, 100),
                   TI_tillage = tidyr::replace_na(.data$TI_tillage, 0),
-                  tillage_designation = tidyr::replace_na(.data$tillage_designation, "NT"))
+                  tillage_designation = tidyr::replace_na(.data$tillage_designation, "NT"),
+                  Diversity = .grazing_credit(.data$Diversity_plants, .data$p_animal, graze_gap)) %>%
+    dplyr::relocate("Diversity", .before = "Diversity_plants")
 }
 
 # Tillage scale for "auto": EPA when passes name implements or carry mixing
@@ -94,6 +108,10 @@ clip_crop_to_rotation <- function(crop, rot_bounds) {
 
 
 #' Years with organic amendments and animals
+#'
+#' The shares of years that drive SHMI's two organic-input terms: `p_animal`
+#' raises Diversity (grazing credit) and `p_amend` raises SHMI to SHMI+
+#' (amendment bonus); see [build_shmi()].
 #'
 #' @param rot_bounds Rotation bounds with `MGT_combo`, `rot_start_yr`,
 #'   `rot_end_yr`.

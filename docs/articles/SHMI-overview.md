@@ -3,16 +3,24 @@
 ## Introduction
 
 The Soil Health Management Index (SHMI) turns a record of field
-management into a single 0-100 score. It combines four sub-indices, each
+management into 0-100 scores. **SHMI** combines three sub-indices, each
 also scored 0-100, with weights calibrated against measured soil health:
 
-- **Cover** (weight 0.40): the share of days with living plants in the
+- **Cover** (weight 0.687): the share of days with living plants in the
   growing and non-growing seasons, set by the site’s climate.
-- **Organic inputs (OrgInput)** (0.32): the share of years with an
-  organic amendment or grazing animals.
-- **Diversity** (0.15): the average number of plant species per year.
-- **Inverse disturbance (InvDist)** (0.13): how little the soil was
+- **Diversity** (0.150): the number of plant species in each 4-year span
+  of the record. Grazing animals raise it: grazing every year closes a
+  quarter of the gap to 100.
+- **Inverse disturbance (InvDist)** (0.163): how little the soil was
   tilled; 100 means no tillage.
+
+**SHMI+** adds organic amendments (manure, compost), carbon brought in
+from outside the field. An amendment every year closes 60% of the gap
+between SHMI and 100; in half the years, 30%:
+
+SHMI+ = SHMI + 0.60 × p_amend × (100 − SHMI)
+
+A unit without amendments has SHMI+ = SHMI, and no score can exceed 100.
 
 This vignette walks through the standard workflow: fill in the Excel
 workbook, prepare the inputs, add climate, compute SHMI, and review the
@@ -268,28 +276,33 @@ growing_months(climate[1, ])
 ``` r
 result <- build_shmi(inputs, climate)
 result$indicator_df
-#> # A tibble: 8 × 16
-#>   MGT_combo  MGT_study MGT_farm MGT_field MGT_trt irrigated  SHMI Cover OrgInput
-#>   <chr>      <chr>     <chr>    <chr>     <chr>   <lgl>     <dbl> <dbl>    <dbl>
-#> 1 MLSH_ARDE… MLSH      ARDEC    200A      DMP-Ma… TRUE       65.5  64.9      100
-#> 2 MLSH_ARDE… MLSH      ARDEC    200A      DMP-Ma… TRUE       65.5  64.9      100
-#> 3 MLSH_ARDE… MLSH      ARDEC    200A      DMP-N0  TRUE       33.4  64.9        0
-#> 4 MLSH_ARDE… MLSH      ARDEC    200A      DMP-N1… TRUE       33.4  64.9        0
-#> 5 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N0 TRUE       38.4  64.9        0
-#> 6 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0
-#> 7 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0
-#> 8 MLSH_ARDE… MLSH      ARDEC    200A      Rot1-N… TRUE       38.4  64.9        0
-#> # ℹ 7 more variables: Diversity <dbl>, InvDist <dbl>, Cover_growing <dbl>,
-#> #   Cover_nongrowing <dbl>, Richness <dbl>, TI_tillage <dbl>,
-#> #   tillage_designation <chr>
+#> # A tibble: 8 × 20
+#>   MGT_combo       MGT_study MGT_farm MGT_field MGT_trt irrigated  SHMI SHMI_plus
+#>   <chr>           <chr>     <chr>    <chr>     <chr>   <lgl>     <dbl>     <dbl>
+#> 1 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-Ma… TRUE       51.8      80.7
+#> 2 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-Ma… TRUE       51.8      80.7
+#> 3 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-N0  TRUE       51.8      51.8
+#> 4 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-N1… TRUE       51.8      51.8
+#> 5 MLSH_ARDEC_200… MLSH      ARDEC    200A      Rot1-N0 TRUE       58.8      58.8
+#> 6 MLSH_ARDEC_200… MLSH      ARDEC    200A      Rot1-N… TRUE       58.8      58.8
+#> 7 MLSH_ARDEC_200… MLSH      ARDEC    200A      Rot1-N… TRUE       58.8      58.8
+#> 8 MLSH_ARDEC_200… MLSH      ARDEC    200A      Rot1-N… TRUE       58.8      58.8
+#> # ℹ 12 more variables: Amend_bonus <dbl>, Cover <dbl>, Diversity <dbl>,
+#> #   InvDist <dbl>, Cover_growing <dbl>, Cover_nongrowing <dbl>,
+#> #   Diversity_plants <dbl>, Richness <dbl>, p_amend <dbl>, p_animal <dbl>,
+#> #   TI_tillage <dbl>, tillage_designation <chr>
 ```
 
-`indicator_df` has one row per management unit, with `SHMI`, `Cover`,
-`OrgInput`, `Diversity` and `InvDist`, the two parts of Cover
-(`Cover_growing`, `Cover_nongrowing`), the average number of species per
-year (`Richness`), and the unit’s study, farm, field and treatment. The
-result also records the weights, the tillage scale used (`dist_meth`),
-whether the scores are official, the package version and a timestamp.
+`indicator_df` has one row per management unit, with `SHMI`, `SHMI_plus`
+and the amendment bonus between them (`Amend_bonus`); the sub-indices
+`Cover`, `Diversity` and `InvDist`; the two parts of Cover
+(`Cover_growing`, `Cover_nongrowing`); Diversity before the grazing
+credit (`Diversity_plants`) and the average number of species per 4-year
+span (`Richness`); the shares of years with an organic amendment
+(`p_amend`) and with animals (`p_animal`); and the unit’s study, farm,
+field and treatment. The result also records the weights and constants
+(`parameters`), the tillage scale used (`dist_meth`), whether the scores
+are official, the package version and a timestamp.
 
 **Tillage.**
 [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
@@ -306,16 +319,17 @@ scored with `dist_meth = "STIR"`, on the same crop intervals and
 windows. The result also gives each unit’s T-DISC tillage designation
 (NT, RT or CT).
 
-## 5. Custom weights
+## 5. Custom weights and constants
 
-For research or scenario analysis, the weights can be changed. They are
-rescaled to sum to 1, and the scores are flagged as not official:
+For research or scenario analysis, the weights, the growing-season share
+in Cover, and the grazing and amendment shares can be changed. Weights
+are rescaled to sum to 1, and the scores are flagged as not official:
 
 ``` r
 result_equal <- build_shmi(inputs, climate,
-                           weights = c(Cover = 0.25, OrgInput = 0.25,
-                                       Diversity = 0.25, InvDist = 0.25))
-shmi_weights()   # the official weights
+                           weights = c(Cover = 1, Diversity = 1, InvDist = 1))
+result_nobonus <- build_shmi(inputs, climate, amend_gap = 0, graze_gap = 0)
+shmi_parameters()   # the official weights and constants
 ```
 
 ## 6. How missing records are scored
@@ -328,8 +342,8 @@ SHMI treats a missing record as a practice that did not happen:
   site scores Cover = 0 and Diversity = 0. A unit with management
   records but no crop records is flagged (`no_crop_records`), so a
   forgotten crop sheet is not mistaken for a fallow.
-- **No amendment or animal records** means no organic inputs, so
-  OrgInput = 0.
+- **No amendment or animal records** means no amendment bonus (SHMI+ =
+  SHMI) and no grazing credit in Diversity.
 
 Record every tillage pass, planting, harvest, and amendment for the
 period being evaluated, so that gaps in the records are not mistaken for
@@ -344,14 +358,14 @@ compute_cover(inputs$crop, inputs$rot_bounds, climate)
 #> # A tibble: 8 × 4
 #>   MGT_combo                   Cover Cover_growing Cover_nongrowing
 #>   <chr>                       <dbl>         <dbl>            <dbl>
-#> 1 MLSH_ARDEC_200A_DMP-Manure   64.9          81.4                0
-#> 2 MLSH_ARDEC_200A_DMP-Manure+  64.9          81.4                0
-#> 3 MLSH_ARDEC_200A_DMP-N0       64.9          81.4                0
-#> 4 MLSH_ARDEC_200A_DMP-N160     64.9          81.4                0
-#> 5 MLSH_ARDEC_200A_Rot1-N0      64.9          81.4                0
-#> 6 MLSH_ARDEC_200A_Rot1-N120    64.9          81.4                0
-#> 7 MLSH_ARDEC_200A_Rot1-N180    64.9          81.4                0
-#> 8 MLSH_ARDEC_200A_Rot1-N60     64.9          81.4                0
+#> 1 MLSH_ARDEC_200A_DMP-Manure   61.9          81.4                0
+#> 2 MLSH_ARDEC_200A_DMP-Manure+  61.9          81.4                0
+#> 3 MLSH_ARDEC_200A_DMP-N0       61.9          81.4                0
+#> 4 MLSH_ARDEC_200A_DMP-N160     61.9          81.4                0
+#> 5 MLSH_ARDEC_200A_Rot1-N0      61.9          81.4                0
+#> 6 MLSH_ARDEC_200A_Rot1-N120    61.9          81.4                0
+#> 7 MLSH_ARDEC_200A_Rot1-N180    61.9          81.4                0
+#> 8 MLSH_ARDEC_200A_Rot1-N60     61.9          81.4                0
 compute_diversity(inputs$crop, inputs$rot_bounds)
 #> # A tibble: 8 × 3
 #>   MGT_combo                   Diversity Richness
@@ -376,18 +390,18 @@ compute_disturbance(inputs$dist, inputs$rot_bounds, inputs$crop, inputs$harvests
 #> 6 MLSH_ARDEC_200A_Rot1-N120     100   0     NT                    6
 #> 7 MLSH_ARDEC_200A_Rot1-N180     100   0     NT                    6
 #> 8 MLSH_ARDEC_200A_Rot1-N60      100   0     NT                    6
-compute_orginput(inputs$rot_bounds, inputs$amend, inputs$animal)
-#> # A tibble: 8 × 2
-#>   MGT_combo                   OrgInput
-#>   <chr>                          <dbl>
-#> 1 MLSH_ARDEC_200A_DMP-Manure       100
-#> 2 MLSH_ARDEC_200A_DMP-Manure+      100
-#> 3 MLSH_ARDEC_200A_DMP-N0             0
-#> 4 MLSH_ARDEC_200A_DMP-N160           0
-#> 5 MLSH_ARDEC_200A_Rot1-N0            0
-#> 6 MLSH_ARDEC_200A_Rot1-N120          0
-#> 7 MLSH_ARDEC_200A_Rot1-N180          0
-#> 8 MLSH_ARDEC_200A_Rot1-N60           0
+compute_orginput_components(inputs$rot_bounds, inputs$amend, inputs$animal)
+#> # A tibble: 8 × 5
+#>   MGT_combo                   p_amend p_animal p_any n_years
+#>   <chr>                         <dbl>    <dbl> <dbl>   <int>
+#> 1 MLSH_ARDEC_200A_DMP-Manure        1        0     1       5
+#> 2 MLSH_ARDEC_200A_DMP-Manure+       1        0     1       5
+#> 3 MLSH_ARDEC_200A_DMP-N0            0        0     0       5
+#> 4 MLSH_ARDEC_200A_DMP-N160          0        0     0       5
+#> 5 MLSH_ARDEC_200A_Rot1-N0           0        0     0       5
+#> 6 MLSH_ARDEC_200A_Rot1-N120         0        0     0       5
+#> 7 MLSH_ARDEC_200A_Rot1-N180         0        0     0       5
+#> 8 MLSH_ARDEC_200A_Rot1-N60          0        0     0       5
 ```
 
 The functions also accept small tables built by hand, which is a quick
@@ -421,12 +435,12 @@ compute_cover(crop, rot_bounds, climate_1)
 #> # A tibble: 1 × 4
 #>   MGT_combo Cover Cover_growing Cover_nongrowing
 #>   <chr>     <dbl>         <dbl>            <dbl>
-#> 1 field_1    71.4          76.9             50.2
+#> 1 field_1    70.5          76.9             50.2
 ```
 
-**Diversity** counts the species present each year: corn and rye in
-2019, rye and soybean in 2020, so two species a year. One species a year
-scores 0 and eight or more score 100:
+**Diversity** counts the species in each 4-year span; this two-year
+record is one span, with three species (corn, rye, soybean). One species
+scores 0 and eight or more score 100, so three species score 29:
 
 ``` r
 compute_diversity(crop, rot_bounds)
@@ -482,7 +496,8 @@ compute_disturbance(dist, rot_bounds, crop, harvests, implements = my_disk)
 ```
 
 **Organic inputs**: manure applied in one of the two years, and no
-animals:
+animals. `p_amend` (0.5) sets the amendment bonus and `p_animal` (0) the
+grazing credit:
 
 ``` r
 amend  <- data.frame(MGT_combo = "field_1",
@@ -490,16 +505,20 @@ amend  <- data.frame(MGT_combo = "field_1",
 animal <- data.frame(MGT_combo = character(),
                      AD_start_date = as.Date(character()),
                      AD_end_date = as.Date(character()))
-compute_orginput(rot_bounds, amend, animal)
-#> # A tibble: 1 × 2
-#>   MGT_combo OrgInput
-#>   <chr>        <dbl>
-#> 1 field_1         50
+compute_orginput_components(rot_bounds, amend, animal)
+#> # A tibble: 1 × 5
+#>   MGT_combo p_amend p_animal p_any n_years
+#>   <chr>       <dbl>    <dbl> <dbl>   <int>
+#> 1 field_1       0.5        0   0.5       2
 ```
+
+With manure in half the years, a unit with SHMI 50 gains 0.60 × 0.5 ×
+(100 − 50) = 15 points, for SHMI+ 65. Grazing every year would raise
+Diversity from 29 to 29 + 0.25 × (100 − 29) = 46.
 
 ## 8. Plotting results
 
-One unit, with a gauge for each sub-index and for overall SHMI:
+One unit, with a gauge for each sub-index, SHMI and SHMI+:
 
 ``` r
 plot_shmi_gauge(result$indicator_df, row = 1)
@@ -507,7 +526,8 @@ plot_shmi_gauge(result$indicator_df, row = 1)
 
 ![](SHMI-overview_files/figure-html/plot-gauge-1.png)
 
-Many units, overall SHMI sorted by score:
+Many units, sorted: each line runs to SHMI (blue) and on to SHMI+
+(orange) when the unit received amendments:
 
 ``` r
 plot_shmi_lollipop(result$indicator_df)
@@ -520,16 +540,18 @@ Select a unit by name with `MGT_combo = "..."` instead of `row`.
 ## 9. Interpreting SHMI
 
 Higher scores indicate management that is more supportive of soil
-health: more of the year under living cover, more frequent organic
-inputs, more plant species each year, and less tillage.
+health: more of the year under living cover, more plant species (and
+grazing), less tillage and, for SHMI+, more frequent organic amendments.
 
-When comparing units, keep the weights in mind. A unit that scores 0 on
-one sub-index cannot score above 100 × (1 − that sub-index’s weight): a
-system with no organic inputs, for example, can reach at most 68.3
-however well it does otherwise. Looking at the four sub-indices
-alongside SHMI shows which practices drive a unit’s score. SHMI is most
-informative for comparing practices at the same site; a single score
-predicted for a new site is typically within about 13 soil-health
+Report both scores. SHMI describes the field’s own plant and tillage
+management; SHMI+ adds carbon brought in from outside, which matters for
+soil health but depends on access to manure or compost. SHMI+ is the
+score calibrated against soil health; the two are equal without
+amendments. The amendment bonus is largest for a low SHMI: amendments
+every year add 36 points at SHMI 40 but 12 at SHMI 80. Looking at the
+sub-indices alongside the scores shows which practices drive them. SHMI
+is most informative for comparing practices at the same site; a single
+score predicted for a new site is typically within about 13 soil-health
 points.
 
 ## Further reading
@@ -537,18 +559,20 @@ points.
 - [`?prepare_shmi_inputs`](https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.md):
   workbook structure, crop-date rules, the assumptions table, and
   overrides.
-- [`?build_shmi`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
+- [`?build_shmi`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md),
+  [`?shmi_weights`](https://danielmanter-usda.github.io/SHMI/reference/shmi_weights.md)
   and
-  [`?shmi_weights`](https://danielmanter-usda.github.io/SHMI/reference/shmi_weights.md):
-  the index and its official weights.
+  [`?shmi_parameters`](https://danielmanter-usda.github.io/SHMI/reference/shmi_parameters.md):
+  SHMI, SHMI+ and their official weights and constants.
 - [`?compute_cover`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.md),
   [`?growing_months`](https://danielmanter-usda.github.io/SHMI/reference/growing_months.md),
   [`?get_shmi_climate`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_climate.md):
   Cover’s seasons and climate.
 - [`?compute_diversity`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md),
-  [`?compute_disturbance`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md),
-  [`?compute_orginput`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md):
+  [`?compute_disturbance`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md):
   the other sub-indices.
+- [`?compute_orginput_components`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput_components.md):
+  years with amendments and with animals.
 - [`?shmi_components`](https://danielmanter-usda.github.io/SHMI/reference/shmi_components.md):
-  all four sub-indices, for calibration or inspection.
+  all sub-indices, for calibration or inspection.
 - `NEWS.md`: what changed in each version.

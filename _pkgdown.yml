@@ -35,9 +35,9 @@ navbar:
           href: "articles/Diversity.html"
         - text: "Disturbance Index"
           href: "articles/Disturbance.html"
-        - text: "Organic Inputs (SHMI+)"
+        - text: "Organic Inputs (amendment bonus)"
           href: "articles/OrgInputs.html"
-        - text: "SHMI and SHMI+"
+        - text: "SHMI and SHMI_base"
           href: "articles/SHMI.html"
 
     - text: "Reference"
@@ -102,7 +102,7 @@ reference:
     desc: >
       All sub-indices at once, the monthly components of Cover, and the
       shares of years with organic amendments and grazing animals (which set
-      the grazing credit and the SHMI+ amendment bonus), for calibration or
+      the grazing credit and the amendment bonus), for calibration or
       inspection.
     contents:
       - shmi_components

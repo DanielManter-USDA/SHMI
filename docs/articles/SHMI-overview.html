@@ -43,8 +43,8 @@
     <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
     <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
     <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (SHMI+)</a></li>
-    <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI+</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (amendment bonus)</a></li>
+    <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI_base</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -93,7 +93,7 @@
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
 <p>The Soil Health Management Index (SHMI) turns a record of field
-management into 0-100 scores. <strong>SHMI</strong> combines three
+management into 0-100 scores. <strong>SHMI_base</strong> combines three
 sub-indices, each also scored 0-100, with weights calibrated against
 measured soil health:</p>
 <ul>
@@ -109,12 +109,13 @@ year closes a quarter of the gap to 100.</li>
 <strong>Inverse disturbance (InvDist)</strong> (0.163): how little
 the soil was tilled; 100 means no tillage.</li>
 </ul>
-<p><strong>SHMI+</strong> adds organic amendments (manure, compost),
-carbon brought in from outside the field. An amendment every year closes
-60% of the gap between SHMI and 100; in half the years, 30%:</p>
-<p>SHMI+ = SHMI + 0.60 × p_amend × (100 − SHMI)</p>
-<p>A unit without amendments has SHMI+ = SHMI, and no score can exceed
-100.</p>
+<p><strong>SHMI</strong>, the calibrated score, adds organic amendments
+(manure, compost), carbon brought in from outside the field, to
+SHMI_base. An amendment every year closes 60% of the gap between
+SHMI_base and 100; in half the years, 30%:</p>
+<p>SHMI = SHMI_base + 0.60 × p_amend × (100 − SHMI_base)</p>
+<p>A unit without amendments has SHMI = SHMI_base, and no score can
+exceed 100.</p>
 <p>This vignette walks through the standard workflow: fill in the Excel
 workbook, prepare the inputs, add climate, compute SHMI, and review the
 results.</p>
@@ -427,7 +428,7 @@ entered by hand:</p>
 <span><span class="co">#&gt; <span style="color: #949494;">#   Diversity_plants &lt;dbl&gt;, Richness &lt;dbl&gt;, p_amend &lt;dbl&gt;, p_animal &lt;dbl&gt;,</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;">#   TI_tillage &lt;dbl&gt;, tillage_designation &lt;chr&gt;</span></span></span></code></pre></div>
 <p><code>indicator_df</code> has one row per management unit, with
-<code>SHMI</code>, <code>SHMI_plus</code> and the amendment bonus
+<code>SHMI_base</code>, <code>SHMI</code> and the amendment bonus
 between them (<code>Amend_bonus</code>); the sub-indices
 <code>Cover</code>, <code>Diversity</code> and <code>InvDist</code>; the
 two parts of Cover (<code>Cover_growing</code>,
@@ -483,7 +484,7 @@ management records but no crop records is flagged
 mistaken for a fallow.</li>
 <li>
 <strong>No amendment or animal records</strong> means no amendment
-bonus (SHMI+ = SHMI) and no grazing credit in Diversity.</li>
+bonus (SHMI = SHMI_base) and no grazing credit in Diversity.</li>
 </ul>
 <p>Record every tillage pass, planting, harvest, and amendment for the
 period being evaluated, so that gaps in the records are not mistaken for
@@ -634,18 +635,18 @@ bonus and <code>p_animal</code> (0) the grazing credit:</p>
 <span><span class="co">#&gt;   MGT_combo p_amend p_animal p_any n_years</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> field_1       0.5        0   0.5       2</span></span></code></pre></div>
-<p>With manure in half the years, a unit with SHMI 50 gains 0.60 × 0.5 ×
-(100 − 50) = 15 points, for SHMI+ 65. Grazing every year would raise
-Diversity from 29 to 29 + 0.25 × (100 − 29) = 46.</p>
+<p>With manure in half the years, a unit with SHMI_base 50 gains 0.60 ×
+0.5 × (100 − 50) = 15 points, for SHMI 65. Grazing every year would
+raise Diversity from 29 to 29 + 0.25 × (100 − 29) = 46.</p>
 </div>
 <div class="section level2">
 <h2 id="plotting-results">8. Plotting results<a class="anchor" aria-label="anchor" href="#plotting-results"></a>
 </h2>
-<p>One unit, with a gauge for each sub-index, SHMI and SHMI+:</p>
+<p>One unit, with a gauge for each sub-index, SHMI_base and SHMI:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_shmi_gauge.html">plot_shmi_gauge</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span>, row <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="SHMI-overview_files/figure-html/plot-gauge-1.png" class="r-plt" alt="" width="768"></p>
-<p>Many units, sorted: each line runs to SHMI (blue) and on to SHMI+
+<p>Many units, sorted: each line runs to SHMI_base (blue) and on to SHMI
 (orange) when the unit received amendments:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_shmi_lollipop.html">plot_shmi_lollipop</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">indicator_df</span><span class="op">)</span></span></code></pre></div>
@@ -658,18 +659,18 @@ Diversity from 29 to 29 + 0.25 × (100 − 29) = 46.</p>
 </h2>
 <p>Higher scores indicate management that is more supportive of soil
 health: more of the year under living cover, more plant species (and
-grazing), less tillage and, for SHMI+, more frequent organic
+grazing), less tillage and, for SHMI, more frequent organic
 amendments.</p>
-<p>Report both scores. SHMI describes the field’s own plant and tillage
-management; SHMI+ adds carbon brought in from outside, which matters for
-soil health but depends on access to manure or compost. SHMI+ is the
-score calibrated against soil health; the two are equal without
-amendments. The amendment bonus is largest for a low SHMI: amendments
-every year add 36 points at SHMI 40 but 12 at SHMI 80. Looking at the
-sub-indices alongside the scores shows which practices drive them. SHMI
-is most informative for comparing practices at the same site; a single
-score predicted for a new site is typically within about 13 soil-health
-points.</p>
+<p>Report both scores. SHMI_base describes the field’s own plant and
+tillage management; SHMI adds carbon brought in from outside, which
+matters for soil health but depends on access to manure or compost. SHMI
+is the score calibrated against soil health; the two are equal without
+amendments. The amendment bonus is largest for a low SHMI_base:
+amendments every year add 36 points at SHMI_base 40 but 12 at SHMI_base
+80. Looking at the sub-indices alongside the scores shows which
+practices drive them. SHMI is most informative for comparing practices
+at the same site; a single score predicted for a new site is typically
+within about 13 soil-health points.</p>
 </div>
 <div class="section level2">
 <h2 id="further-reading">Further reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>
@@ -680,8 +681,8 @@ points.</p>
 rules, the assumptions table, and overrides.</li>
 <li>
 <code><a href="../reference/build_shmi.html">?build_shmi</a></code>, <code><a href="../reference/shmi_weights.html">?shmi_weights</a></code> and
-<code><a href="../reference/shmi_parameters.html">?shmi_parameters</a></code>: SHMI, SHMI+ and their official weights
-and constants.</li>
+<code><a href="../reference/shmi_parameters.html">?shmi_parameters</a></code>: SHMI_base, SHMI and their official
+weights and constants.</li>
 <li>
 <code><a href="../reference/compute_cover.html">?compute_cover</a></code>, <code><a href="../reference/growing_months.html">?growing_months</a></code>,
 <code><a href="../reference/get_shmi_climate.html">?get_shmi_climate</a></code>: Cover’s seasons and climate.</li>

@@ -8,7 +8,7 @@
 \description{
 Computes the Soil Health Management Index (SHMI) from management records
 entered in a standard Excel workbook. It reports two 0-100 scores.
-\strong{SHMI} is a weighted sum of three sub-indices, each also 0-100:
+\strong{SHMI_base} is a weighted sum of three sub-indices, each also 0-100:
 }
 \details{
 \itemize{
@@ -20,9 +20,10 @@ the record; grazing animals close up to a quarter of the gap to 100.
 computed as in USDA's Tillage Disturbance Index for Soil Carbon (T-DISC).
 }
 
-\strong{SHMI+} adds organic amendments: amendments in a share \eqn{p} of years
-close \eqn{0.60\,p} of the gap between SHMI and 100. A unit without
-amendments has SHMI+ = SHMI, and no score exceeds 100.
+\strong{SHMI}, the calibrated score, adds organic amendments: amendments in a
+share \eqn{p} of years close \eqn{0.60\,p} of the gap between SHMI_base
+and 100. A unit without amendments has SHMI = SHMI_base, and no score
+exceeds 100.
 
 The weights were calibrated against measured soil health on 354 US plots
 at 74 sites of the North American Project to Evaluate Soil Health
@@ -38,7 +39,7 @@ the path of the installed example.
 records into species episodes, and records every assumption it makes.
 \item \code{\link[=get_shmi_climate]{get_shmi_climate()}} provides monthly climate normals for each unit,
 which set Cover's growing season.
-\item \code{\link[=build_shmi]{build_shmi()}} computes the sub-indices, SHMI and SHMI+.
+\item \code{\link[=build_shmi]{build_shmi()}} computes the sub-indices, SHMI_base and SHMI.
 \item \code{\link[=plot_shmi_gauge]{plot_shmi_gauge()}} and \code{\link[=plot_shmi_lollipop]{plot_shmi_lollipop()}} display the results.
 }
 

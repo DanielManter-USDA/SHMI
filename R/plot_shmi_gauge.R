@@ -1,12 +1,12 @@
-#' Plot gauges of SHMI, SHMI+ and the sub-indices for one management unit
+#' Plot gauges of SHMI and its sub-indices for one management unit
 #'
-#' Draws vertical gauges for Cover, Diversity, Inverse Disturbance, SHMI and,
-#' when the data have `SHMI_plus`, SHMI+ (SHMI with the organic amendment
-#' bonus). Each gauge shows the 0-100 scale in five bands ("very low" to
+#' Draws vertical gauges for Cover, Diversity, Inverse Disturbance, SHMI_base
+#' (when the data have `SHMI_base`) and SHMI, which adds the organic amendment
+#' bonus to SHMI_base. Each gauge shows the 0-100 scale in five bands ("very low" to
 #' "very high") with a pointer at the unit's score.
 #'
 #' @param shmi A data frame of scores with `SHMI`, `Cover`, `Diversity` and
-#'   `InvDist`, optionally `SHMI_plus`, and `MGT_combo` if units are selected
+#'   `InvDist`, optionally `SHMI_base`, and `MGT_combo` if units are selected
 #'   by name, such as `build_shmi()$indicator_df`.
 #' @param MGT_combo Optional management unit to plot. Overrides `row`.
 #' @param row Row of `shmi` to plot when `MGT_combo` is not given.
@@ -17,7 +17,7 @@
 #' @seealso [plot_shmi_lollipop()], [build_shmi()]
 #'
 #' @examples
-#' scores <- data.frame(MGT_combo = "field_1", SHMI = 62.3, SHMI_plus = 73.6,
+#' scores <- data.frame(MGT_combo = "field_1", SHMI = 73.6, SHMI_base = 62.3,
 #'                      Cover = 71.2, Diversity = 45.0, InvDist = 88.9)
 #' plot_shmi_gauge(scores)
 #'
@@ -56,7 +56,7 @@ plot_shmi_gauge <- function(shmi,
     stop("Missing required columns: ", paste(missing, collapse = ", "),
          call. = FALSE)
   }
-  has_plus <- "SHMI_plus" %in% names(x)
+  has_base <- "SHMI_base" %in% names(x)
 
   # ---- Score bins ----
   scores <- factor(
@@ -115,10 +115,10 @@ plot_shmi_gauge <- function(shmi,
   panels <- list(
     panel(x$Cover,     "\nCover"),
     panel(x$Diversity, "\nDiversity"),
-    panel(x$InvDist,   "Inverse\nDisturbance"),
-    panel(x$SHMI,      "\nSHMI", band_labels = !has_plus)
+    panel(x$InvDist,   "Inverse\nDisturbance")
   )
-  if (has_plus) panels <- c(panels, list(panel(x$SHMI_plus, "\nSHMI+", band_labels = TRUE)))
+  if (has_base) panels <- c(panels, list(panel(x$SHMI_base, "SHMI\nbase")))
+  panels <- c(panels, list(panel(x$SHMI, "\nSHMI", band_labels = TRUE)))
 
   gridExtra::grid.arrange(grobs = panels, nrow = 1)
 }

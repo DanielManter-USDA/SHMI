@@ -21,5 +21,5 @@ utils::globalVariables(c(
   "me", "stir", "date", ".end", ".cover",
   ".id", "cat", "crop", "crop_year", "harvest_date", "N_kg_ha_yr",
   "n_unconverted", "SA_source", "SA_units", "window_start", "first_in_record",
-  "SHMI_plus", "Amend_bonus", "Diversity_plants", "value", "score", "what", "top", "label"
+  "SHMI_base", "Amend_bonus", "Diversity_plants", "value", "score", "what", "top", "label", "base"
 ))

@@ -1,4 +1,4 @@
-# Organic Inputs and SHMI+
+# Organic Inputs and the Amendment Bonus
 
 Organic Amendments as a Bonus; Grazing Animals as Diversity
 
@@ -13,7 +13,7 @@ Organic inputs now enter in two places:
 - **Grazing animals** are part of the field’s living system, so they
   raise **Diversity** (see the Diversity article).
 - **Organic amendments** (manure, compost) bring in carbon from outside
-  the field, so they raise **SHMI** to **SHMI+**.
+  the field, so they raise **SHMI_base** to **SHMI**.
 
 Both terms close a share of the gap to 100, so no score can exceed 100,
 and a field without amendments or animals is simply not raised.
@@ -35,47 +35,49 @@ Only presence is scored, not amounts.
 
 ------------------------------------------------------------------------
 
-## **2. The amendment bonus and SHMI+**
+## **2. The amendment bonus and SHMI**
 
 ``` math
 
-\text{Amend\_bonus}_i = 0.60\,p_{amend,i}\,(100 - \text{SHMI}_i)
+\text{Amend\_bonus}_i = 0.60\,p_{amend,i}\,(100 - \text{SHMI}_{\text{base},i})
 \qquad
-\text{SHMI+}_i = \text{SHMI}_i + \text{Amend\_bonus}_i
+\text{SHMI}_i = \text{SHMI}_{\text{base},i} + \text{Amend\_bonus}_i
 ```
 
-Equivalently, $`\text{SHMI+} = (1 - 0.6p)\,\text{SHMI} + 60p`$: an
-amendment every year moves a unit 60% of the way from its SHMI to 100.
+Equivalently,
+$`\text{SHMI} = (1 - 0.6p)\,\text{SHMI}_{\text{base}} + 60p`$: an
+amendment every year moves a unit 60% of the way from its SHMI_base to
+100.
 
-| SHMI | Amendments every year | Half the years |
-|------|-----------------------|----------------|
-| 40   | +36 (SHMI+ 76)        | +18 (58)       |
-| 60   | +24 (84)              | +12 (72)       |
-| 80   | +12 (92)              | +6 (86)        |
+| SHMI_base | Amendments every year | Half the years |
+|-----------|-----------------------|----------------|
+| 40        | +36 (SHMI 76)         | +18 (58)       |
+| 60        | +24 (84)              | +12 (72)       |
+| 80        | +12 (92)              | +6 (86)        |
 
 The bonus is largest where management alone scores lowest. In the
 calibration data, the soil-health gain from amendments within sites also
-shrank as SHMI rose, though not significantly.
+shrank as SHMI_base rose, though not significantly.
 
 ------------------------------------------------------------------------
 
 ## **3. Where the 0.60 and 0.25 come from**
 
 The sub-index weights were fitted with the amendment bonus in place, so
-SHMI+ is the calibrated score. Held-out fit was flat for amendment
-shares from 0.5 to 0.8 and grazing shares from 0.25 to 0.5; 0.60 and
-0.25 were chosen within those ranges. For sites held out of the fitting,
-SHMI+ explained 26% of the differences in soil health and SHMI 23%.
+SHMI is the calibrated score. Held-out fit was flat for amendment shares
+from 0.5 to 0.8 and grazing shares from 0.25 to 0.5; 0.60 and 0.25 were
+chosen within those ranges. For sites held out of the fitting, SHMI
+explained 26% of the differences in soil health and SHMI_base 23%.
 
 ------------------------------------------------------------------------
 
 ## **Interpretation**
 
-- Report both scores. SHMI is the field’s own plant and tillage
-  management; SHMI+ adds carbon brought in from outside.
-- **SHMI+ = SHMI**: no organic amendments in the window.
-- Amendments and SHMI do not trade off one-for-one: a well-managed field
-  gains less from manure than a poorly managed one.
+- Report both scores. SHMI_base is the field’s own plant and tillage
+  management; SHMI adds carbon brought in from outside.
+- **SHMI = SHMI_base**: no organic amendments in the window.
+- Amendments and SHMI_base do not trade off one-for-one: a well-managed
+  field gains less from manure than a poorly managed one.
 
 ------------------------------------------------------------------------
 
@@ -89,7 +91,7 @@ returns one row per management unit:
 | …         | 0–1     | 0–1      | 0–1   | years   |
 
 [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
-returns `SHMI`, `Amend_bonus` and `SHMI_plus`, with `p_amend` and
+returns `SHMI_base`, `Amend_bonus` and `SHMI`, with `p_amend` and
 `p_animal`.
 [`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)
 still gives the SHMI 1.0 score, $`100\,p_{any}`$, for code written

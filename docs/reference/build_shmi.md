@@ -1,9 +1,9 @@
-# Compute SHMI and SHMI+ scores
+# Compute SHMI scores
 
 Computes two scores for each management unit (`MGT_combo`) from prepared
-inputs and monthly climate normals: \$\$SHMI = 0.687\\Cover +
-0.150\\Diversity + 0.163\\InvDist\$\$ \$\$SHMI+ = SHMI +
-0.60\\p\_{amend}\\(100 - SHMI)\$\$
+inputs and monthly climate normals: \$\$SHMI\_{base} = 0.687\\Cover +
+0.150\\Diversity + 0.163\\InvDist\$\$ \$\$SHMI = SHMI\_{base} +
+0.60\\p\_{amend}\\(100 - SHMI\_{base})\$\$
 
 ## Usage
 
@@ -64,7 +64,7 @@ build_shmi(
 ## Value
 
 A list with `indicator_df` (one row per unit: `MGT_combo`, any
-management metadata, `SHMI`, `SHMI_plus`, `Amend_bonus`, `Cover`,
+management metadata, `SHMI`, `SHMI_base`, `Amend_bonus`, `Cover`,
 `Diversity`, `InvDist`, then `Cover_growing`, `Cover_nongrowing`,
 `Diversity_plants` (before the grazing credit), `Richness`, `p_amend`,
 `p_animal`, `TI_tillage` and `tillage_designation`), `weights`,
@@ -88,11 +88,12 @@ kept for code written against SHMI \< 1.0).
   from implement mixing efficiencies and depths, or from STIR
   ([`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md)).
 
-- **SHMI+** adds the amendment bonus, `Amend_bonus`: organic amendments
-  in a share \\p\_{amend}\\ of years close \\0.60\\p\_{amend}\\ of the
-  gap between SHMI and 100. SHMI describes the field's own plant and
-  tillage management; SHMI+ adds carbon brought in from outside. A unit
-  without amendments has SHMI+ = SHMI.
+- **SHMI** adds the amendment bonus, `Amend_bonus`, to `SHMI_base`:
+  organic amendments in a share \\p\_{amend}\\ of years close
+  \\0.60\\p\_{amend}\\ of the gap between SHMI_base and 100. SHMI_base
+  describes the field's own plant and tillage management; SHMI adds
+  carbon brought in from outside. SHMI is the calibrated score; a unit
+  without amendments has SHMI = SHMI_base.
 
 Every sub-index and both scores run from 0 to 100. A missing record
 means the practice did not happen.

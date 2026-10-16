@@ -1,4 +1,4 @@
-# SHMI and SHMI+: sub-indices and build_shmi()
+# SHMI_base and SHMI: sub-indices and build_shmi()
 
 rb1 <- data.frame(MGT_combo = "u1", rot_start = as.Date("2020-01-01"), rot_end = as.Date("2021-12-31"),
                   rot_start_yr = 2020L, rot_end_yr = 2021L)
@@ -65,7 +65,7 @@ test_that("grazing credit and amendment bonus close a share of the gap to 100", 
   expect_equal(SHMI:::.grazing_credit(d0, 0.5), 25)
   expect_equal(SHMI:::.grazing_credit(40, 0), 40)                  # no animals, no credit
   expect_equal(SHMI:::.grazing_credit(40, 1, graze_gap = 0), 40)
-  # SHMI 40 with manure every year: 0.6 x 60 = 36, SHMI+ 76; at 80 the bonus is 12
+  # SHMI_base 40 with manure every year: 0.6 x 60 = 36, SHMI 76; at 80 the bonus is 12
   expect_equal(SHMI:::.amend_bonus(40, 1), 36)
   expect_equal(SHMI:::.amend_bonus(80, 1), 12)
   expect_equal(SHMI:::.amend_bonus(60, 0.5), 12)
@@ -164,7 +164,7 @@ test_that("STIR is summed within a window and divided by max_stir (135)", {
   expect_equal(compute_disturbance(old, rb20, dist_meth = "STIR")$TI, (39 + 28.5) / 135)
 })
 
-test_that("build_shmi gives SHMI from the official weights and SHMI+ from the amendment bonus", {
+test_that("build_shmi gives SHMI_base from the official weights and SHMI from the amendment bonus", {
   inp <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
   cl  <- climate_for(inp$mgt$MGT_combo)
   res <- suppressMessages(build_shmi(inp, cl))          # EPA, the default
@@ -176,14 +176,15 @@ test_that("build_shmi gives SHMI from the official weights and SHMI+ from the am
   expect_equal(res$parameters, shmi_parameters())
   expect_equal(nrow(d), nrow(inp$mgt))
   expect_false("OrgInput" %in% names(d))
-  expect_equal(d$SHMI, w[["Cover"]] * d$Cover + w[["Diversity"]] * d$Diversity + w[["InvDist"]] * d$InvDist)
+  expect_equal(d$SHMI_base, w[["Cover"]] * d$Cover + w[["Diversity"]] * d$Diversity + w[["InvDist"]] * d$InvDist)
   expect_equal(d$Diversity, d$Diversity_plants + 0.25 * d$p_animal * (100 - d$Diversity_plants))
-  expect_equal(d$Amend_bonus, 0.6 * d$p_amend * (100 - d$SHMI))
-  expect_equal(d$SHMI_plus, d$SHMI + d$Amend_bonus)
-  expect_true(all(d$SHMI_plus >= d$SHMI))
+  expect_equal(d$Amend_bonus, 0.6 * d$p_amend * (100 - d$SHMI_base))
+  expect_equal(d$SHMI, d$SHMI_base + d$Amend_bonus)
+  expect_true(all(d$SHMI >= d$SHMI_base))
+  expect_false("SHMI_plus" %in% names(d))
   expect_true(all(d$Diversity >= d$Diversity_plants))
   expect_true(all(d$tillage_designation %in% c("NT", "RT", "CT")))
-  for (k in c("SHMI", "SHMI_plus", "Cover", "Diversity", "Diversity_plants", "InvDist")) {
+  for (k in c("SHMI", "SHMI_base", "Cover", "Diversity", "Diversity_plants", "InvDist")) {
     expect_true(all(d[[k]] >= 0 & d[[k]] <= 100), info = k)
   }
   for (k in c("p_amend", "p_animal")) expect_true(all(d[[k]] >= 0 & d[[k]] <= 1), info = k)
@@ -198,7 +199,7 @@ test_that("build_shmi gives SHMI from the official weights and SHMI+ from the am
   # custom constants: no amendment bonus, no grazing credit
   c0 <- suppressMessages(build_shmi(inp, cl, amend_gap = 0, graze_gap = 0))
   expect_false(c0$official)
-  expect_equal(c0$indicator_df$SHMI_plus, c0$indicator_df$SHMI)
+  expect_equal(c0$indicator_df$SHMI, c0$indicator_df$SHMI_base)
   expect_equal(c0$indicator_df$Diversity, c0$indicator_df$Diversity_plants)
   expect_error(suppressMessages(build_shmi(inp, cl, amend_gap = 1.5)), "between 0 and 1")
 })

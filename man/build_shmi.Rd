@@ -2,7 +2,7 @@
 % Please edit documentation in R/build_shmi.R
 \name{build_shmi}
 \alias{build_shmi}
-\title{Compute SHMI and SHMI+ scores}
+\title{Compute SHMI scores}
 \usage{
 build_shmi(
   shmi_inputs,
@@ -43,7 +43,7 @@ Scores computed with any custom weight or constant are flagged
 }
 \value{
 A list with \code{indicator_df} (one row per unit: \code{MGT_combo}, any
-management metadata, \code{SHMI}, \code{SHMI_plus}, \code{Amend_bonus}, \code{Cover},
+management metadata, \code{SHMI}, \code{SHMI_base}, \code{Amend_bonus}, \code{Cover},
 \code{Diversity}, \code{InvDist}, then \code{Cover_growing}, \code{Cover_nongrowing},
 \code{Diversity_plants} (before the grazing credit), \code{Richness}, \code{p_amend},
 \code{p_animal}, \code{TI_tillage} and \code{tillage_designation}), \code{weights},
@@ -55,8 +55,8 @@ kept for code written against SHMI < 1.0).
 \description{
 Computes two scores for each management unit (\code{MGT_combo}) from prepared
 inputs and monthly climate normals:
-\deqn{SHMI = 0.687\,Cover + 0.150\,Diversity + 0.163\,InvDist}
-\deqn{SHMI+ = SHMI + 0.60\,p_{amend}\,(100 - SHMI)}
+\deqn{SHMI_{base} = 0.687\,Cover + 0.150\,Diversity + 0.163\,InvDist}
+\deqn{SHMI = SHMI_{base} + 0.60\,p_{amend}\,(100 - SHMI_{base})}
 }
 \details{
 \itemize{
@@ -68,11 +68,12 @@ non-growing seasons, set by each unit's climate (\code{\link[=compute_cover]{com
 \item \strong{InvDist}: inverse tillage disturbance, computed as in USDA's T-DISC
 from implement mixing efficiencies and depths, or from STIR
 (\code{\link[=compute_disturbance]{compute_disturbance()}}).
-\item \strong{SHMI+} adds the amendment bonus, \code{Amend_bonus}: organic amendments in
-a share \eqn{p_{amend}} of years close \eqn{0.60\,p_{amend}} of the gap
-between SHMI and 100. SHMI describes the field's own plant and tillage
-management; SHMI+ adds carbon brought in from outside. A unit without
-amendments has SHMI+ = SHMI.
+\item \strong{SHMI} adds the amendment bonus, \code{Amend_bonus}, to \code{SHMI_base}:
+organic amendments in a share \eqn{p_{amend}} of years close
+\eqn{0.60\,p_{amend}} of the gap between SHMI_base and 100. SHMI_base
+describes the field's own plant and tillage management; SHMI adds carbon
+brought in from outside. SHMI is the calibrated score; a unit without
+amendments has SHMI = SHMI_base.
 }
 
 Every sub-index and both scores run from 0 to 100. A missing record means

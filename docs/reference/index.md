@@ -7,7 +7,7 @@
 - [`get_shmi_climate()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_climate.md)
   : Monthly climate normals for SHMI's Cover seasons
 - [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
-  : Compute SHMI and SHMI+ scores
+  : Compute SHMI scores
 - [`shmi_weights()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_weights.md)
   : Official SHMI weights
 - [`shmi_parameters()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_parameters.md)
@@ -44,8 +44,7 @@ Cover.
 
 All sub-indices at once, the monthly components of Cover, and the shares
 of years with organic amendments and grazing animals (which set the
-grazing credit and the SHMI+ amendment bonus), for calibration or
-inspection.
+grazing credit and the amendment bonus), for calibration or inspection.
 
 - [`shmi_components()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_components.md)
   : The SHMI sub-indices for each management unit
@@ -82,7 +81,6 @@ Kept so code written for SHMI 1.0 still runs.
 ## Plotting Functions
 
 - [`plot_shmi_gauge()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_gauge.md)
-  : Plot gauges of SHMI, SHMI+ and the sub-indices for one management
-  unit
+  : Plot gauges of SHMI and its sub-indices for one management unit
 - [`plot_shmi_lollipop()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_lollipop.md)
-  : Plot SHMI and SHMI+ across management units
+  : Plot SHMI across management units

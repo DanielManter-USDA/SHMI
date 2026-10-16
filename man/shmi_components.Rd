@@ -48,7 +48,7 @@ amendments or animals shares of 0.
 \description{
 Computes Cover, Diversity and InvDist (all 0-100), and the shares of years
 with organic amendments and with grazing animals, from prepared inputs.
-\code{\link[=build_shmi]{build_shmi()}} combines them into SHMI and SHMI+; calling this function
+\code{\link[=build_shmi]{build_shmi()}} combines them into SHMI_base and SHMI; calling this function
 directly is useful for calibration or for inspecting the parts of Cover
 and Diversity.
 }

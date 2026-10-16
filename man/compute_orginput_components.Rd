@@ -22,6 +22,6 @@ years with an organic amendment or animals, or both) and \code{n_years}.
 }
 \description{
 The shares of years that drive SHMI's two organic-input terms: \code{p_animal}
-raises Diversity (grazing credit) and \code{p_amend} raises SHMI to SHMI+
+raises Diversity (grazing credit) and \code{p_amend} raises SHMI_base to SHMI
 (amendment bonus); see \code{\link[=build_shmi]{build_shmi()}}.
 }

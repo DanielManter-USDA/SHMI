@@ -2,7 +2,7 @@
 
 Computes the Soil Health Management Index (SHMI) from management records
 entered in a standard Excel workbook. It reports two 0-100 scores.
-**SHMI** is a weighted sum of three sub-indices, each also 0-100:
+**SHMI_base** is a weighted sum of three sub-indices, each also 0-100:
 
 ## Details
 
@@ -16,9 +16,10 @@ entered in a standard Excel workbook. It reports two 0-100 scores.
   computed as in USDA's Tillage Disturbance Index for Soil Carbon
   (T-DISC).
 
-**SHMI+** adds organic amendments: amendments in a share \\p\\ of years
-close \\0.60\\p\\ of the gap between SHMI and 100. A unit without
-amendments has SHMI+ = SHMI, and no score exceeds 100.
+**SHMI**, the calibrated score, adds organic amendments: amendments in a
+share \\p\\ of years close \\0.60\\p\\ of the gap between SHMI_base and
+100. A unit without amendments has SHMI = SHMI_base, and no score
+exceeds 100.
 
 The weights were calibrated against measured soil health on 354 US plots
 at 74 sites of the North American Project to Evaluate Soil Health
@@ -45,7 +46,7 @@ and
     growing season.
 
 4.  [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
-    computes the sub-indices, SHMI and SHMI+.
+    computes the sub-indices, SHMI_base and SHMI.
 
 5.  [`plot_shmi_gauge()`](https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_gauge.md)
     and

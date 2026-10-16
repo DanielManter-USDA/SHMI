@@ -22,9 +22,9 @@ SHMI’s purpose is to provide:
 
 ------------------------------------------------------------------------
 
-## 2. Two scores, three sub-indices
+## 2. Three sub-indices and two scores
 
-**SHMI** combines three widely recognized levers for improving soil
+**SHMI_base** combines three widely recognized levers for improving soil
 function, each scored 0-100:
 
 | Sub-index | What it measures | Weight |
@@ -39,18 +39,19 @@ feeds a wider range of organisms. Grazing animals count as part of the
 living system: they close up to a quarter of the gap between plant
 Diversity and 100.
 
-**SHMI+** adds organic amendments (manure, compost), carbon brought in
-from outside the field. An amendment in a share $`p`$ of years closes
-$`0.60\,p`$ of the gap between SHMI and 100:
+**SHMI**, the calibrated score, adds organic amendments (manure,
+compost), carbon brought in from outside the field, to SHMI_base. An
+amendment in a share $`p`$ of years closes $`0.60\,p`$ of the gap
+between SHMI_base and 100:
 
 ``` math
 
-\text{SHMI+} = \text{SHMI} + 0.60\,p_{amend}\,(100 - \text{SHMI})
+\text{SHMI} = \text{SHMI}_{\text{base}} + 0.60\,p_{amend}\,(100 - \text{SHMI}_{\text{base}})
 ```
 
 Amendments are a bonus rather than a weighted sub-index: a field without
-them is not marked down for it (SHMI+ = SHMI), no score can exceed 100,
-and the bonus is largest where management alone scores lowest.
+them is not marked down for it (SHMI = SHMI_base), no score can exceed
+100, and the bonus is largest where management alone scores lowest.
 
 ------------------------------------------------------------------------
 
@@ -69,7 +70,7 @@ Health Measurements (NAPESHM):
     feeding one overall score.
 2.  **The weights.** The sub-index weights were fitted to that score by
     non-negative least squares with the amendment bonus in place, so
-    SHMI+ is the calibrated score, with each site weighted equally.
+    SHMI is the calibrated score, with each site weighted equally.
     Fitting was repeated 1,000 times on different subsets of sites
     (10-fold cross-validation, repeated 100 times), and each final
     weight is the median. Cover and Diversity share much of their
@@ -89,13 +90,14 @@ Health Measurements (NAPESHM):
 
 ## 4. How well it works
 
-- **Fit to the US data.** SHMI+ correlates with measured soil health at
-  r = 0.55 across all plots, SHMI at r = 0.52.
+- **Fit to the US data.** SHMI correlates with measured soil health at r
+  = 0.55 across all plots, SHMI_base at r = 0.52.
 - **Sites it has not seen.** Predicting each site with weights fitted
-  without it, SHMI+ explains about a quarter of the differences in soil
+  without it, SHMI explains about a quarter of the differences in soil
   health (R² = 0.26), and ranks practices in the right order at **82% of
-  sites**; SHMI alone explains 0.23 and ranks 76% of sites correctly. A
-  single prediction is typically within about 13 soil-health points.
+  sites**; SHMI_base alone explains 0.23 and ranks 76% of sites
+  correctly. A single prediction is typically within about 13
+  soil-health points.
 - **Another region.** At 16 Mexican sites, never used in calibration,
   SHMI transferred poorly: predictions ran about 20 points low and
   ranking within sites was not clearly better than chance. SHMI as
@@ -121,7 +123,7 @@ shared.
 SHMI is:
 
 - built from three practice-based sub-indices that any management record
-  can provide, with organic amendments reported as a bonus (SHMI+);
+  can provide (SHMI_base), plus a bonus for organic amendments (SHMI);
 - weighted by calibration against measured soil health on US research
   sites;
 - most reliable for comparing practices at the same site;

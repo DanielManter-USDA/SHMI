@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>SHMI and SHMI+ • SHMI</title>
+<title>SHMI and SHMI_base • SHMI</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -15,7 +15,7 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="SHMI and SHMI+">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="SHMI and SHMI_base">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -43,8 +43,8 @@
     <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
     <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
     <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (SHMI+)</a></li>
-    <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI+</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (amendment bonus)</a></li>
+    <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI_base</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -80,7 +80,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>SHMI and SHMI+</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>SHMI and SHMI_base</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/DanielManter-USDA/SHMI/blob/HEAD/vignettes/articles/SHMI.Rmd" class="external-link"><code>vignettes/articles/SHMI.Rmd</code></a></small>
@@ -96,10 +96,11 @@ Amendment Bonus</p>
 <strong>Overview</strong><a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
 <p>The Soil Health Management Index reports two 0–100 scores.
-<strong>SHMI</strong> combines <strong>Cover</strong>,
-<strong>Diversity</strong> and <strong>Inverse Disturbance</strong>,
-with weights calibrated against measured soil health.
-<strong>SHMI+</strong> adds a bonus for organic amendments.</p>
+<strong>SHMI_base</strong> combines <strong>Cover</strong>,
+<strong>Diversity</strong> and <strong>Inverse Disturbance</strong>.
+<strong>SHMI</strong> adds a bonus for organic amendments to SHMI_base;
+it is the calibrated score, with weights fitted against measured soil
+health.</p>
 <hr>
 </div>
 <div class="section level2">
@@ -108,11 +109,11 @@ with weights calibrated against measured soil health.
 </h2>
 <p>For management unit
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">SHMI</mtext><mi>i</mi></msub><mo>=</mo><mn>0.687</mn><mspace width="0.167em"></mspace><msub><mtext mathvariant="normal">Cover</mtext><mi>i</mi></msub><mo>+</mo><mn>0.150</mn><mspace width="0.167em"></mspace><msub><mtext mathvariant="normal">Diversity</mtext><mi>i</mi></msub><mo>+</mo><mn>0.163</mn><mspace width="0.167em"></mspace><msub><mtext mathvariant="normal">InvDist</mtext><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">
-\text{SHMI}_i = 0.687\,\text{Cover}_i + 0.150\,\text{Diversity}_i + 0.163\,\text{InvDist}_i
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">SHMI</mtext><mrow><mtext mathvariant="normal">base</mtext><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><mn>0.687</mn><mspace width="0.167em"></mspace><msub><mtext mathvariant="normal">Cover</mtext><mi>i</mi></msub><mo>+</mo><mn>0.150</mn><mspace width="0.167em"></mspace><msub><mtext mathvariant="normal">Diversity</mtext><mi>i</mi></msub><mo>+</mo><mn>0.163</mn><mspace width="0.167em"></mspace><msub><mtext mathvariant="normal">InvDist</mtext><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">
+\text{SHMI}_{\text{base},i} = 0.687\,\text{Cover}_i + 0.150\,\text{Diversity}_i + 0.163\,\text{InvDist}_i
 </annotation></semantics></math></p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">SHMI+</mtext><mi>i</mi></msub><mo>=</mo><msub><mtext mathvariant="normal">SHMI</mtext><mi>i</mi></msub><mo>+</mo><mn>0.60</mn><mspace width="0.167em"></mspace><msub><mi>p</mi><mrow><mi>a</mi><mi>m</mi><mi>e</mi><mi>n</mi><mi>d</mi><mo>,</mo><mi>i</mi></mrow></msub><mspace width="0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mn>100</mn><mo>−</mo><msub><mtext mathvariant="normal">SHMI</mtext><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
-\text{SHMI+}_i = \text{SHMI}_i + 0.60\,p_{amend,i}\,(100 - \text{SHMI}_i)
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">SHMI</mtext><mi>i</mi></msub><mo>=</mo><msub><mtext mathvariant="normal">SHMI</mtext><mrow><mtext mathvariant="normal">base</mtext><mo>,</mo><mi>i</mi></mrow></msub><mo>+</mo><mn>0.60</mn><mspace width="0.167em"></mspace><msub><mi>p</mi><mrow><mi>a</mi><mi>m</mi><mi>e</mi><mi>n</mi><mi>d</mi><mo>,</mo><mi>i</mi></mrow></msub><mspace width="0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mn>100</mn><mo>−</mo><msub><mtext mathvariant="normal">SHMI</mtext><mrow><mtext mathvariant="normal">base</mtext><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\text{SHMI}_i = \text{SHMI}_{\text{base},i} + 0.60\,p_{amend,i}\,(100 - \text{SHMI}_{\text{base},i})
 </annotation></semantics></math></p>
 <p>where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mrow><mi>a</mi><mi>m</mi><mi>e</mi><mi>n</mi><mi>d</mi><mo>,</mo><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">p_{amend,i}</annotation></semantics></math>
@@ -150,7 +151,7 @@ is the share of years with an organic amendment.</p>
 <td>chosen; fit flat 0.25 – 0.5</td>
 </tr>
 <tr class="even">
-<td>Amendment share (SHMI+)</td>
+<td>Amendment share (SHMI)</td>
 <td>0.60</td>
 <td>chosen; fit flat 0.5 – 0.8</td>
 </tr>
@@ -158,7 +159,7 @@ is the share of years with an organic amendment.</p>
 </table>
 <p>The weights sum to 1 and both gap terms close part of the distance to
 100, so
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>≤</mo><msub><mtext mathvariant="normal">SHMI</mtext><mi>i</mi></msub><mo>≤</mo><msub><mtext mathvariant="normal">SHMI+</mtext><mi>i</mi></msub><mo>≤</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">0 \le \text{SHMI}_i \le \text{SHMI+}_i \le 100</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>≤</mo><msub><mtext mathvariant="normal">SHMI</mtext><mrow><mtext mathvariant="normal">base</mtext><mo>,</mo><mi>i</mi></mrow></msub><mo>≤</mo><msub><mtext mathvariant="normal">SHMI</mtext><mi>i</mi></msub><mo>≤</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">0 \le \text{SHMI}_{\text{base},i} \le \text{SHMI}_i \le 100</annotation></semantics></math>.
 <code><a href="../reference/shmi_weights.html">shmi_weights()</a></code> returns the weights and
 <code><a href="../reference/shmi_parameters.html">shmi_parameters()</a></code> every constant.</p>
 <hr>
@@ -184,8 +185,8 @@ monthly climate for Cover, and the shares of years with amendments and
 with animals; grazing raises Diversity. Missing records mean the
 practice did not happen.</li>
 <li>
-<strong>Combination.</strong> SHMI is the weighted sum; SHMI+ adds
-the amendment bonus.</li>
+<strong>Combination.</strong> SHMI_base is the weighted sum; SHMI
+adds the amendment bonus.</li>
 </ol>
 <hr>
 </div>
@@ -221,17 +222,17 @@ result <code>official = FALSE</code>.</p>
 <tr class="odd">
 <td>SHMI</td>
 <td>0–100</td>
-<td>weighted sum of the three sub-indices</td>
+<td>SHMI_base plus the amendment bonus (the calibrated score)</td>
 </tr>
 <tr class="even">
-<td>SHMI_plus</td>
+<td>SHMI_base</td>
 <td>0–100</td>
-<td>SHMI plus the amendment bonus</td>
+<td>weighted sum of the three sub-indices</td>
 </tr>
 <tr class="odd">
 <td>Amend_bonus</td>
 <td>0–60</td>
-<td>SHMI_plus − SHMI</td>
+<td>SHMI − SHMI_base</td>
 </tr>
 <tr class="even">
 <td>Cover, Diversity, InvDist</td>
@@ -279,17 +280,17 @@ and <code>timestamp</code>.</p>
 <li>
 <strong>Higher scores</strong> mean management more supportive of
 soil health: more of the year under living cover, more plant species and
-grazing, less tillage and, for SHMI+, more frequent organic
+grazing, less tillage and, for SHMI, more frequent organic
 amendments.</li>
 <li>
-<strong>Two scores.</strong> SHMI describes the field’s own
-management; SHMI+ adds carbon brought in from outside. They are equal
-for a unit without amendments.</li>
+<strong>Two scores.</strong> SHMI_base describes the field’s own
+management; SHMI adds carbon brought in from outside. They are equal for
+a unit without amendments.</li>
 <li>
 <strong>Precision.</strong> For US sites not used in calibration,
-SHMI+ explained about a quarter of the differences in measured soil
+SHMI explained about a quarter of the differences in measured soil
 health (R² = 0.26) and ranked practices in the right order at 82% of
-sites (SHMI: 0.23 and 76%); a single prediction is typically within
+sites (SHMI_base: 0.23 and 76%); a single prediction is typically within
 about 13 soil-health points. Both are most informative for comparing
 practices at the same site.</li>
 <li>

@@ -2,27 +2,26 @@
 % Please edit documentation in R/plot_shmi_lollipop.R
 \name{plot_shmi_lollipop}
 \alias{plot_shmi_lollipop}
-\title{Plot SHMI and SHMI+ across management units}
+\title{Plot SHMI across management units}
 \usage{
 plot_shmi_lollipop(shmi)
 }
 \arguments{
 \item{shmi}{A data frame with \code{MGT_combo} and \code{SHMI}, and optionally
-\code{SHMI_plus}, such as \code{build_shmi()$indicator_df}.}
+\code{SHMI_base}, such as \code{build_shmi()$indicator_df}.}
 }
 \value{
 A ggplot object.
 }
 \description{
-Horizontal lollipop chart, one line per management unit. Each line runs
-from 0 to the unit's SHMI (blue point); when the data have \code{SHMI_plus},
-the line continues to SHMI+ (orange point), so its last stretch is the
-organic amendment bonus. Units are sorted by SHMI+ when present, otherwise
-by SHMI.
+Horizontal lollipop chart, one line per management unit, sorted by SHMI.
+When the data have \code{SHMI_base}, each line runs from 0 to SHMI_base (blue
+point) and on to SHMI (orange point), so its last stretch is the organic
+amendment bonus; units without amendments end at SHMI_base = SHMI.
 }
 \examples{
 scores <- data.frame(MGT_combo = c("field_1", "field_2", "field_3"),
-                     SHMI = c(62.3, 48.1, 75.6), SHMI_plus = c(62.3, 63.7, 80.5))
+                     SHMI = c(62.3, 63.7, 80.5), SHMI_base = c(62.3, 48.1, 75.6))
 plot_shmi_lollipop(scores)
 
 }

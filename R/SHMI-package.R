@@ -2,7 +2,7 @@
 #'
 #' Computes the Soil Health Management Index (SHMI) from management records
 #' entered in a standard Excel workbook. It reports two 0-100 scores.
-#' **SHMI** is a weighted sum of three sub-indices, each also 0-100:
+#' **SHMI_base** is a weighted sum of three sub-indices, each also 0-100:
 #'
 #' * **Cover** (weight 0.687): share of days with living plants in the
 #'   growing and non-growing seasons, set by each unit's climate.
@@ -11,9 +11,10 @@
 #' * **Inverse disturbance** (0.163): how little the soil was tilled,
 #'   computed as in USDA's Tillage Disturbance Index for Soil Carbon (T-DISC).
 #'
-#' **SHMI+** adds organic amendments: amendments in a share \eqn{p} of years
-#' close \eqn{0.60\,p} of the gap between SHMI and 100. A unit without
-#' amendments has SHMI+ = SHMI, and no score exceeds 100.
+#' **SHMI**, the calibrated score, adds organic amendments: amendments in a
+#' share \eqn{p} of years close \eqn{0.60\,p} of the gap between SHMI_base
+#' and 100. A unit without amendments has SHMI = SHMI_base, and no score
+#' exceeds 100.
 #'
 #' The weights were calibrated against measured soil health on 354 US plots
 #' at 74 sites of the North American Project to Evaluate Soil Health
@@ -27,7 +28,7 @@
 #'    records into species episodes, and records every assumption it makes.
 #' 3. [get_shmi_climate()] provides monthly climate normals for each unit,
 #'    which set Cover's growing season.
-#' 4. [build_shmi()] computes the sub-indices, SHMI and SHMI+.
+#' 4. [build_shmi()] computes the sub-indices, SHMI_base and SHMI.
 #' 5. [plot_shmi_gauge()] and [plot_shmi_lollipop()] display the results.
 #'
 #' The sub-indices can also be computed directly with [compute_cover()],

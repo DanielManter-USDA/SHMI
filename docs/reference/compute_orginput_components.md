@@ -1,8 +1,8 @@
 # Years with organic amendments and animals
 
 The shares of years that drive SHMI's two organic-input terms:
-`p_animal` raises Diversity (grazing credit) and `p_amend` raises SHMI
-to SHMI+ (amendment bonus); see
+`p_animal` raises Diversity (grazing credit) and `p_amend` raises
+SHMI_base to SHMI (amendment bonus); see
 [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md).
 
 ## Usage

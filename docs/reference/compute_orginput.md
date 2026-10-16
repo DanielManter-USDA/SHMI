@@ -2,8 +2,8 @@
 
 Share of years with an organic amendment or grazing animals, scaled
 0-100. This was SHMI 1.0's fourth sub-index. It is no longer part of
-SHMI: grazing now raises Diversity and organic amendments raise SHMI to
-SHMI+ (see
+SHMI: grazing now raises Diversity and organic amendments raise
+SHMI_base to SHMI (see
 [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
 and
 [`compute_orginput_components()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput_components.md)).

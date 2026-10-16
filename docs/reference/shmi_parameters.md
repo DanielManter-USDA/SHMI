@@ -25,9 +25,10 @@ A list with `weights`, `growing_share`, `graze_gap` and `amend_gap`.
   years gives \\Diversity = D\_{plants} + 0.25\\p\_{animal}(100 -
   D\_{plants})\\.
 
-- `amend_gap`: share of the gap to 100 in SHMI closed by an organic
+- `amend_gap`: share of the gap to 100 in SHMI_base closed by an organic
   amendment in every year (0.60). Amendments in a share \\p\_{amend}\\
-  of years give \\SHMI+ = SHMI + 0.60\\p\_{amend}(100 - SHMI)\\.
+  of years give \\SHMI = SHMI\_{base} + 0.60\\p\_{amend}(100 -
+  SHMI\_{base})\\.
 
 Both gap terms close part of the distance to 100, so no score exceeds
 100, and a low score gains more than a high one.

@@ -2,7 +2,7 @@
 #'
 #' Computes Cover, Diversity and InvDist (all 0-100), and the shares of years
 #' with organic amendments and with grazing animals, from prepared inputs.
-#' [build_shmi()] combines them into SHMI and SHMI+; calling this function
+#' [build_shmi()] combines them into SHMI_base and SHMI; calling this function
 #' directly is useful for calibration or for inspecting the parts of Cover
 #' and Diversity.
 #'
@@ -110,7 +110,7 @@ clip_crop_to_rotation <- function(crop, rot_bounds) {
 #' Years with organic amendments and animals
 #'
 #' The shares of years that drive SHMI's two organic-input terms: `p_animal`
-#' raises Diversity (grazing credit) and `p_amend` raises SHMI to SHMI+
+#' raises Diversity (grazing credit) and `p_amend` raises SHMI_base to SHMI
 #' (amendment bonus); see [build_shmi()].
 #'
 #' @param rot_bounds Rotation bounds with `MGT_combo`, `rot_start_yr`,

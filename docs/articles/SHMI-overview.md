@@ -3,8 +3,9 @@
 ## Introduction
 
 The Soil Health Management Index (SHMI) turns a record of field
-management into 0-100 scores. **SHMI** combines three sub-indices, each
-also scored 0-100, with weights calibrated against measured soil health:
+management into 0-100 scores. **SHMI_base** combines three sub-indices,
+each also scored 0-100, with weights calibrated against measured soil
+health:
 
 - **Cover** (weight 0.687): the share of days with living plants in the
   growing and non-growing seasons, set by the site’s climate.
@@ -14,13 +15,15 @@ also scored 0-100, with weights calibrated against measured soil health:
 - **Inverse disturbance (InvDist)** (0.163): how little the soil was
   tilled; 100 means no tillage.
 
-**SHMI+** adds organic amendments (manure, compost), carbon brought in
-from outside the field. An amendment every year closes 60% of the gap
-between SHMI and 100; in half the years, 30%:
+**SHMI**, the calibrated score, adds organic amendments (manure,
+compost), carbon brought in from outside the field, to SHMI_base. An
+amendment every year closes 60% of the gap between SHMI_base and 100; in
+half the years, 30%:
 
-SHMI+ = SHMI + 0.60 × p_amend × (100 − SHMI)
+SHMI = SHMI_base + 0.60 × p_amend × (100 − SHMI_base)
 
-A unit without amendments has SHMI+ = SHMI, and no score can exceed 100.
+A unit without amendments has SHMI = SHMI_base, and no score can exceed
+100.
 
 This vignette walks through the standard workflow: fill in the Excel
 workbook, prepare the inputs, add climate, compute SHMI, and review the
@@ -293,7 +296,7 @@ result$indicator_df
 #> #   TI_tillage <dbl>, tillage_designation <chr>
 ```
 
-`indicator_df` has one row per management unit, with `SHMI`, `SHMI_plus`
+`indicator_df` has one row per management unit, with `SHMI_base`, `SHMI`
 and the amendment bonus between them (`Amend_bonus`); the sub-indices
 `Cover`, `Diversity` and `InvDist`; the two parts of Cover
 (`Cover_growing`, `Cover_nongrowing`); Diversity before the grazing
@@ -342,8 +345,8 @@ SHMI treats a missing record as a practice that did not happen:
   site scores Cover = 0 and Diversity = 0. A unit with management
   records but no crop records is flagged (`no_crop_records`), so a
   forgotten crop sheet is not mistaken for a fallow.
-- **No amendment or animal records** means no amendment bonus (SHMI+ =
-  SHMI) and no grazing credit in Diversity.
+- **No amendment or animal records** means no amendment bonus (SHMI =
+  SHMI_base) and no grazing credit in Diversity.
 
 Record every tillage pass, planting, harvest, and amendment for the
 period being evaluated, so that gaps in the records are not mistaken for
@@ -512,13 +515,13 @@ compute_orginput_components(rot_bounds, amend, animal)
 #> 1 field_1       0.5        0   0.5       2
 ```
 
-With manure in half the years, a unit with SHMI 50 gains 0.60 × 0.5 ×
-(100 − 50) = 15 points, for SHMI+ 65. Grazing every year would raise
+With manure in half the years, a unit with SHMI_base 50 gains 0.60 × 0.5
+× (100 − 50) = 15 points, for SHMI 65. Grazing every year would raise
 Diversity from 29 to 29 + 0.25 × (100 − 29) = 46.
 
 ## 8. Plotting results
 
-One unit, with a gauge for each sub-index, SHMI and SHMI+:
+One unit, with a gauge for each sub-index, SHMI_base and SHMI:
 
 ``` r
 plot_shmi_gauge(result$indicator_df, row = 1)
@@ -526,7 +529,7 @@ plot_shmi_gauge(result$indicator_df, row = 1)
 
 ![](SHMI-overview_files/figure-html/plot-gauge-1.png)
 
-Many units, sorted: each line runs to SHMI (blue) and on to SHMI+
+Many units, sorted: each line runs to SHMI_base (blue) and on to SHMI
 (orange) when the unit received amendments:
 
 ``` r
@@ -541,18 +544,18 @@ Select a unit by name with `MGT_combo = "..."` instead of `row`.
 
 Higher scores indicate management that is more supportive of soil
 health: more of the year under living cover, more plant species (and
-grazing), less tillage and, for SHMI+, more frequent organic amendments.
+grazing), less tillage and, for SHMI, more frequent organic amendments.
 
-Report both scores. SHMI describes the field’s own plant and tillage
-management; SHMI+ adds carbon brought in from outside, which matters for
-soil health but depends on access to manure or compost. SHMI+ is the
-score calibrated against soil health; the two are equal without
-amendments. The amendment bonus is largest for a low SHMI: amendments
-every year add 36 points at SHMI 40 but 12 at SHMI 80. Looking at the
-sub-indices alongside the scores shows which practices drive them. SHMI
-is most informative for comparing practices at the same site; a single
-score predicted for a new site is typically within about 13 soil-health
-points.
+Report both scores. SHMI_base describes the field’s own plant and
+tillage management; SHMI adds carbon brought in from outside, which
+matters for soil health but depends on access to manure or compost. SHMI
+is the score calibrated against soil health; the two are equal without
+amendments. The amendment bonus is largest for a low SHMI_base:
+amendments every year add 36 points at SHMI_base 40 but 12 at SHMI_base
+80. Looking at the sub-indices alongside the scores shows which
+practices drive them. SHMI is most informative for comparing practices
+at the same site; a single score predicted for a new site is typically
+within about 13 soil-health points.
 
 ## Further reading
 
@@ -563,7 +566,7 @@ points.
   [`?shmi_weights`](https://danielmanter-usda.github.io/SHMI/reference/shmi_weights.md)
   and
   [`?shmi_parameters`](https://danielmanter-usda.github.io/SHMI/reference/shmi_parameters.md):
-  SHMI, SHMI+ and their official weights and constants.
+  SHMI_base, SHMI and their official weights and constants.
 - [`?compute_cover`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.md),
   [`?growing_months`](https://danielmanter-usda.github.io/SHMI/reference/growing_months.md),
   [`?get_shmi_climate`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_climate.md):

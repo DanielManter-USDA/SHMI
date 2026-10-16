@@ -23,8 +23,8 @@
     <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
     <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
     <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (SHMI+)</a></li>
-    <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI+</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (amendment bonus)</a></li>
+    <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI_base</a></li>
   </ul></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-reference" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Reference</button>
@@ -76,9 +76,9 @@
 <li><p><code>graze_gap</code>: share of the gap to 100 in Diversity closed by grazing
 animals in every year (0.25). Grazing in a share \(p_{animal}\) of years
 gives \(Diversity = D_{plants} + 0.25\,p_{animal}(100 - D_{plants})\).</p></li>
-<li><p><code>amend_gap</code>: share of the gap to 100 in SHMI closed by an organic
+<li><p><code>amend_gap</code>: share of the gap to 100 in SHMI_base closed by an organic
 amendment in every year (0.60). Amendments in a share \(p_{amend}\) of
-years give \(SHMI+ = SHMI + 0.60\,p_{amend}(100 - SHMI)\).</p></li>
+years give \(SHMI = SHMI_{base} + 0.60\,p_{amend}(100 - SHMI_{base})\).</p></li>
 </ul><p>Both gap terms close part of the distance to 100, so no score exceeds 100,
 and a low score gains more than a high one.</p>
     </div>

@@ -22,7 +22,7 @@ in \code{rot_bounds}.
 \description{
 Share of years with an organic amendment or grazing animals, scaled 0-100.
 This was SHMI 1.0's fourth sub-index. It is no longer part of SHMI:
-grazing now raises Diversity and organic amendments raise SHMI to SHMI+
+grazing now raises Diversity and organic amendments raise SHMI_base to SHMI
 (see \code{\link[=build_shmi]{build_shmi()}} and \code{\link[=compute_orginput_components]{compute_orginput_components()}}). It is kept so
 code written for SHMI 1.0 still runs.
 }

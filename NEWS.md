@@ -12,9 +12,9 @@ First public release.
 
 SHMI reports two scores from a field's management record, both 0 to 100:
 
-SHMI = 0.687 Cover + 0.150 Diversity + 0.163 InvDist
+SHMI_base = 0.687 Cover + 0.150 Diversity + 0.163 InvDist
 
-SHMI+ = SHMI + 0.60 p_amend (100 − SHMI)
+SHMI = SHMI_base + 0.60 p_amend (100 − SHMI_base)
 
 Each sub-index also runs from 0 to 100.
 
@@ -43,16 +43,20 @@ Each sub-index also runs from 0 to 100.
     its most intense window. Each unit also receives T-DISC's
     designation: no-till, reduced till or conventional till. STIR
     records can be scored on the same intervals and windows.
--   **SHMI+ (amendment bonus)**: organic amendments (`SA_cat` "Organic")
+-   **SHMI (SHMI_base plus the amendment bonus)**: organic amendments (`SA_cat` "Organic")
     in a share p_amend of years close 0.60 p_amend of the gap between
-    SHMI and 100. A unit without amendments has SHMI+ = SHMI; no score
-    can exceed 100, and a low SHMI gains more than a high one
-    (amendments every year add 36 points at SHMI 40, 12 at SHMI 80).
+    SHMI_base and 100. A unit without amendments has SHMI =
+    SHMI_base; no score can exceed 100, and a low SHMI_base gains more than a high one
+    (amendments every year add 36 points at SHMI_base 40, 12 at SHMI_base 80).
+
+Scores are named so the calibrated score carries the plain name:
+`SHMI` includes the amendment bonus, and `SHMI_base` is the score
+without it. (In SHMI 1.0, `SHMI` was the four-sub-index score.)
 
 Organic Inputs is no longer a weighted sub-index. As a weighted
 sub-index it scored 0 for any field without manure or animals, which
 read as a penalty; grazing now raises Diversity, and amendments raise
-SHMI to SHMI+. `compute_orginput()` is kept, superseded, so SHMI 1.0
+SHMI_base to SHMI. `compute_orginput()` is kept, superseded, so SHMI 1.0
 code still runs, and custom `weights` naming `OrgInput` now give an
 error that explains the change.
 
@@ -62,16 +66,16 @@ The weights were calibrated against a soil-health score built from 11
 laboratory indicators, adjusted for climate and soil texture, on 354 US
 plots at 74 sites of the North American Project to Evaluate Soil Health
 Measurements (NAPESHM). They were fitted with the amendment bonus in
-place, so SHMI+ is the calibrated score. Each weight is the median of
+place, so SHMI is the calibrated score. Each weight is the median of
 1,000 cross-validated fits. Cover/Roots and Diversity share much of
 their information, so their combined weight is well determined but its
 split is not; Diversity's weight was fixed at 0.15, within the range
 where cross-validated fit was unchanged, and the other weights were
 fitted under that constraint. The grazing share (0.25) and amendment
 share (0.60) were chosen where held-out fit was flat (0.25-0.5 and
-0.5-0.8). For sites held out of the fitting, SHMI+ explained about a
+0.5-0.8). For sites held out of the fitting, SHMI explained about a
 quarter of the differences in soil health (R² = 0.26) and ranked
-practices in the right order at 82% of sites; SHMI alone explained
+practices in the right order at 82% of sites; SHMI_base alone explained
 0.23 and ranked 76% of sites correctly. SHMI is calibrated for US
 systems; other regions should recalibrate. `shmi_parameters()`
 returns every calibrated constant, and each `build_shmi()` result
@@ -136,8 +140,8 @@ grazing credit or no amendment bonus.
 -   `prepare_shmi_inputs()`: read, validate and prepare a workbook.
 -   `get_shmi_climate()`: WorldClim monthly climate normals at each
     unit's coordinates (needs `geodata` and `terra`).
--   `build_shmi()`: the sub-indices, SHMI and SHMI+ (`SHMI_plus`, with
-    `Amend_bonus` between them), with the official weights and
+-   `build_shmi()`: the sub-indices, `SHMI_base` and `SHMI`, with
+    `Amend_bonus` between them, with the official weights and
     constants (`shmi_weights()`, `shmi_parameters()`) or custom values
     (`weights`, `growing_share`, `graze_gap`, `amend_gap`) for research.
 -   `compute_cover()`, `compute_diversity()`, `compute_disturbance()`,
@@ -148,4 +152,4 @@ grazing credit or no amendment bonus.
     values and operation names used for tillage; a user table
     (`implements =`) can replace or add to them.
 -   `plot_shmi_gauge()` and `plot_shmi_lollipop()`: results for one unit
-    or many, with SHMI+ shown alongside SHMI.
+    or many, with SHMI_base shown alongside SHMI.

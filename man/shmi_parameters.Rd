@@ -20,9 +20,9 @@ Every calibrated constant used by \code{\link[=build_shmi]{build_shmi()}}:
 \item \code{graze_gap}: share of the gap to 100 in Diversity closed by grazing
 animals in every year (0.25). Grazing in a share \eqn{p_{animal}} of years
 gives \eqn{Diversity = D_{plants} + 0.25\,p_{animal}(100 - D_{plants})}.
-\item \code{amend_gap}: share of the gap to 100 in SHMI closed by an organic
+\item \code{amend_gap}: share of the gap to 100 in SHMI_base closed by an organic
 amendment in every year (0.60). Amendments in a share \eqn{p_{amend}} of
-years give \eqn{SHMI+ = SHMI + 0.60\,p_{amend}(100 - SHMI)}.
+years give \eqn{SHMI = SHMI_{base} + 0.60\,p_{amend}(100 - SHMI_{base})}.
 }
 
 Both gap terms close part of the distance to 100, so no score exceeds 100,

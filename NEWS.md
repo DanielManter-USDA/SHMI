@@ -121,7 +121,13 @@ records them.
     previous harvest (the unit's first from the start of its record) to
     its own harvest, and fall manure or fertilizer applied after
     harvest goes to the next crop. Cover crops and fallow do not end a
-    crop's window. `$n_rate` gives one row per unit and harvest
+    crop's window. A perennial stand that ends with a termination date
+    only (plowed down, not harvested) does not take N applied in the 270
+    days before it: manure spread ahead of the plow-down, including fall
+    manure before a spring plow-down, goes to the next
+    crop (reported as `n_plowdown_next_crop`). N rates summarise recorded
+    applications only (total N as entered); legume N and carry-over
+    credits are not estimated. `$n_rate` gives one row per unit and harvest
     (`crop_year`, `harvest_date`, `crop`, `N_kg_ha`); `crop_year` is the
     year of the harvest and matches `$yield$year`. Calendar-year totals
     are in `$n_rate_calendar`, and `$n_applications` lists each

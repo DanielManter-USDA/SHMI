@@ -19,6 +19,15 @@
 #'   \item If no amendment for a crop could be converted, `N_kg_ha` is NA; if
 #'         only some could be converted, the total is a lower bound and
 #'         `n_unconverted` counts the rest.
+#'   \item A perennial stand that ends with a termination date only (no
+#'         harvest date on that row, e.g. alfalfa plowed down) is not an N
+#'         target for amendments applied in the `plowdown_days` before it: N
+#'         spread ahead of the stand being turned under (typically fall manure
+#'         ahead of a spring or early-summer plow-down for corn) goes to the
+#'         next harvested crop. The default, 270 days, reaches back from a
+#'         plow-down in April to July to the previous fall; manure a year or
+#'         more before the plow-down (topdressed on the stand) still goes to the
+#'         stand. Each such reassignment is reported (`n_plowdown_next_crop`).
 #'   \item A unit without any harvest dates falls back to calendar years
 #'         (`crop_year` = year of application) and is reported.
 #'   \item The first crop in a unit's record has no previous harvest, so its
@@ -34,6 +43,10 @@
 #'   `CD_cat`, `CD_name`, `CD_harv_date`, `CD_term_date`.
 #' @param rot_bounds Final rotation bounds (after overrides).
 #' @param max_plausible_kg_ha Converted N rates above this are flagged.
+#' @param plowdown_days Days before a perennial's termination-only date within
+#'   which applied N is assigned to the next harvested crop instead of the stand
+#'   (default 270, so fall manure before a spring plow-down goes to the next
+#'   crop; 0 assigns all N to the stand, as before version 1.0.0).
 #' @return A list with `n_rate` (one row per unit and harvest: `crop_year`,
 #'   `harvest_date`, `crop`, `window_start`, `first_in_record`, `N_kg_ha`,
 #'   `n_events`, `n_unconverted`),
@@ -43,7 +56,8 @@
 #'   `harvest_date`, `N_kg_ha`) and `assumptions`.
 #' @keywords internal
 #' @noRd
-.prepare_n_rate <- function(amend, crop, rot_bounds, max_plausible_kg_ha = 1000) {
+.prepare_n_rate <- function(amend, crop, rot_bounds, max_plausible_kg_ha = 1000,
+                            plowdown_days = 270) {
 
   rb <- rot_bounds %>% dplyr::select(MGT_combo, rot_start, rot_end)
 
@@ -64,7 +78,8 @@
   harv <- crop %>%
     dplyr::mutate(
       cat          = tolower(trimws(as.character(CD_cat))),
-      harvest_date = dplyr::coalesce(CD_harv_date, CD_term_date)
+      harvest_date = dplyr::coalesce(CD_harv_date, CD_term_date),
+      per_term     = grepl("perennial", cat) & is.na(CD_harv_date) & !is.na(CD_term_date)
     ) %>%
     dplyr::filter(!is.na(harvest_date), !(cat %in% c("cover", "fallow"))) %>%
     dplyr::inner_join(rb, by = "MGT_combo") %>%
@@ -72,6 +87,7 @@
     dplyr::group_by(MGT_combo, harvest_date) %>%
     dplyr::summarize(
       crop      = paste(sort(unique(trimws(as.character(CD_name)))), collapse = " + "),
+      plowdown  = all(per_term),            # only perennial stands ending here, none harvested
       rot_start = dplyr::first(rot_start),
       .groups = "drop"
     ) %>%
@@ -94,9 +110,15 @@
     dplyr::inner_join(harv, by = "MGT_combo", relationship = "many-to-many") %>%
     dplyr::filter(harvest_date > SA_date) %>%
     dplyr::group_by(.id) %>%
+    dplyr::mutate(
+      .gap     = as.numeric(difftime(as.Date(harvest_date), as.Date(SA_date), units = "days")),
+      .skip    = plowdown & .gap <= plowdown_days,       # stand plowed down soon after: not its N
+      any_skip = any(.skip & harvest_date == min(harvest_date))
+    ) %>%
+    dplyr::filter(!.skip) %>%
     dplyr::slice_min(harvest_date, n = 1, with_ties = FALSE) %>%
     dplyr::ungroup() %>%
-    dplyr::select(.id, harvest_date, crop, window_start, first_in_record)
+    dplyr::select(.id, harvest_date, crop, window_start, first_in_record, any_skip)
 
   no_harv_units <- setdiff(unique(a$MGT_combo), unique(harv$MGT_combo))
 
@@ -108,7 +130,8 @@
         !is.na(harvest_date)         ~ lubridate::year(harvest_date),
         TRUE                         ~ NA_real_          # after the last harvest
       ),
-      crop_year = as.integer(crop_year)
+      crop_year = as.integer(crop_year),
+      any_skip  = dplyr::coalesce(any_skip, FALSE)
     )
 
   # ---- totals ---------------------------------------------------------------------
@@ -157,6 +180,7 @@
         a$N_kg_ha > max_plausible_kg_ha              ~ "n_rate_implausible",
       a$MGT_combo %in% no_harv_units                 ~ "n_no_harvest_dates",
       is.na(a$crop_year)                             ~ "n_after_last_harvest",
+      a$any_skip                                     ~ "n_plowdown_next_crop",
       TRUE                                           ~ NA_character_
     )
   ) %>%

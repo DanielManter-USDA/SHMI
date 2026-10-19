@@ -38,22 +38,22 @@ Other SHMI helper functions:
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [533ms]
+#> ✔ Validating inputs... [650ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [340ms]
+#> ✔ Reading Excel file... [365ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [42ms]
+#> ✔ Calculating rotation lengths... [37ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [205ms]
+#> ✔ Calculating crop start/end dates... [227ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [13ms]
+#> ✔ Applying overrides... [19ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [61ms]
+#> ✔ Re-calculating rotation lengths... [75ms]
 #> 
 
 # Monthly climate normals for each unit; get_shmi_climate() downloads these
@@ -64,20 +64,20 @@ climate[sprintf("prec_%02d", 1:12)] <- as.list(c(20, 25, 50, 70, 110, 115, 95, 8
 
 result <- build_shmi(inputs, climate)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [8ms]
+#> ✔ Validating inputs... [10ms]
 #> 
 #> ℹ Computing sub-indices...
-#> ✔ Computing sub-indices... [240ms]
+#> ✔ Computing sub-indices... [254ms]
 #> 
 #> ℹ Combining...
 #> ✔ Combining... [23ms]
 #> 
 result$indicator_df
 #> # A tibble: 8 × 20
-#>   MGT_combo       MGT_study MGT_farm MGT_field MGT_trt irrigated  SHMI SHMI_plus
+#>   MGT_combo       MGT_study MGT_farm MGT_field MGT_trt irrigated  SHMI SHMI_base
 #>   <chr>           <chr>     <chr>    <chr>     <chr>   <lgl>     <dbl>     <dbl>
-#> 1 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-Ma… TRUE       51.8      80.7
-#> 2 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-Ma… TRUE       51.8      80.7
+#> 1 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-Ma… TRUE       80.7      51.8
+#> 2 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-Ma… TRUE       80.7      51.8
 #> 3 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-N0  TRUE       51.8      51.8
 #> 4 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-N1… TRUE       51.8      51.8
 #> 5 MLSH_ARDEC_200… MLSH      ARDEC    200A      Rot1-N0 TRUE       58.8      58.8

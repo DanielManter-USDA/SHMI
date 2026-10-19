@@ -165,6 +165,10 @@ kg/ha. Bushels are converted with a standard test weight for the crop
 reported. With \code{calc_n_rate = TRUE}, \code{SA_N} is converted to kg N/ha using
 \code{SA_units} and summed by unit and year; years whose N cannot be converted
 are \code{NA}, not zero. Unconverted values are listed in \code{assumptions}.
+N rates summarise the N recorded as applied (fertilizer and amendments,
+total N as entered). They are not a nutrient budget: legume fixation,
+legume or manure carry-over credits and N availability are not estimated,
+so a crop that relies on a plowed-down legume shows little or no N.
 }
 
 \examples{

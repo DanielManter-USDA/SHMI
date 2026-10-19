@@ -190,7 +190,11 @@ kg/ha. Bushels are converted with a standard test weight for the crop
 reported. With `calc_n_rate = TRUE`, `SA_N` is converted to kg N/ha
 using `SA_units` and summed by unit and year; years whose N cannot be
 converted are `NA`, not zero. Unconverted values are listed in
-`assumptions`.
+`assumptions`. N rates summarise the N recorded as applied (fertilizer
+and amendments, total N as entered). They are not a nutrient budget:
+legume fixation, legume or manure carry-over credits and N availability
+are not estimated, so a crop that relies on a plowed-down legume shows
+little or no N.
 
 ## See also
 
@@ -204,22 +208,22 @@ converted are `NA`, not zero. Unconverted values are listed in
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [329ms]
+#> ✔ Validating inputs... [342ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [312ms]
+#> ✔ Reading Excel file... [346ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [27ms]
+#> ✔ Calculating rotation lengths... [30ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [196ms]
+#> ✔ Calculating crop start/end dates... [213ms]
 #> 
 #> ℹ Applying overrides...
 #> ✔ Applying overrides... [14ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [68ms]
+#> ✔ Re-calculating rotation lengths... [75ms]
 #> 
 
 # What was assumed, and what should be reviewed?
@@ -235,22 +239,22 @@ inputs_2022_23 <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE,
                                       start_date_override = "2022-01-01",
                                       end_date_override   = "2023-12-31")
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [318ms]
+#> ✔ Validating inputs... [335ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [322ms]
+#> ✔ Reading Excel file... [352ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [29ms]
+#> ✔ Calculating rotation lengths... [37ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [194ms]
+#> ✔ Calculating crop start/end dates... [230ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [25ms]
+#> ✔ Applying overrides... [35ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [85ms]
+#> ✔ Re-calculating rotation lengths... [89ms]
 #> 
 inputs_2022_23$rot_bounds
 #> # A tibble: 8 × 5

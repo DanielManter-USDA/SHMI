@@ -280,10 +280,10 @@ growing_months(climate[1, ])
 result <- build_shmi(inputs, climate)
 result$indicator_df
 #> # A tibble: 8 × 20
-#>   MGT_combo       MGT_study MGT_farm MGT_field MGT_trt irrigated  SHMI SHMI_plus
+#>   MGT_combo       MGT_study MGT_farm MGT_field MGT_trt irrigated  SHMI SHMI_base
 #>   <chr>           <chr>     <chr>    <chr>     <chr>   <lgl>     <dbl>     <dbl>
-#> 1 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-Ma… TRUE       51.8      80.7
-#> 2 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-Ma… TRUE       51.8      80.7
+#> 1 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-Ma… TRUE       80.7      51.8
+#> 2 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-Ma… TRUE       80.7      51.8
 #> 3 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-N0  TRUE       51.8      51.8
 #> 4 MLSH_ARDEC_200… MLSH      ARDEC    200A      DMP-N1… TRUE       51.8      51.8
 #> 5 MLSH_ARDEC_200… MLSH      ARDEC    200A      Rot1-N0 TRUE       58.8      58.8

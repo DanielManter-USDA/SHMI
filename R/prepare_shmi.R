@@ -81,6 +81,10 @@
 #' reported. With `calc_n_rate = TRUE`, `SA_N` is converted to kg N/ha using
 #' `SA_units` and summed by unit and year; years whose N cannot be converted
 #' are `NA`, not zero. Unconverted values are listed in `assumptions`.
+#' N rates summarise the N recorded as applied (fertilizer and amendments,
+#' total N as entered). They are not a nutrient budget: legume fixation,
+#' legume or manure carry-over credits and N availability are not estimated,
+#' so a crop that relies on a plowed-down legume shows little or no N.
 #'
 #' @param path Path to the SHMI Excel workbook.
 #' @param exclude Optional character vector of `MGT_combo` values to leave

@@ -568,6 +568,7 @@
   n_missing_units             = "check",
   n_rate_implausible          = "check",
   n_after_last_harvest        = "assumption",
+  n_plowdown_next_crop        = "assumption",
   n_no_harvest_dates          = "check"
 )
 
@@ -656,6 +657,10 @@
   n_after_last_harvest = paste(
     "N applied after the unit's last recorded harvest; it has no crop yet and",
     "is not in n_rate (it is in n_rate_calendar)."),
+  n_plowdown_next_crop = paste(
+    "N applied shortly before a perennial stand was terminated (plowed down,",
+    "no harvest on that date) was assigned to the next harvested crop, not",
+    "the stand (see plowdown_days)."),
   n_no_harvest_dates = paste(
     "Unit has no harvest or termination dates for cash or perennial crops;",
     "N rates by crop fall back to calendar years. Add harvest dates.")

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,10 +20,10 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Background.html">SHMI Background</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (amendment bonus)</a></li>
+    <li><a class="dropdown-item" href="../articles/Cover.html">Cover/Roots</a></li>
+    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity</a></li>
+    <li><a class="dropdown-item" href="../articles/Disturbance.html">Inverse Disturbance</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Amendment bonus and grazing</a></li>
     <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI_base</a></li>
   </ul></li>
 <li class="active nav-item dropdown">
@@ -122,7 +122,7 @@
       </dl></div><div class="section level2">
       <h2 id="climate">Climate<a class="anchor" aria-label="anchor" href="#climate"></a></h2>
 
-      <div class="section-desc"><p>Monthly climate normals and the growing-season months they define for Cover.</p></div>
+      <div class="section-desc"><p>Monthly climate normals and the growing-season months they define for Cover/Roots.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -135,6 +135,13 @@
 
         </dt>
         <dd>Growing-season months from monthly climate normals</dd>
+
+        <dt>
+
+          <code><a href="shmi_climate_dir.html">shmi_climate_dir()</a></code>
+
+        </dt>
+        <dd>Folder where SHMI keeps the WorldClim climate normals</dd>
       </dl></div><div class="section level2">
       <h2 id="sub-index-functions">Sub-index Functions<a class="anchor" aria-label="anchor" href="#sub-index-functions"></a></h2>
 
@@ -150,7 +157,7 @@
           <code><a href="compute_cover.html">compute_cover()</a></code>
 
         </dt>
-        <dd>Compute the Cover sub-index</dd>
+        <dd>Compute the Cover/Roots sub-index</dd>
 
         <dt>
 
@@ -195,22 +202,6 @@
 
         </dt>
         <dd>Years with organic amendments and animals</dd>
-      </dl></div><div class="section level2">
-      <h2 id="superseded">Superseded<a class="anchor" aria-label="anchor" href="#superseded"></a></h2>
-
-      <div class="section-desc"><p>Kept so code written for SHMI 1.0 still runs.</p></div>
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="compute_orginput.html">compute_orginput()</a></code>
-
-        </dt>
-        <dd>Organic Inputs score (superseded)</dd>
       </dl></div><div class="section level2">
       <h2 id="helper-functions">Helper Functions<a class="anchor" aria-label="anchor" href="#helper-functions"></a></h2>
 

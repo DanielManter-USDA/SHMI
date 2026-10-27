@@ -141,7 +141,7 @@ animal periods are clipped to it, and the window boundaries are exactly
 the override dates (under \code{"calendar"}). A unit whose records begin after
 the start override is scored as having no cover, tillage, or inputs
 before its first record, following the missing-record rule. Because
-Organic Inputs and Inverse Disturbance are scored by calendar year,
+the amendment and grazing shares and Inverse Disturbance are scored by calendar year,
 overrides are best placed on year boundaries; other dates trigger a
 message.
 

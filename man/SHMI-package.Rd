@@ -12,11 +12,12 @@ entered in a standard Excel workbook. It reports two 0-100 scores.
 }
 \details{
 \itemize{
-\item \strong{Cover} (weight 0.687): share of days with living plants in the
-growing and non-growing seasons, set by each unit's climate.
+\item \strong{Cover/Roots} (column \code{Cover}; weight 0.687): share of days with
+plants present in the growing and non-growing seasons, set by each
+unit's climate.
 \item \strong{Diversity} (0.150): number of plant species in each 4-year span of
 the record; grazing animals close up to a quarter of the gap to 100.
-\item \strong{Inverse disturbance} (0.163): how little the soil was tilled,
+\item \strong{Inverse Disturbance} (column \code{InvDist}; 0.163): how little the soil was tilled,
 computed as in USDA's Tillage Disturbance Index for Soil Carbon (T-DISC).
 }
 
@@ -28,6 +29,10 @@ exceeds 100.
 The weights were calibrated against measured soil health on 354 US plots
 at 74 sites of the North American Project to Evaluate Soil Health
 Measurements (NAPESHM); see \code{\link[=shmi_weights]{shmi_weights()}} and \code{\link[=shmi_parameters]{shmi_parameters()}}.
+The calibration and its tests against soil health and corn yield are
+described in Moore and Manter (in review). Version numbers follow the
+published index: SHMI v1 is the index of Deel et al. (2024), and package
+version 2.0.0 is the calibrated SHMI.
 }
 \section{Workflow}{
 
@@ -38,7 +43,7 @@ the path of the installed example.
 \item \code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}} reads and validates the workbook, converts crop
 records into species episodes, and records every assumption it makes.
 \item \code{\link[=get_shmi_climate]{get_shmi_climate()}} provides monthly climate normals for each unit,
-which set Cover's growing season.
+which set Cover/Roots' growing season.
 \item \code{\link[=build_shmi]{build_shmi()}} computes the sub-indices, SHMI_base and SHMI.
 \item \code{\link[=plot_shmi_gauge]{plot_shmi_gauge()}} and \code{\link[=plot_shmi_lollipop]{plot_shmi_lollipop()}} display the results.
 }

@@ -6,15 +6,16 @@ entered in a standard Excel workbook. It reports two 0-100 scores.
 
 ## Details
 
-- **Cover** (weight 0.687): share of days with living plants in the
-  growing and non-growing seasons, set by each unit's climate.
+- **Cover/Roots** (column `Cover`; weight 0.687): share of days with
+  plants present in the growing and non-growing seasons, set by each
+  unit's climate.
 
 - **Diversity** (0.150): number of plant species in each 4-year span of
   the record; grazing animals close up to a quarter of the gap to 100.
 
-- **Inverse disturbance** (0.163): how little the soil was tilled,
-  computed as in USDA's Tillage Disturbance Index for Soil Carbon
-  (T-DISC).
+- **Inverse Disturbance** (column `InvDist`; 0.163): how little the soil
+  was tilled, computed as in USDA's Tillage Disturbance Index for Soil
+  Carbon (T-DISC).
 
 **SHMI**, the calibrated score, adds organic amendments: amendments in a
 share \\p\\ of years close \\0.60\\p\\ of the gap between SHMI_base and
@@ -27,6 +28,10 @@ Measurements (NAPESHM); see
 [`shmi_weights()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_weights.md)
 and
 [`shmi_parameters()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_parameters.md).
+The calibration and its tests against soil health and corn yield are
+described in Moore and Manter (in review). Version numbers follow the
+published index: SHMI v1 is the index of Deel et al. (2024), and package
+version 2.0.0 is the calibrated SHMI.
 
 ## Workflow
 
@@ -42,8 +47,8 @@ and
     episodes, and records every assumption it makes.
 
 3.  [`get_shmi_climate()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_climate.md)
-    provides monthly climate normals for each unit, which set Cover's
-    growing season.
+    provides monthly climate normals for each unit, which set
+    Cover/Roots' growing season.
 
 4.  [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
     computes the sub-indices, SHMI_base and SHMI.

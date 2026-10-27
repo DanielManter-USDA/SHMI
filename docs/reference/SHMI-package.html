@@ -11,7 +11,7 @@ SHMI_base is a weighted sum of three sub-indices, each also 0-100:"><meta proper
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,10 +24,10 @@ SHMI_base is a weighted sum of three sub-indices, each also 0-100:"><meta proper
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Background.html">SHMI Background</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (amendment bonus)</a></li>
+    <li><a class="dropdown-item" href="../articles/Cover.html">Cover/Roots</a></li>
+    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity</a></li>
+    <li><a class="dropdown-item" href="../articles/Disturbance.html">Inverse Disturbance</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Amendment bonus and grazing</a></li>
     <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI_base</a></li>
   </ul></li>
 <li class="active nav-item dropdown">
@@ -68,11 +68,12 @@ entered in a standard Excel workbook. It reports two 0-100 scores.
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
 
-<ul><li><p><strong>Cover</strong> (weight 0.687): share of days with living plants in the
-growing and non-growing seasons, set by each unit's climate.</p></li>
+<ul><li><p><strong>Cover/Roots</strong> (column <code>Cover</code>; weight 0.687): share of days with
+plants present in the growing and non-growing seasons, set by each
+unit's climate.</p></li>
 <li><p><strong>Diversity</strong> (0.150): number of plant species in each 4-year span of
 the record; grazing animals close up to a quarter of the gap to 100.</p></li>
-<li><p><strong>Inverse disturbance</strong> (0.163): how little the soil was tilled,
+<li><p><strong>Inverse Disturbance</strong> (column <code>InvDist</code>; 0.163): how little the soil was tilled,
 computed as in USDA's Tillage Disturbance Index for Soil Carbon (T-DISC).</p></li>
 </ul><p><strong>SHMI</strong>, the calibrated score, adds organic amendments: amendments in a
 share \(p\) of years close \(0.60\,p\) of the gap between SHMI_base
@@ -80,7 +81,11 @@ and 100. A unit without amendments has SHMI = SHMI_base, and no score
 exceeds 100.</p>
 <p>The weights were calibrated against measured soil health on 354 US plots
 at 74 sites of the North American Project to Evaluate Soil Health
-Measurements (NAPESHM); see <code><a href="shmi_weights.html">shmi_weights()</a></code> and <code><a href="shmi_parameters.html">shmi_parameters()</a></code>.</p>
+Measurements (NAPESHM); see <code><a href="shmi_weights.html">shmi_weights()</a></code> and <code><a href="shmi_parameters.html">shmi_parameters()</a></code>.
+The calibration and its tests against soil health and corn yield are
+described in Moore and Manter (in review). Version numbers follow the
+published index: SHMI v1 is the index of Deel et al. (2024), and package
+version 2.0.0 is the calibrated SHMI.</p>
     </div>
     <div class="section level2">
     <h2 id="workflow">Workflow<a class="anchor" aria-label="anchor" href="#workflow"></a></h2>
@@ -92,7 +97,7 @@ the path of the installed example.</p></li>
 <li><p><code><a href="prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code> reads and validates the workbook, converts crop
 records into species episodes, and records every assumption it makes.</p></li>
 <li><p><code><a href="get_shmi_climate.html">get_shmi_climate()</a></code> provides monthly climate normals for each unit,
-which set Cover's growing season.</p></li>
+which set Cover/Roots' growing season.</p></li>
 <li><p><code><a href="build_shmi.html">build_shmi()</a></code> computes the sub-indices, SHMI_base and SHMI.</p></li>
 <li><p><code><a href="plot_shmi_gauge.html">plot_shmi_gauge()</a></code> and <code><a href="plot_shmi_lollipop.html">plot_shmi_lollipop()</a></code> display the results.</p></li>
 </ol><p>The sub-indices can also be computed directly with <code><a href="compute_cover.html">compute_cover()</a></code>,

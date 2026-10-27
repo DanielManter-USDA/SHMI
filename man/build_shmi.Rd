@@ -49,8 +49,7 @@ management metadata, \code{SHMI}, \code{SHMI_base}, \code{Amend_bonus}, \code{Co
 \code{p_animal}, \code{TI_tillage} and \code{tillage_designation}), \code{weights},
 \code{parameters} (all constants used), \code{dist_meth} (the tillage scale used),
 \code{official} (\code{TRUE} unless a custom weight or constant was used),
-\code{shmi_version} and \code{timestamp} (plus \code{expert_mode} and \code{settings_used},
-kept for code written against SHMI < 1.0).
+\code{shmi_version} and \code{timestamp}.
 }
 \description{
 Computes two scores for each management unit (\code{MGT_combo}) from prepared
@@ -60,12 +59,13 @@ inputs and monthly climate normals:
 }
 \details{
 \itemize{
-\item \strong{Cover}: share of days with living plants in the growing and
-non-growing seasons, set by each unit's climate (\code{\link[=compute_cover]{compute_cover()}}).
+\item \strong{Cover/Roots} (column \code{Cover}): share of days with plants present in
+the growing and non-growing seasons, set by each unit's climate
+(\code{\link[=compute_cover]{compute_cover()}}).
 \item \strong{Diversity}: plant species richness over 4-year spans
 (\code{\link[=compute_diversity]{compute_diversity()}}), raised by grazing animals: grazing in a share
 \eqn{p_{animal}} of years closes \eqn{0.25\,p_{animal}} of the gap to 100.
-\item \strong{InvDist}: inverse tillage disturbance, computed as in USDA's T-DISC
+\item \strong{Inverse Disturbance} (column \code{InvDist}): inverse tillage disturbance, computed as in USDA's T-DISC
 from implement mixing efficiencies and depths, or from STIR
 (\code{\link[=compute_disturbance]{compute_disturbance()}}).
 \item \strong{SHMI} adds the amendment bonus, \code{Amend_bonus}, to \code{SHMI_base}:

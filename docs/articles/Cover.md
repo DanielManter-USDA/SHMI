@@ -1,20 +1,21 @@
-# Cover Subindex
+# Cover/Roots Subindex
 
 Living Plants in the Growing and Non-Growing Seasons
 
 ## **Overview**
 
-The Cover subindex measures how much of the year living plants cover the
-soil. Days are split into a **growing** and a **non-growing** season
-defined by each site’s climate, and the growing season counts more. The
-score runs from 0 to 100.
+The Cover/Roots subindex (column `Cover`) measures how much of the year
+plants are present, covering the soil and keeping roots in it. Days are
+split into a **growing** and a **non-growing** season defined by each
+site’s climate, and the growing season counts more. The score runs from
+0 to 100.
 
 ------------------------------------------------------------------------
 
 ### **1. Plant days**
 
 Every crop episode (from planting to harvest or termination) is a window
-of living cover, except rows named `"fallow"`, `"none"` or `"bare"`.
+of plant presence, except rows named `"fallow"`, `"none"` or `"bare"`.
 Overlapping windows (mixtures, relays, cover crops interseeded into a
 growing crop) are merged, so each day counts once:
 
@@ -22,7 +23,7 @@ growing crop) are merged, so each day counts once:
 
 \text{plant}_{i,d} =
 \begin{cases}
-1 & \text{if any living crop is present on day } d \\
+1 & \text{if any crop is present on day } d \\
 0 & \text{otherwise}
 \end{cases}
 ```
@@ -71,7 +72,7 @@ value.
 
 ------------------------------------------------------------------------
 
-### **4. Final Cover score**
+### **4. Final Cover/Roots score**
 
 ``` math
 
@@ -86,7 +87,7 @@ The growing-season share, 0.760, was estimated in the SHMI calibration
 ### **Interpretation**
 
 - **0**: bare soil all year (or fallow only).
-- **100**: living plants every day of both seasons.
+- **100**: plants present every day of both seasons.
 - A summer annual alone scores mainly through the growing season; a
   cover crop or a perennial adds the non-growing season.
 

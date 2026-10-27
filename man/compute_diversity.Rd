@@ -20,8 +20,7 @@ compute_diversity(
 
 \item{max_richness}{Species per window that scores 100.}
 
-\item{window}{Window length in years (default 4; 1 = calendar years, as in
-SHMI 1.0). Can be set for a session with \code{options(SHMI.diversity_window = )},
+\item{window}{Window length in years (default 4; 1 = calendar years). Can be set for a session with \code{options(SHMI.diversity_window = )},
 which also changes \code{\link[=build_shmi]{build_shmi()}} and \code{\link[=shmi_components]{shmi_components()}}.}
 }
 \value{
@@ -39,7 +38,7 @@ sliding one calendar year at a time, and averages the counts. A record of
 corn-soybean rotation counts 2 species, corn-soybean-wheat 3, and a rye cover
 grown in the rotation adds 1; a long stand of a single perennial counts 1
 except in the spans where it meets the next crop. \code{window = 1} counts species
-per calendar year (the SHMI 1.0 definition).
+per calendar year.
 
 \strong{Species.} Each distinct \code{CD_name} is a species (whitespace tidied).
 Count-first placeholder mixtures such as \code{"8-species"}, \code{"8 spp"} or
@@ -62,7 +61,7 @@ rot_bounds <- data.frame(MGT_combo = "field_1",
                          rot_start = as.Date("2020-01-01"),
                          rot_end   = as.Date("2021-12-31"))
 compute_diversity(crop, rot_bounds)              # 3 species in the rotation: 29
-compute_diversity(crop, rot_bounds, window = 1)  # 2 a year (SHMI 1.0): 14
+compute_diversity(crop, rot_bounds, window = 1)  # 2 a year: 14
 
 }
 \seealso{

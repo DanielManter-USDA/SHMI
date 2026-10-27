@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Cover Subindex • SHMI</title>
+<title>Cover/Roots Subindex • SHMI</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -15,7 +15,7 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Cover Subindex">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Cover/Roots Subindex">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,10 +40,10 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/Background.html">SHMI Background</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (amendment bonus)</a></li>
+    <li><a class="dropdown-item" href="../articles/Cover.html">Cover/Roots</a></li>
+    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity</a></li>
+    <li><a class="dropdown-item" href="../articles/Disturbance.html">Inverse Disturbance</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Amendment bonus and grazing</a></li>
     <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI_base</a></li>
   </ul>
 </li>
@@ -80,7 +80,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Cover Subindex</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Cover/Roots Subindex</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/DanielManter-USDA/SHMI/blob/HEAD/vignettes/articles/Cover.Rmd" class="external-link"><code>vignettes/articles/Cover.Rmd</code></a></small>
@@ -94,8 +94,9 @@
 <h2 id="overview">
 <strong>Overview</strong><a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>The Cover subindex measures how much of the year living plants cover
-the soil. Days are split into a <strong>growing</strong> and a
+<p>The Cover/Roots subindex (column <code>Cover</code>) measures how
+much of the year plants are present, covering the soil and keeping roots
+in it. Days are split into a <strong>growing</strong> and a
 <strong>non-growing</strong> season defined by each site’s climate, and
 the growing season counts more. The score runs from 0 to 100.</p>
 <hr>
@@ -104,14 +105,14 @@ the growing season counts more. The score runs from 0 to 100.</p>
 <strong>1. Plant days</strong><a class="anchor" aria-label="anchor" href="#plant-days"></a>
 </h3>
 <p>Every crop episode (from planting to harvest or termination) is a
-window of living cover, except rows named <code>"fallow"</code>,
+window of plant presence, except rows named <code>"fallow"</code>,
 <code>"none"</code> or <code>"bare"</code>. Overlapping windows
 (mixtures, relays, cover crops interseeded into a growing crop) are
 merged, so each day counts once:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">plant</mtext><mrow><mi>i</mi><mo>,</mo><mi>d</mi></mrow></msub><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mn>1</mn></mtd><mtd columnalign="left" style="text-align: left"><mrow><mtext mathvariant="normal">if any living crop is present on day </mtext><mspace width="0.333em"></mspace></mrow><mi>d</mi></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mn>0</mn></mtd><mtd columnalign="left" style="text-align: left"><mtext mathvariant="normal">otherwise</mtext></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">plant</mtext><mrow><mi>i</mi><mo>,</mo><mi>d</mi></mrow></msub><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mn>1</mn></mtd><mtd columnalign="left" style="text-align: left"><mrow><mtext mathvariant="normal">if any crop is present on day </mtext><mspace width="0.333em"></mspace></mrow><mi>d</mi></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mn>0</mn></mtd><mtd columnalign="left" style="text-align: left"><mtext mathvariant="normal">otherwise</mtext></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">
 \text{plant}_{i,d} =
 \begin{cases}
-1 &amp; \text{if any living crop is present on day } d \\
+1 &amp; \text{if any crop is present on day } d \\
 0 &amp; \text{otherwise}
 \end{cases}
 </annotation></semantics></math></p>
@@ -161,8 +162,8 @@ value.</p>
 <hr>
 </div>
 <div class="section level3">
-<h3 id="final-cover-score">
-<strong>4. Final Cover score</strong><a class="anchor" aria-label="anchor" href="#final-cover-score"></a>
+<h3 id="final-coverroots-score">
+<strong>4. Final Cover/Roots score</strong><a class="anchor" aria-label="anchor" href="#final-coverroots-score"></a>
 </h3>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">Cover</mtext><mi>i</mi></msub><mo>=</mo><mn>0.760</mn><mspace width="0.278em"></mspace><mi>G</mi><msub><mtext mathvariant="normal">-cover</mtext><mi>i</mi></msub><mo>+</mo><mn>0.240</mn><mspace width="0.278em"></mspace><mi>N</mi><msub><mtext mathvariant="normal">-cover</mtext><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">
 \text{Cover}_i = 0.760 \; G\text{-cover}_i + 0.240 \; N\text{-cover}_i
@@ -180,7 +181,7 @@ calibration (95% range 0.70-0.83).
 <li>
 <strong>0</strong>: bare soil all year (or fallow only).</li>
 <li>
-<strong>100</strong>: living plants every day of both seasons.</li>
+<strong>100</strong>: plants present every day of both seasons.</li>
 <li>A summer annual alone scores mainly through the growing season; a
 cover crop or a perennial adds the non-growing season.</li>
 </ul>

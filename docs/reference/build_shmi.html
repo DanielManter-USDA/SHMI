@@ -13,7 +13,7 @@ $$SHMI = SHMI_{base} + 0.60\,p_{amend}\,(100 - SHMI_{base})$$"><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,10 +26,10 @@ $$SHMI = SHMI_{base} + 0.60\,p_{amend}\,(100 - SHMI_{base})$$"><meta property="o
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Background.html">SHMI Background</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (amendment bonus)</a></li>
+    <li><a class="dropdown-item" href="../articles/Cover.html">Cover/Roots</a></li>
+    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity</a></li>
+    <li><a class="dropdown-item" href="../articles/Disturbance.html">Inverse Disturbance</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Amendment bonus and grazing</a></li>
     <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI_base</a></li>
   </ul></li>
 <li class="active nav-item dropdown">
@@ -131,18 +131,18 @@ management metadata, <code>SHMI</code>, <code>SHMI_base</code>, <code>Amend_bonu
 <code>p_animal</code>, <code>TI_tillage</code> and <code>tillage_designation</code>), <code>weights</code>,
 <code>parameters</code> (all constants used), <code>dist_meth</code> (the tillage scale used),
 <code>official</code> (<code>TRUE</code> unless a custom weight or constant was used),
-<code>shmi_version</code> and <code>timestamp</code> (plus <code>expert_mode</code> and <code>settings_used</code>,
-kept for code written against SHMI &lt; 1.0).</p>
+<code>shmi_version</code> and <code>timestamp</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
 
-<ul><li><p><strong>Cover</strong>: share of days with living plants in the growing and
-non-growing seasons, set by each unit's climate (<code><a href="compute_cover.html">compute_cover()</a></code>).</p></li>
+<ul><li><p><strong>Cover/Roots</strong> (column <code>Cover</code>): share of days with plants present in
+the growing and non-growing seasons, set by each unit's climate
+(<code><a href="compute_cover.html">compute_cover()</a></code>).</p></li>
 <li><p><strong>Diversity</strong>: plant species richness over 4-year spans
 (<code><a href="compute_diversity.html">compute_diversity()</a></code>), raised by grazing animals: grazing in a share
 \(p_{animal}\) of years closes \(0.25\,p_{animal}\) of the gap to 100.</p></li>
-<li><p><strong>InvDist</strong>: inverse tillage disturbance, computed as in USDA's T-DISC
+<li><p><strong>Inverse Disturbance</strong> (column <code>InvDist</code>): inverse tillage disturbance, computed as in USDA's T-DISC
 from implement mixing efficiencies and depths, or from STIR
 (<code><a href="compute_disturbance.html">compute_disturbance()</a></code>).</p></li>
 <li><p><strong>SHMI</strong> adds the amendment bonus, <code>Amend_bonus</code>, to <code>SHMI_base</code>:

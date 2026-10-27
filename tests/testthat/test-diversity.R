@@ -27,7 +27,7 @@ test_that("the window slides over long records", {
   expect_equal(compute_diversity(ccaa, rb8, window = 2)$Richness, 10 / 7, tolerance = 1e-9)  # CC and AA spans count 1
 })
 
-test_that("window = 1 is the SHMI 1.0 calendar-year definition", {
+test_that("window = 1 counts species per calendar year", {
   cs <- data.frame(MGT_combo = "u1", CD_name = c("Corn", "Soybean"),
                    crop_start = as.Date(c("2020-05-01", "2021-05-01")),
                    crop_end   = as.Date(c("2020-10-01", "2021-10-01")))

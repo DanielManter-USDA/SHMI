@@ -31,9 +31,8 @@ compute_diversity(
 
 - window:
 
-  Window length in years (default 4; 1 = calendar years, as in SHMI
-  1.0). Can be set for a session with
-  `options(SHMI.diversity_window = )`, which also changes
+  Window length in years (default 4; 1 = calendar years). Can be set for
+  a session with `options(SHMI.diversity_window = )`, which also changes
   [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
   and
   [`shmi_components()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_components.md).
@@ -52,8 +51,7 @@ counts. A record of `window` years or fewer is a single span. With the
 default 4-year window a corn-soybean rotation counts 2 species,
 corn-soybean-wheat 3, and a rye cover grown in the rotation adds 1; a
 long stand of a single perennial counts 1 except in the spans where it
-meets the next crop. `window = 1` counts species per calendar year (the
-SHMI 1.0 definition).
+meets the next crop. `window = 1` counts species per calendar year.
 
 **Species.** Each distinct `CD_name` is a species (whitespace tidied).
 Count-first placeholder mixtures such as `"8-species"`, `"8 spp"` or
@@ -86,7 +84,7 @@ compute_diversity(crop, rot_bounds)              # 3 species in the rotation: 29
 #>   MGT_combo Diversity Richness
 #>   <chr>         <dbl>    <dbl>
 #> 1 field_1        28.6        3
-compute_diversity(crop, rot_bounds, window = 1)  # 2 a year (SHMI 1.0): 14
+compute_diversity(crop, rot_bounds, window = 1)  # 2 a year: 14
 #> # A tibble: 1 × 3
 #>   MGT_combo Diversity Richness
 #>   <chr>         <dbl>    <dbl>

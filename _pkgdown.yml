@@ -29,13 +29,13 @@ navbar:
         - text: "SHMI Background"
           href: "articles/Background.html"
         - text: "---"
-        - text: "Cover Index"
+        - text: "Cover/Roots"
           href: "articles/Cover.html"
-        - text: "Diversity Index"
+        - text: "Diversity"
           href: "articles/Diversity.html"
-        - text: "Disturbance Index"
+        - text: "Inverse Disturbance"
           href: "articles/Disturbance.html"
-        - text: "Organic Inputs (amendment bonus)"
+        - text: "Amendment bonus and grazing"
           href: "articles/OrgInputs.html"
         - text: "SHMI and SHMI_base"
           href: "articles/SHMI.html"
@@ -88,9 +88,10 @@ reference:
   - title: "Climate"
     desc: >
       Monthly climate normals and the growing-season months they define for
-      Cover.
+      Cover/Roots.
     contents:
       - growing_months
+      - shmi_climate_dir
 
   - title: "Sub-index Functions"
     contents:
@@ -108,12 +109,6 @@ reference:
       - shmi_components
       - compute_cover_monthly
       - compute_orginput_components
-
-  - title: "Superseded"
-    desc: >
-      Kept so code written for SHMI 1.0 still runs.
-    contents:
-      - compute_orginput
 
   - title: "Helper Functions"
     contents:

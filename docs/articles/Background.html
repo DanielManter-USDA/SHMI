@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,10 +40,10 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/Background.html">SHMI Background</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (amendment bonus)</a></li>
+    <li><a class="dropdown-item" href="../articles/Cover.html">Cover/Roots</a></li>
+    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity</a></li>
+    <li><a class="dropdown-item" href="../articles/Disturbance.html">Inverse Disturbance</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Amendment bonus and grazing</a></li>
     <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI_base</a></li>
   </ul>
 </li>
@@ -130,8 +130,8 @@ for improving soil function, each scored 0-100:</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Cover</td>
-<td>share of days with living plants, in the growing and non-growing
+<td>Cover/Roots</td>
+<td>share of days with plants present, in the growing and non-growing
 seasons set by the site’s climate</td>
 <td>0.687</td>
 </tr>
@@ -149,7 +149,7 @@ tool</td>
 </tr>
 </tbody>
 </table>
-<p>Cover does two jobs: living plants protect the soil surface and feed
+<p>Cover/Roots does two jobs: plants protect the soil surface and feed
 soil organisms through their roots. Disturbance protects; Diversity
 feeds a wider range of organisms. Grazing animals count as part of the
 living system: they close up to a quarter of the gap between plant
@@ -191,19 +191,19 @@ that score by non-negative least squares with the amendment bonus in
 place, so SHMI is the calibrated score, with each site weighted equally.
 Fitting was repeated 1,000 times on different subsets of sites (10-fold
 cross-validation, repeated 100 times), and each final weight is the
-median. Cover and Diversity share much of their information, so
+median. Cover/Roots and Diversity share much of their information, so
 Diversity’s weight was fixed at 0.15, within the range where held-out
 fit was unchanged.</li>
 <li>
 <strong>Alternatives.</strong> Other diversity measures
 (time-weighted Shannon diversity, crop rotation, functional richness)
 and other placements of animals and amendments were compared on the same
-sites, including Organic Inputs as a fourth weighted sub-index (SHMI
-1.0). Most predicted about equally well. The final structure scores a
-field on its own management, treats amendments as a bonus that cannot
-push a score past 100, and lost about 0.01 in held-out R² against the
-four-sub-index version. The grazing share (0.25) and amendment share
-(0.60) were chosen where held-out fit was flat.</li>
+sites, including Organic Inputs as a fourth weighted sub-index. Most
+predicted about equally well. The final structure scores a field on its
+own management, treats amendments as a bonus that cannot push a score
+past 100, and lost about 0.01 in held-out R² against the four-sub-index
+version. The grazing share (0.25) and amendment share (0.60) were chosen
+where held-out fit was flat.</li>
 </ol>
 <hr>
 </div>
@@ -218,8 +218,10 @@ soil health at r = 0.55 across all plots, SHMI_base at r = 0.52.</li>
 <strong>Sites it has not seen.</strong> Predicting each site with
 weights fitted without it, SHMI explains about a quarter of the
 differences in soil health (R² = 0.26), and ranks practices in the right
-order at <strong>82% of sites</strong>; SHMI_base alone explains 0.23
-and ranks 76% of sites correctly. A single prediction is typically
+direction at <strong>81% of sites</strong> (47 of the 58 with at least
+three systems); SHMI_base alone explains 0.23. Combining the parts is
+what makes this work: each part alone ranked practices in the right
+direction at only 50-64% of sites. A single prediction is typically
 within about 13 soil-health points.</li>
 <li>
 <strong>Another region.</strong> At 16 Mexican sites, never used in
@@ -227,6 +229,13 @@ calibration, SHMI transferred poorly: predictions ran about 20 points
 low and ranking within sites was not clearly better than chance. SHMI as
 calibrated is a tool for US systems; other regions need their own
 calibration.</li>
+<li>
+<strong>Corn yield.</strong> In ten long-term US experiments never
+used in calibration, each 10 SHMI points raised corn yield by about 220
+kg/ha on average at 150 kg N/ha, equivalent to roughly 18 kg/ha of
+fertilizer N, and the gain held in dry and poor years. The return
+depended on which practices raised the score (Moore &amp; Manter, in
+review).</li>
 </ul>
 <hr>
 </div>

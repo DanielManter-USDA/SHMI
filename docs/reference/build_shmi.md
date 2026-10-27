@@ -70,13 +70,12 @@ management metadata, `SHMI`, `SHMI_base`, `Amend_bonus`, `Cover`,
 `p_animal`, `TI_tillage` and `tillage_designation`), `weights`,
 `parameters` (all constants used), `dist_meth` (the tillage scale used),
 `official` (`TRUE` unless a custom weight or constant was used),
-`shmi_version` and `timestamp` (plus `expert_mode` and `settings_used`,
-kept for code written against SHMI \< 1.0).
+`shmi_version` and `timestamp`.
 
 ## Details
 
-- **Cover**: share of days with living plants in the growing and
-  non-growing seasons, set by each unit's climate
+- **Cover/Roots** (column `Cover`): share of days with plants present in
+  the growing and non-growing seasons, set by each unit's climate
   ([`compute_cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.md)).
 
 - **Diversity**: plant species richness over 4-year spans
@@ -84,8 +83,9 @@ kept for code written against SHMI \< 1.0).
   raised by grazing animals: grazing in a share \\p\_{animal}\\ of years
   closes \\0.25\\p\_{animal}\\ of the gap to 100.
 
-- **InvDist**: inverse tillage disturbance, computed as in USDA's T-DISC
-  from implement mixing efficiencies and depths, or from STIR
+- **Inverse Disturbance** (column `InvDist`): inverse tillage
+  disturbance, computed as in USDA's T-DISC from implement mixing
+  efficiencies and depths, or from STIR
   ([`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md)).
 
 - **SHMI** adds the amendment bonus, `Amend_bonus`, to `SHMI_base`:

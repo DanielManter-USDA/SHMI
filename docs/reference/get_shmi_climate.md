@@ -5,13 +5,16 @@ Extracts long-term monthly mean temperature and precipitation (WorldClim
 [`compute_cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.md)
 and
 [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
-expect. Requires the `geodata` and `terra` packages; the global
-WorldClim layers are downloaded once to `path`.
+expect. Requires the `geodata` and `terra` packages. The global
+WorldClim layers are downloaded once and kept in a persistent cache
+([`shmi_climate_dir()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_climate_dir.md)),
+so later calls, new R sessions and subprocesses reuse them instead of
+downloading them again.
 
 ## Usage
 
 ``` r
-get_shmi_climate(locations, res = 10, path = file.path(tempdir(), "worldclim"))
+get_shmi_climate(locations, res = 10, path = shmi_climate_dir())
 ```
 
 ## Arguments
@@ -32,7 +35,9 @@ get_shmi_climate(locations, res = 10, path = file.path(tempdir(), "worldclim"))
 
 - path:
 
-  Folder for the downloaded WorldClim files.
+  Folder for the WorldClim files. Defaults to
+  [`shmi_climate_dir()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_climate_dir.md),
+  a persistent cache; files already there are reused.
 
 ## Value
 

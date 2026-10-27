@@ -6,7 +6,7 @@
   Overview](https://danielmanter-usda.github.io/SHMI/articles/SHMI-overview.md):
 - [SHMI
   Background](https://danielmanter-usda.github.io/SHMI/articles/Background.md):
-- [Cover
+- [Cover/Roots
   Subindex](https://danielmanter-usda.github.io/SHMI/articles/Cover.md):
 - [Crop Diversity
   Subindex](https://danielmanter-usda.github.io/SHMI/articles/Diversity.md):

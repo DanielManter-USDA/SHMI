@@ -4,7 +4,7 @@
 \alias{get_shmi_climate}
 \title{Monthly climate normals for SHMI's Cover seasons}
 \usage{
-get_shmi_climate(locations, res = 10, path = file.path(tempdir(), "worldclim"))
+get_shmi_climate(locations, res = 10, path = shmi_climate_dir())
 }
 \arguments{
 \item{locations}{Either the list returned by \code{\link[=prepare_shmi_inputs]{prepare_shmi_inputs()}}, whose
@@ -16,7 +16,8 @@ ignore the dry-month rule.}
 \item{res}{WorldClim resolution in arc-minutes: 10, 5 or 2.5 (finer means
 a larger download).}
 
-\item{path}{Folder for the downloaded WorldClim files.}
+\item{path}{Folder for the WorldClim files. Defaults to \code{\link[=shmi_climate_dir]{shmi_climate_dir()}},
+a persistent cache; files already there are reused.}
 }
 \value{
 A tibble with \code{MGT_combo}, \code{tavg_01} ... \code{tavg_12} (C),
@@ -25,8 +26,10 @@ A tibble with \code{MGT_combo}, \code{tavg_01} ... \code{tavg_12} (C),
 \description{
 Extracts long-term monthly mean temperature and precipitation (WorldClim
 2.1, 1970-2000) at each location, in the form \code{\link[=compute_cover]{compute_cover()}} and
-\code{\link[=build_shmi]{build_shmi()}} expect. Requires the \code{geodata} and \code{terra} packages; the
-global WorldClim layers are downloaded once to \code{path}.
+\code{\link[=build_shmi]{build_shmi()}} expect. Requires the \code{geodata} and \code{terra} packages. The
+global WorldClim layers are downloaded once and kept in a persistent cache
+(\code{\link[=shmi_climate_dir]{shmi_climate_dir()}}), so later calls, new R sessions and subprocesses
+reuse them instead of downloading them again.
 }
 \examples{
 \dontrun{

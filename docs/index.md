@@ -6,15 +6,17 @@ MIT](https://img.shields.io/badge/License-MIT-blue.svg?logo=open-source-initiati
 SHMI converts multi-year crop, disturbance, and amendment records into
 standardized soil-health management scores.
 
-> **Scope.** SHMI 1.0 is calibrated on **US cropping systems**: 354
+> **Scope.** SHMI 2.0.0 is calibrated on **US cropping systems**: 354
 > plots at 74 sites of the North American Project to Evaluate Soil
 > Health Measurements (NAPESHM), mostly annual cropping systems plus
-> perennial and native reference systems. It is most reliable for
-> comparing practices at the same site. An independent test at Mexican
-> sites showed it does not transfer directly to other regions without
-> recalibration.
+> perennial systems and unmanaged reference soils. It is most reliable
+> for comparing practices at the same site. An independent test at
+> Mexican sites showed it does not transfer directly to other regions
+> without recalibration.
 
-> **Version 1.0.0 is the first public release.** See
+> **Version 2.0.0 is the first public release.** Version numbers follow
+> the published index: SHMI v1 is the index of Deel et al. (2024); 2.0.0
+> is the calibrated SHMI described in Moore and Manter (in review). See
 > [NEWS](https://github.com/DanielManter-USDA/SHMI/blob/master/NEWS.md).
 
 ------------------------------------------------------------------------
@@ -25,13 +27,14 @@ Excel workbook. It reports two 0-100 scores. **SHMI_base** scores the
 field’s own plant and tillage management from three sub-indices, each
 also scored 0-100:
 
-- **Cover** (weight 0.687): share of days with living plants in the
-  growing and non-growing seasons, set by each site’s climate
+- **Cover/Roots** (column `Cover`; weight 0.687): share of days with
+  plants present in the growing and non-growing seasons, set by each
+  site’s climate
 - **Diversity** (0.150): number of plant species in each 4-year span of
   the record; grazing animals raise it, closing up to a quarter of the
   gap to 100
-- **Inverse Disturbance** (0.163): how little the soil was tilled,
-  computed as in USDA’s T-DISC tool
+- **Inverse Disturbance** (column `InvDist`; 0.163): how little the soil
+  was tilled, computed as in USDA’s T-DISC tool
 
 **SHMI**, the calibrated score, adds carbon brought in from outside the
 field to SHMI_base: organic amendments (manure, compost) close part of
@@ -87,7 +90,7 @@ traced to a fixed version):
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("DanielManter-USDA/SHMI@v1.0.0")
+remotes::install_github("DanielManter-USDA/SHMI@v2.0.0")
 ```
 
 Or the latest development version:
@@ -318,6 +321,15 @@ crop means no cover; no amendments or animals means no amendment bonus
 or grazing credit. Record every tillage pass, planting, harvest, and
 amendment for the period being evaluated.
 
+**What a record needs.** In tests with records stripped of detail, SHMI
+kept its skill with the main crop only, cover crops as present or
+absent, tillage as a class (no-till, reduced, conventional) and dates to
+within about two weeks, provided manure, compost and livestock were
+reported; removing those cost the most. For yield comparisons, record
+dates field by field. A reference soil without management records
+(remnant prairie, sod, a benchmark stand) is entered as one perennial
+stand named with its number of species (for example `"8-species"`).
+
 **Official weights.** The weights
 ([`shmi_weights()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_weights.md))
 are the medians of 1,000 cross-validated fits against a soil-health
@@ -325,13 +337,18 @@ score built from 11 laboratory indicators (adjusted for climate and soil
 texture) on 354 US plots at 74 NAPESHM sites, with tillage computed as
 in USDA’s T-DISC. The weights were fitted with the amendment bonus in
 place, so SHMI is the calibrated score. Diversity’s weight was fixed at
-0.15, because Cover and Diversity carry much of the same information;
-within Cover, the growing season counts for 0.760 and the non-growing
-season for 0.240. The grazing share (0.25) and amendment share (0.60)
-were chosen where held-out fit was flat. For sites held out of the
-fitting, SHMI explained about a quarter of the differences in soil
-health (R² = 0.26) and ranked practices in the right order at 82% of
-sites; SHMI_base alone explained 0.23 and ranked 76% of sites correctly.
+0.15, because Cover/Roots and Diversity carry much of the same
+information; within Cover/Roots, the growing season counts for 0.760 and
+the non-growing season for 0.240. The grazing share (0.25) and amendment
+share (0.60) were chosen where held-out fit was flat. For sites held out
+of the fitting, SHMI explained about a quarter of the differences in
+soil health (R² = 0.26) and ranked practices in the right direction (a
+positive within-site rank correlation with measured soil health) at 81%
+of sites (47 of the 58 with at least three systems); SHMI_base alone
+explained 0.23, and each part alone ranked practices in the right
+direction at only 50-64% of sites. In ten long-term experiments it was
+never fitted to, each 10 SHMI points raised corn yield by about 220
+kg/ha on average at 150 kg N/ha (Moore and Manter, in review).
 [`shmi_parameters()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_parameters.md)
 returns every constant.
 
@@ -378,7 +395,7 @@ plot_shmi_lollipop(result$indicator_df)
 
 ### **4. Sub-index Computation**
 
-- Cover:
+- Cover/Roots:
   [`compute_cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.html)
 - Diversity:
   [`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.html)
@@ -440,7 +457,10 @@ Distributed under the MIT license.
 
 If you use SHMI in a publication, please cite:
 
+Moore JM, Manter DK. Soil health tracks management systems, not the sum
+of individual practices. (in review)
+
 Manter DK, Moore JM. (2026). *SHMI: Soil Health Management Index R
-package.*
+package*, version 2.0.0. \[Zenodo DOI\]
 
 ------------------------------------------------------------------------

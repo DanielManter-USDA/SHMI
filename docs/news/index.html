@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,10 +20,10 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/Background.html">SHMI Background</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (amendment bonus)</a></li>
+    <li><a class="dropdown-item" href="../articles/Cover.html">Cover/Roots</a></li>
+    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity</a></li>
+    <li><a class="dropdown-item" href="../articles/Disturbance.html">Inverse Disturbance</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Amendment bonus and grazing</a></li>
     <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI_base</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -54,31 +54,57 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.0.0" id="shmi-100">SHMI 1.0.0<a class="anchor" aria-label="anchor" href="#shmi-100"></a></h2>
-<p>First public release.</p>
+<h2 class="pkg-version" data-toc-text="2.0.0" id="shmi-200">SHMI 2.0.0<a class="anchor" aria-label="anchor" href="#shmi-200"></a></h2>
+<p>First public release: the calibrated Soil Health Management Index described in Moore and Manter (in review).</p>
+<p><strong>Version numbers follow the published index.</strong> SHMI v1 is the index of Deel et al. (2024): its parts were scored in classes and summed with equal weights. Version 2.0.0 is the calibrated SHMI below. Development builds before this release were numbered 1.x; they are not separate published versions of the index.</p>
 <div class="section level3">
-<h3 id="the-index-1-0-0">The index<a class="anchor" aria-label="anchor" href="#the-index-1-0-0"></a></h3>
+<h3 id="changes-from-the-development-builds-2-0-0">Changes from the development builds<a class="anchor" aria-label="anchor" href="#changes-from-the-development-builds-2-0-0"></a></h3>
+<div class="section level4">
+<h4 id="bug-fixes-2-0-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-2-0-0"></a></h4>
+<ul><li>
+<code><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code> and <code><a href="../reference/validate_excel_input.html">validate_excel_input()</a></code> no longer reject a workbook whose required date column (e.g. <code>CD_term_date</code>) is present but blank in every row, as when every crop ends at harvest.</li>
+<li>
+<code><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code> accepts workbooks with an empty sheet, such as <code>Soil_Disturbance</code> for a no-till system with no recorded passes. Empty sheets are read as zero rows with typed columns (<code>MGT_combo</code> character, dates as <code>Date</code>), and a unit without tillage records scores Inverse Disturbance 100.</li>
+<li>N-rate assignment (<code>calc_n_rate = TRUE</code>) no longer emits repeated “no non-missing arguments to min” warnings when no harvest follows an application.</li>
+</ul></div>
+<div class="section level4">
+<h4 id="removed-2-0-0">Removed<a class="anchor" aria-label="anchor" href="#removed-2-0-0"></a></h4>
+<ul><li>
+<code><a href="https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.html">compute_orginput()</a></code>, the Organic Inputs score of the development builds. Organic inputs now enter as the grazing credit in Diversity and the amendment bonus in SHMI; <code><a href="../reference/compute_orginput_components.html">compute_orginput_components()</a></code> gives the shares of years with amendments and with animals.</li>
+<li>The <code>expert_mode</code> and <code>settings_used</code> elements of the <code><a href="../reference/build_shmi.html">build_shmi()</a></code> result; use <code>official</code>, <code>weights</code>, <code>parameters</code> and <code>dist_meth</code>.</li>
+<li>The unused residue tables in <code>inst/extdata</code> (<code>residue_classes.csv</code>, <code>residue_crop_map.csv</code>): residue gets no weight once plant presence is known.</li>
+</ul></div>
+<div class="section level4">
+<h4 id="other-changes-2-0-0">Other changes<a class="anchor" aria-label="anchor" href="#other-changes-2-0-0"></a></h4>
+<ul><li>Documentation uses the names of the paper: <strong>Cover/Roots</strong> (column <code>Cover</code>), <strong>Diversity</strong> and <strong>Inverse Disturbance</strong> (column <code>InvDist</code>). Output column names are unchanged; the gauge plot labels the first gauge “Cover/Roots”.</li>
+<li>Ranking statistics are reported as in the paper: practices ranked in the right direction (a positive within-site rank correlation with measured soil health) at 81% of the 58 calibration sites with at least three systems.</li>
+<li>
+<code><a href="../reference/get_shmi_climate.html">get_shmi_climate()</a></code> keeps the WorldClim normals in a persistent cache, <code><a href="../reference/shmi_climate_dir.html">shmi_climate_dir()</a></code> (by default <code>tools::R_user_dir("SHMI", "cache")</code>; set <code>options(shmi.climate_dir = ...)</code> or <code>SHMI_CLIMATE_DIR</code> to change it), instead of the session’s temporary folder, so they are downloaded once rather than in every R session. Downloads use a longer timeout and one retry, and a failure says where to get the files by hand.</li>
+</ul></div>
+</div>
+<div class="section level3">
+<h3 id="the-index-2-0-0">The index<a class="anchor" aria-label="anchor" href="#the-index-2-0-0"></a></h3>
 <p>SHMI reports two scores from a field’s management record, both 0 to 100:</p>
 <p>SHMI_base = 0.687 Cover + 0.150 Diversity + 0.163 InvDist</p>
 <p>SHMI = SHMI_base + 0.60 p_amend (100 − SHMI_base)</p>
 <p>Each sub-index also runs from 0 to 100.</p>
 <ul><li>
-<strong>Cover</strong>: share of days with living plants in each unit’s growing and non-growing seasons, set by its climate. A month is in the growing season when its mean temperature is at least 5 °C and, unless the unit is irrigated, its precipitation (mm) is at least twice its temperature (°C). The growing season counts 0.760 and the rest of the year 0.240.</li>
+<strong>Cover/Roots</strong> (<code>Cover</code>): share of days with plants present in each unit’s growing and non-growing seasons, set by its climate. A month is in the growing season when its mean temperature is at least 5 °C and, unless the unit is irrigated, its precipitation (mm) is at least twice its temperature (°C). The growing season counts 0.760 and the rest of the year 0.240.</li>
 <li>
 <strong>Diversity</strong>: number of plant species (cash crops, forages and cover crops) in each 4-year span of the record, sliding one year at a time and averaged (a record of 4 years or fewer is one span); 0 for one species, 100 for eight or more. A corn-soybean rotation scores 14, corn-soybean-wheat 29, and corn-soybean-wheat with a rye cover 43. <code>compute_diversity(window = 1)</code> gives species per calendar year. Placeholder mixtures such as “8-species mix” count as that many species. <strong>Grazing credit:</strong> animals grazing in a share p_animal of years close 0.25 p_animal of the gap to 100 (Diversity = plants + 0.25 p_animal (100 − plants)); every calendar year a grazing period spans counts. Diversity’s weight is fixed at 0.15 (see Calibration).</li>
 <li>
 <strong>Inverse Disturbance</strong>: tillage intensity computed exactly as USDA’s Tillage Disturbance Index for Soil Carbon (T-DISC, version 1.1.1). Each cash crop defines a crop interval; passes fall into five tillage windows around planting; implements combine within a window by the EPA soil-mixing model; and each interval is rated by its most intense window. Each unit also receives T-DISC’s designation: no-till, reduced till or conventional till. STIR records can be scored on the same intervals and windows.</li>
 <li>
 <strong>SHMI (SHMI_base plus the amendment bonus)</strong>: organic amendments (<code>SA_cat</code> “Organic”) in a share p_amend of years close 0.60 p_amend of the gap between SHMI_base and 100. A unit without amendments has SHMI = SHMI_base; no score can exceed 100, and a low SHMI_base gains more than a high one (amendments every year add 36 points at SHMI_base 40, 12 at SHMI_base 80).</li>
-</ul><p>Scores are named so the calibrated score carries the plain name: <code>SHMI</code> includes the amendment bonus, and <code>SHMI_base</code> is the score without it. (In SHMI 1.0, <code>SHMI</code> was the four-sub-index score.)</p>
-<p>Organic Inputs is no longer a weighted sub-index. As a weighted sub-index it scored 0 for any field without manure or animals, which read as a penalty; grazing now raises Diversity, and amendments raise SHMI_base to SHMI. <code><a href="../reference/compute_orginput.html">compute_orginput()</a></code> is kept, superseded, so SHMI 1.0 code still runs, and custom <code>weights</code> naming <code>OrgInput</code> now give an error that explains the change.</p>
+</ul><p>Scores are named so the calibrated score carries the plain name: <code>SHMI</code> includes the amendment bonus, and <code>SHMI_base</code> is the score without it.</p>
+<p>Organic Inputs is no longer a weighted sub-index. As a weighted sub-index it scored 0 for any field without manure or animals, which read as a penalty; grazing now raises Diversity, and amendments raise SHMI_base to SHMI. Custom <code>weights</code> naming <code>OrgInput</code> give an error that explains the change.</p>
 </div>
 <div class="section level3">
-<h3 id="calibration-1-0-0">Calibration<a class="anchor" aria-label="anchor" href="#calibration-1-0-0"></a></h3>
-<p>The weights were calibrated against a soil-health score built from 11 laboratory indicators, adjusted for climate and soil texture, on 354 US plots at 74 sites of the North American Project to Evaluate Soil Health Measurements (NAPESHM). They were fitted with the amendment bonus in place, so SHMI is the calibrated score. Each weight is the median of 1,000 cross-validated fits. Cover/Roots and Diversity share much of their information, so their combined weight is well determined but its split is not; Diversity’s weight was fixed at 0.15, within the range where cross-validated fit was unchanged, and the other weights were fitted under that constraint. The grazing share (0.25) and amendment share (0.60) were chosen where held-out fit was flat (0.25-0.5 and 0.5-0.8). For sites held out of the fitting, SHMI explained about a quarter of the differences in soil health (R² = 0.26) and ranked practices in the right order at 82% of sites; SHMI_base alone explained 0.23 and ranked 76% of sites correctly. SHMI is calibrated for US systems; other regions should recalibrate. <code><a href="../reference/shmi_parameters.html">shmi_parameters()</a></code> returns every calibrated constant, and each <code><a href="../reference/build_shmi.html">build_shmi()</a></code> result records them.</p>
+<h3 id="calibration-2-0-0">Calibration<a class="anchor" aria-label="anchor" href="#calibration-2-0-0"></a></h3>
+<p>The weights were calibrated against a soil-health score built from 11 laboratory indicators, adjusted for climate and soil texture, on 354 US plots at 74 sites of the North American Project to Evaluate Soil Health Measurements (NAPESHM). They were fitted with the amendment bonus in place, so SHMI is the calibrated score. Each weight is the median of 1,000 cross-validated fits. Cover/Roots and Diversity share much of their information, so their combined weight is well determined but its split is not; Diversity’s weight was fixed at 0.15, within the range where cross-validated fit was unchanged, and the other weights were fitted under that constraint. The grazing share (0.25) and amendment share (0.60) were chosen where held-out fit was flat (0.25-0.5 and 0.5-0.8). For sites held out of the fitting, SHMI explained about a quarter of the differences in soil health (R² = 0.26) and ranked practices in the right direction at 81% of sites (47 of the 58 with at least three systems); SHMI_base alone explained 0.23. Each part alone ranked practices in the right direction at only 50-64% of sites. SHMI is calibrated for US systems; other regions should recalibrate. <code><a href="../reference/shmi_parameters.html">shmi_parameters()</a></code> returns every calibrated constant, and each <code><a href="../reference/build_shmi.html">build_shmi()</a></code> result records them.</p>
 </div>
 <div class="section level3">
-<h3 id="the-workbook-1-0-0">The workbook<a class="anchor" aria-label="anchor" href="#the-workbook-1-0-0"></a></h3>
+<h3 id="the-workbook-2-0-0">The workbook<a class="anchor" aria-label="anchor" href="#the-workbook-2-0-0"></a></h3>
 <ul><li>A standard Excel workbook (<code><a href="../reference/download_shmi_template.html">download_shmi_template()</a></code>), with a completed example (<code><a href="../reference/download_shmi_example.html">download_shmi_example()</a></code>, <code><a href="../reference/get_shmi_example.html">get_shmi_example()</a></code>).</li>
 <li>
 <strong>Mgt_Unit</strong>: one row per management unit, with its location (<code>MGT_lat</code>, <code>MGT_lon</code>) and irrigation method (<code>MGT_irr_cat</code>, “None” if rain-fed). <code>MGT_combo</code> is built automatically from study, farm, field and treatment.</li>
@@ -90,7 +116,7 @@
 <strong>Soil_Amendments</strong> and <strong>Animal_Diversity</strong>: organic amendments and grazing periods.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="preparing-the-records-1-0-0">Preparing the records<a class="anchor" aria-label="anchor" href="#preparing-the-records-1-0-0"></a></h3>
+<h3 id="preparing-the-records-2-0-0">Preparing the records<a class="anchor" aria-label="anchor" href="#preparing-the-records-2-0-0"></a></h3>
 <p><code><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code> reads and validates the workbook and:</p>
 <ul><li>converts crop records into species episodes, so mixtures, relays, intercrops and perennial cuttings need no special coding;</li>
 <li>fills gaps with fixed rules (a crop without an end date ends at the next planting, at the first intensive tillage, or at the end of the record) and reports every assumption, along with data checks that flag likely entry errors, in <code>$assumptions</code>;</li>
@@ -100,7 +126,7 @@
 </ul><p>Missing records mean a practice did not happen: no tillage, no cover, no grazing credit or no amendment bonus.</p>
 </div>
 <div class="section level3">
-<h3 id="main-functions-1-0-0">Main functions<a class="anchor" aria-label="anchor" href="#main-functions-1-0-0"></a></h3>
+<h3 id="main-functions-2-0-0">Main functions<a class="anchor" aria-label="anchor" href="#main-functions-2-0-0"></a></h3>
 <ul><li>
 <code><a href="../reference/prepare_shmi_inputs.html">prepare_shmi_inputs()</a></code>: read, validate and prepare a workbook.</li>
 <li>

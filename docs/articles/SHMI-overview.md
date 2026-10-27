@@ -7,13 +7,14 @@ management into 0-100 scores. **SHMI_base** combines three sub-indices,
 each also scored 0-100, with weights calibrated against measured soil
 health:
 
-- **Cover** (weight 0.687): the share of days with living plants in the
-  growing and non-growing seasons, set by the site’s climate.
+- **Cover/Roots** (column `Cover`; weight 0.687): the share of days with
+  plants present in the growing and non-growing seasons, set by the
+  site’s climate.
 - **Diversity** (0.150): the number of plant species in each 4-year span
   of the record. Grazing animals raise it: grazing every year closes a
   quarter of the gap to 100.
-- **Inverse disturbance (InvDist)** (0.163): how little the soil was
-  tilled; 100 means no tillage.
+- **Inverse Disturbance** (column `InvDist`; 0.163): how little the soil
+  was tilled; 100 means no tillage.
 
 **SHMI**, the calibrated score, adds organic amendments (manure,
 compost), carbon brought in from outside the field, to SHMI_base. An
@@ -29,11 +30,11 @@ This vignette walks through the standard workflow: fill in the Excel
 workbook, prepare the inputs, add climate, compute SHMI, and review the
 results.
 
-SHMI 1.0 was calibrated on 354 US plots at 74 sites of the North
+The weights were calibrated on 354 US plots at 74 sites of the North
 American Project to Evaluate Soil Health Measurements (NAPESHM), mostly
-annual cropping systems plus perennial and native reference systems. It
-is most reliable for comparing practices at the same site, and should be
-recalibrated before use in other regions.
+annual cropping systems plus perennial systems and unmanaged reference
+soils. It is most reliable for comparing practices at the same site, and
+should be recalibrated before use in other regions.
 
 ``` r
 library(SHMI)
@@ -221,17 +222,18 @@ Other options include `exclude` (leave out some units),
 `end_at_sample_date` (stop each unit at its soil sampling date, taken
 from the `MGT_sample_date` column of `Mgt_Unit`), and `calc_yield` /
 `calc_n_rate` (also return yields in kg/ha and annual nitrogen rates).
-Overrides are best placed on calendar-year boundaries, because Organic
-Inputs and Inverse Disturbance are scored by calendar year.
+Overrides are best placed on calendar-year boundaries, because the
+amendment and grazing shares and Inverse Disturbance are scored by
+calendar year.
 
 ## 3. Add climate
 
-Cover splits the year into a growing and a non-growing season for each
-management unit. A month is in the growing season when its long-term
-mean temperature is at least 5 °C and, unless the unit is irrigated, it
-is not dry (precipitation in mm at least twice the mean temperature in
-°C). Each unit’s coordinates (`MGT_lat`, `MGT_lon`) and irrigation
-method (`MGT_irr_cat`) are recorded on the Mgt_Unit tab.
+Cover/Roots splits the year into a growing and a non-growing season for
+each management unit. A month is in the growing season when its
+long-term mean temperature is at least 5 °C and, unless the unit is
+irrigated, it is not dry (precipitation in mm at least twice the mean
+temperature in °C). Each unit’s coordinates (`MGT_lat`, `MGT_lon`) and
+irrigation method (`MGT_irr_cat`) are recorded on the Mgt_Unit tab.
 [`get_shmi_climate()`](https://danielmanter-usda.github.io/SHMI/reference/get_shmi_climate.md)
 takes the monthly normals from WorldClim at those coordinates (it needs
 the `geodata` and `terra` packages):
@@ -347,12 +349,37 @@ SHMI treats a missing record as a practice that did not happen:
   forgotten crop sheet is not mistaken for a fallow.
 - **No amendment or animal records** means no amendment bonus (SHMI =
   SHMI_base) and no grazing credit in Diversity.
+- **A reference soil without management records** (remnant prairie, sod,
+  an exclosure or a benchmark stand) is entered as one perennial stand
+  spanning the period, named with the number of species present (for
+  example `"8-species"`), with no tillage, amendment or animal rows.
+  With eight or more species it scores 100; a single-species stand (for
+  example alfalfa or sod of one grass) scores Diversity 0 and SHMI 85.
 
 Record every tillage pass, planting, harvest, and amendment for the
 period being evaluated, so that gaps in the records are not mistaken for
 practices.
 
-## 7. The sub-indices one at a time
+## 7. What a record needs
+
+SHMI was tested with records stripped of detail, to see how much a
+usable record must contain (Moore & Manter, in review):
+
+| Detail | Minimum that kept SHMI’s skill |
+|----|----|
+| Crops | the main crop is enough; every species is better for Diversity |
+| Cover crops | present or absent (one generic cover per gap between cash crops) |
+| Tillage | the class is enough: no-till, reduced or conventional |
+| Dates | within about two weeks; for yield comparisons, record dates field by field rather than one typical date per site |
+| Manure, compost and livestock | **must be reported**: removing them cost the most skill |
+
+A typical farm record (main crops, cover-crop presence, tillage class,
+approximate dates, amendments) kept nearly the full score. A record
+built from remote sensing, which cannot see manure or animals, kept
+SHMI’s skill only when manure, compost and livestock were reported by
+the farmer.
+
+## 8. The sub-indices one at a time
 
 Each sub-index can be computed directly from the prepared inputs:
 
@@ -430,8 +457,8 @@ climate_1 <- climate[1, ]
 climate_1$MGT_combo <- "field_1"
 ```
 
-**Cover** is the share of days with a living crop in each season. The
-rye keeps the soil covered through most of the non-growing season:
+**Cover/Roots** is the share of days with a crop present in each season.
+The rye keeps the soil covered through most of the non-growing season:
 
 ``` r
 compute_cover(crop, rot_bounds, climate_1)
@@ -453,7 +480,7 @@ compute_diversity(crop, rot_bounds)
 #> 1 field_1        28.6        3
 ```
 
-**Inverse disturbance** is computed as in USDA’s T-DISC tool. Each cash
+**Inverse Disturbance** is computed as in USDA’s T-DISC tool. Each cash
 crop defines a crop interval, ending at its harvest; passes are grouped
 into tillage windows around planting; and the interval is rated by its
 most intense window. Here a heavy disk before corn and a planter pass
@@ -519,7 +546,7 @@ With manure in half the years, a unit with SHMI_base 50 gains 0.60 × 0.5
 × (100 − 50) = 15 points, for SHMI 65. Grazing every year would raise
 Diversity from 29 to 29 + 0.25 × (100 − 29) = 46.
 
-## 8. Plotting results
+## 9. Plotting results
 
 One unit, with a gauge for each sub-index, SHMI_base and SHMI:
 
@@ -540,10 +567,10 @@ plot_shmi_lollipop(result$indicator_df)
 
 Select a unit by name with `MGT_combo = "..."` instead of `row`.
 
-## 9. Interpreting SHMI
+## 10. Interpreting SHMI
 
 Higher scores indicate management that is more supportive of soil
-health: more of the year under living cover, more plant species (and
+health: more of the year with plants present, more plant species (and
 grazing), less tillage and, for SHMI, more frequent organic amendments.
 
 Report both scores. SHMI_base describes the field’s own plant and
@@ -554,8 +581,21 @@ amendments. The amendment bonus is largest for a low SHMI_base:
 amendments every year add 36 points at SHMI_base 40 but 12 at SHMI_base
 80. Looking at the sub-indices alongside the scores shows which
 practices drive them. SHMI is most informative for comparing practices
-at the same site; a single score predicted for a new site is typically
-within about 13 soil-health points.
+at the same site: each 10 SHMI points went with about 4 points of
+measured soil health (0-100), and a single score predicted for a new
+site is typically within about 13 soil-health points.
+
+**Corn yield.** In ten long-term US experiments that SHMI was never
+fitted to, each 10 SHMI points raised corn yield by about 220 kg/ha on
+average at 150 kg N/ha (about 3%, as much as roughly 18 kg/ha more
+fertilizer N), more at low N rates and in older systems. The return
+depended on which practices raised the score: largest through rotation,
+legumes or manure, little or none through tillage alone. Treat yield
+values as averages across experiments, not predictions for a single
+field (Moore & Manter, in review).
+
+**What SHMI does not see.** Weather, fertilizer rate, irrigation, and
+pest and weed management. Report them alongside the score.
 
 ## Further reading
 

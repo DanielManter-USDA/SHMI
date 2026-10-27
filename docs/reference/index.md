@@ -26,15 +26,17 @@ intensity.
 ## Climate
 
 Monthly climate normals and the growing-season months they define for
-Cover.
+Cover/Roots.
 
 - [`growing_months()`](https://danielmanter-usda.github.io/SHMI/reference/growing_months.md)
   : Growing-season months from monthly climate normals
+- [`shmi_climate_dir()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_climate_dir.md)
+  : Folder where SHMI keeps the WorldClim climate normals
 
 ## Sub-index Functions
 
 - [`compute_cover()`](https://danielmanter-usda.github.io/SHMI/reference/compute_cover.md)
-  : Compute the Cover sub-index
+  : Compute the Cover/Roots sub-index
 - [`compute_diversity()`](https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.md)
   : Compute the Diversity sub-index
 - [`compute_disturbance()`](https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.md)
@@ -52,13 +54,6 @@ grazing credit and the amendment bonus), for calibration or inspection.
   : Plant days and window days by calendar month
 - [`compute_orginput_components()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput_components.md)
   : Years with organic amendments and animals
-
-## Superseded
-
-Kept so code written for SHMI 1.0 still runs.
-
-- [`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)
-  : Organic Inputs score (superseded)
 
 ## Helper Functions
 

@@ -14,7 +14,7 @@ to 1.
 The weights of the three sub-indices in SHMI_base, the medians of 1,000
 cross-validated calibration fits against measured soil health on 354 US
 plots at 74 sites (NAPESHM). Diversity's weight was fixed at 0.150 and the
-other two fitted under that constraint. Within Cover, the growing season
+other two fitted under that constraint. Within Cover/Roots, the growing season
 counts 0.760 and the non-growing season 0.240 (see \code{\link[=compute_cover]{compute_cover()}}).
 Organic amendments are not weighted: they raise SHMI_base to SHMI (see
 \code{\link[=shmi_parameters]{shmi_parameters()}} and \code{\link[=build_shmi]{build_shmi()}}).

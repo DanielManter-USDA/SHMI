@@ -1,10 +1,12 @@
-#' Compute the Cover sub-index
+#' Compute the Cover/Roots sub-index
 #'
-#' Share of days with living plants in the growing and non-growing seasons,
-#' weighted and scaled 0-100.
+#' Share of days with plants present (covering the soil and keeping roots in
+#' it) in the growing and non-growing seasons, weighted and scaled 0-100. The
+#' sub-index is called Cover/Roots in the documentation and `Cover` in the
+#' output.
 #'
 #' @details
-#' **Plant days.** Every crop episode is a window of living cover, except
+#' **Plant days.** Every crop episode is a window of plant presence, except
 #' rows named `"fallow"`, `"none"` or `"bare"`. Overlapping windows (mixtures,
 #' relays, cover crops) are merged, so each day counts once.
 #'
@@ -16,7 +18,7 @@
 #' season takes the other's value.
 #'
 #' **Score.** With \eqn{G} and \eqn{N} the percentage of growing- and
-#' non-growing-season days with living plants,
+#' non-growing-season days with plants present,
 #' \deqn{Cover = s G + (1 - s) N}
 #' where \eqn{s} is `growing_share` (0.760, from the SHMI calibration; see [shmi_parameters()]).
 #'

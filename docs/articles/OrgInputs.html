@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,10 +40,10 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/Background.html">SHMI Background</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (amendment bonus)</a></li>
+    <li><a class="dropdown-item" href="../articles/Cover.html">Cover/Roots</a></li>
+    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity</a></li>
+    <li><a class="dropdown-item" href="../articles/Disturbance.html">Inverse Disturbance</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Amendment bonus and grazing</a></li>
     <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI_base</a></li>
   </ul>
 </li>
@@ -94,11 +94,11 @@
 <h2 id="overview">
 <strong>Overview</strong><a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>SHMI 1.0 scored organic inputs as a fourth weighted sub-index, the
-share of years with an organic amendment or grazing animals. Because it
-was weighted, a field without manure or animals scored 0 on it, which
-read as a penalty for management that is often out of the farmer’s
-hands. Organic inputs now enter in two places:</p>
+<p>Organic inputs could be scored as a fourth weighted sub-index, the
+share of years with an organic amendment or grazing animals. But a
+weighted sub-index gives a field without manure or animals a score of 0
+on it, which reads as a penalty for management that is often out of the
+farmer’s hands. SHMI therefore counts organic inputs in two places:</p>
 <ul>
 <li>
 <strong>Grazing animals</strong> are part of the field’s living
@@ -230,10 +230,7 @@ management unit:</p>
 </table>
 <p><code><a href="../reference/build_shmi.html">build_shmi()</a></code> returns <code>SHMI_base</code>,
 <code>Amend_bonus</code> and <code>SHMI</code>, with
-<code>p_amend</code> and <code>p_animal</code>.
-<code><a href="../reference/compute_orginput.html">compute_orginput()</a></code> still gives the SHMI 1.0 score,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><mspace width="0.167em"></mspace><msub><mi>p</mi><mrow><mi>a</mi><mi>n</mi><mi>y</mi></mrow></msub></mrow><annotation encoding="application/x-tex">100\,p_{any}</annotation></semantics></math>,
-for code written against SHMI 1.0.</p>
+<code>p_amend</code> and <code>p_animal</code>.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

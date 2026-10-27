@@ -1,7 +1,7 @@
 Package: SHMI
 Type: Package
 Title: Soil Health Management Index (SHMI)
-Version: 1.0.0
+Version: 2.0.0
 Authors@R: 
     c(
       person("Daniel", "Manter", 
@@ -14,8 +14,8 @@ Authors@R:
 Description: Implements the Soil Health Management Index (SHMI), a 0-100
     score of how strongly a field's management record supports soil health.
     It reads a standard Excel workbook of crop, tillage, amendment and animal
-    records, and combines three sub-indices: living cover in the growing and
-    non-growing seasons set by each site's climate, plant species richness
+    records, and combines three sub-indices: plant presence (cover and roots)
+    in the growing and non-growing seasons set by each site's climate, plant species richness
     (raised by grazing animals) and inverse tillage disturbance, with weights
     calibrated against measured soil health on US research sites, plus a
     bonus for organic amendments; the score without the bonus is reported
@@ -30,7 +30,8 @@ Suggests:
     knitr,
     rmarkdown,
     terra,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    withr
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Depends: R (>= 4.1.0)
@@ -45,6 +46,7 @@ Imports:
     stats,
     tibble,
     tidyr,
+    tools,
     utils
 Config/roxygen2/version: 8.0.0
 Roxygen: list(markdown = TRUE)

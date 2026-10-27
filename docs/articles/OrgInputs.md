@@ -4,11 +4,11 @@ Organic Amendments as a Bonus; Grazing Animals as Diversity
 
 ## **Overview**
 
-SHMI 1.0 scored organic inputs as a fourth weighted sub-index, the share
-of years with an organic amendment or grazing animals. Because it was
-weighted, a field without manure or animals scored 0 on it, which read
-as a penalty for management that is often out of the farmer’s hands.
-Organic inputs now enter in two places:
+Organic inputs could be scored as a fourth weighted sub-index, the share
+of years with an organic amendment or grazing animals. But a weighted
+sub-index gives a field without manure or animals a score of 0 on it,
+which reads as a penalty for management that is often out of the
+farmer’s hands. SHMI therefore counts organic inputs in two places:
 
 - **Grazing animals** are part of the field’s living system, so they
   raise **Diversity** (see the Diversity article).
@@ -93,6 +93,3 @@ returns one row per management unit:
 [`build_shmi()`](https://danielmanter-usda.github.io/SHMI/reference/build_shmi.md)
 returns `SHMI_base`, `Amend_bonus` and `SHMI`, with `p_amend` and
 `p_animal`.
-[`compute_orginput()`](https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.md)
-still gives the SHMI 1.0 score, $`100\,p_{any}`$, for code written
-against SHMI 1.0.

@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,10 +40,10 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/Background.html">SHMI Background</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (amendment bonus)</a></li>
+    <li><a class="dropdown-item" href="../articles/Cover.html">Cover/Roots</a></li>
+    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity</a></li>
+    <li><a class="dropdown-item" href="../articles/Disturbance.html">Inverse Disturbance</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Amendment bonus and grazing</a></li>
     <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI_base</a></li>
   </ul>
 </li>
@@ -96,11 +96,11 @@ Amendment Bonus</p>
 <strong>Overview</strong><a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
 <p>The Soil Health Management Index reports two 0–100 scores.
-<strong>SHMI_base</strong> combines <strong>Cover</strong>,
-<strong>Diversity</strong> and <strong>Inverse Disturbance</strong>.
-<strong>SHMI</strong> adds a bonus for organic amendments to SHMI_base;
-it is the calibrated score, with weights fitted against measured soil
-health.</p>
+<strong>SHMI_base</strong> combines <strong>Cover/Roots</strong> (column
+<code>Cover</code>), <strong>Diversity</strong> and <strong>Inverse
+Disturbance</strong> (<code>InvDist</code>). <strong>SHMI</strong> adds
+a bonus for organic amendments to SHMI_base; it is the calibrated score,
+with weights fitted against measured soil health.</p>
 <hr>
 </div>
 <div class="section level2">
@@ -126,7 +126,7 @@ is the share of years with an organic amendment.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Cover weight</td>
+<td>Cover/Roots weight</td>
 <td>0.687</td>
 <td>0.65 – 0.73</td>
 </tr>
@@ -141,7 +141,7 @@ is the share of years with an organic amendment.</p>
 <td>0.12 – 0.20</td>
 </tr>
 <tr class="even">
-<td>Growing-season share in Cover</td>
+<td>Growing-season share in Cover/Roots</td>
 <td>0.760</td>
 <td>0.70 – 0.83</td>
 </tr>
@@ -279,8 +279,8 @@ and <code>timestamp</code>.</p>
 <ul>
 <li>
 <strong>Higher scores</strong> mean management more supportive of
-soil health: more of the year under living cover, more plant species and
-grazing, less tillage and, for SHMI, more frequent organic
+soil health: more of the year with plants present, more plant species
+and grazing, less tillage and, for SHMI, more frequent organic
 amendments.</li>
 <li>
 <strong>Two scores.</strong> SHMI_base describes the field’s own
@@ -289,8 +289,10 @@ a unit without amendments.</li>
 <li>
 <strong>Precision.</strong> For US sites not used in calibration,
 SHMI explained about a quarter of the differences in measured soil
-health (R² = 0.26) and ranked practices in the right order at 82% of
-sites (SHMI_base: 0.23 and 76%); a single prediction is typically within
+health (R² = 0.26) and ranked practices in the right direction (a
+positive rank correlation with measured soil health) at 81% of sites (47
+of the 58 with at least three systems; SHMI_base: R² 0.23); each part
+alone ranked 50-64% of sites. A single prediction is typically within
 about 13 soil-health points. Both are most informative for comparing
 practices at the same site.</li>
 <li>

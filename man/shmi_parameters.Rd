@@ -16,7 +16,7 @@ Every calibrated constant used by \code{\link[=build_shmi]{build_shmi()}}:
 \details{
 \itemize{
 \item \code{weights}: the sub-index weights (\code{\link[=shmi_weights]{shmi_weights()}}).
-\item \code{growing_share}: weight of the growing season within Cover (0.760).
+\item \code{growing_share}: weight of the growing season within Cover/Roots (0.760).
 \item \code{graze_gap}: share of the gap to 100 in Diversity closed by grazing
 animals in every year (0.25). Grazing in a share \eqn{p_{animal}} of years
 gives \eqn{Diversity = D_{plants} + 0.25\,p_{animal}(100 - D_{plants})}.

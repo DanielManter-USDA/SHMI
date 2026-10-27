@@ -18,7 +18,8 @@ A list with `weights`, `growing_share`, `graze_gap` and `amend_gap`.
 - `weights`: the sub-index weights
   ([`shmi_weights()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_weights.md)).
 
-- `growing_share`: weight of the growing season within Cover (0.760).
+- `growing_share`: weight of the growing season within Cover/Roots
+  (0.760).
 
 - `graze_gap`: share of the gap to 100 in Diversity closed by grazing
   animals in every year (0.25). Grazing in a share \\p\_{animal}\\ of

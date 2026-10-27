@@ -59,7 +59,7 @@
 #' the override dates (under `"calendar"`). A unit whose records begin after
 #' the start override is scored as having no cover, tillage, or inputs
 #' before its first record, following the missing-record rule. Because
-#' Organic Inputs and Inverse Disturbance are scored by calendar year,
+#' the amendment and grazing shares and Inverse Disturbance are scored by calendar year,
 #' overrides are best placed on year boundaries; other dates trigger a
 #' message.
 #'
@@ -198,7 +198,7 @@ prepare_shmi_inputs <- function(path,
 
   if ((!is.null(start_date_override) && format(start_date_override, "%m-%d") != "01-01") ||
       (!is.null(end_date_override)   && format(end_date_override,   "%m-%d") != "12-31")) {
-    message("Note: date overrides not on calendar-year boundaries. Organic Inputs ",
+    message("Note: date overrides not on calendar-year boundaries. Amendment and grazing shares ",
             "and Inverse Disturbance count partial years as whole years.")
   }
 

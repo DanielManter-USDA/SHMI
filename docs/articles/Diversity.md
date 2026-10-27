@@ -30,9 +30,9 @@ starting in each calendar year in turn, has a richness: the number of
 species present on any day of it. A record of 4 years or fewer is one
 span. The richness $`\bar{R}_i`$ is the average over spans.
 
-`compute_diversity(window = 1)` counts species per calendar year instead
-(the SHMI 1.0 definition); `options(SHMI.diversity_window = )` changes
-the window for a session.
+`compute_diversity(window = 1)` counts species per calendar year
+instead; `options(SHMI.diversity_window = )` changes the window for a
+session.
 
 ------------------------------------------------------------------------
 

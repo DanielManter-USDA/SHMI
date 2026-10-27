@@ -2,30 +2,28 @@
 #'
 #' Returns a zero-row tibble with `required_cols` if the sheet is missing or
 #' empty, stops if a non-empty sheet lacks a required column, and drops rows
-#' with no `MGT_combo`.
+#' with no `MGT_combo`. Empty columns are dropped unless they are required: a
+#' required column that is present but blank in every row (e.g. `CD_term_date`
+#' when every crop ends at harvest) is kept, as `NA`.
 #' @keywords internal
 #' @noRd
 .safe_read <- function(path, sheet, required_cols, skip = 0, verbose = FALSE, ...) {
 
   # If sheet doesn't exist
   if (!sheet %in% readxl::excel_sheets(path)) {
-    return(tibble::tibble(!!!stats::setNames(
-      replicate(length(required_cols), logical(), simplify = FALSE),
-      required_cols
-    )))
+    return(.empty_sheet(required_cols))
   }
 
   # Try reading
   df <- readxl::read_xlsx(path, sheet = sheet, skip = skip, ...)
   df <- janitor::remove_empty(df, "rows")
-  df <- janitor::remove_empty(df, "cols")
+  # drop empty columns, but keep required ones even when every value is blank
+  empty <- vapply(df, function(x) all(is.na(x)), logical(1))
+  df <- df[, !empty | names(df) %in% required_cols, drop = FALSE]
 
   # If empty, return zero-row tibble with correct columns
   if (nrow(df) == 0) {
-    return(tibble::tibble(!!!stats::setNames(
-      replicate(length(required_cols), logical(), simplify = FALSE),
-      required_cols
-    )))
+    return(.empty_sheet(required_cols))
   }
 
   # Ensure required columns exist
@@ -45,9 +43,26 @@
       message("Removed ", bad, " rows with NA MGT_combo from sheet '", sheet, "'.")
     }
     df <- df %>% dplyr::filter(!is.na(MGT_combo))
+    df$MGT_combo <- as.character(df$MGT_combo)
   }
 
   df
+}
+
+#' Zero-row tibble for a missing or empty sheet (internal)
+#'
+#' Columns are typed so the result binds with data from other sheets:
+#' `*_date` columns are `Date`, all others character (e.g. `MGT_combo`).
+#' A sheet with no data rows, such as `Soil_Disturbance` for a no-till system
+#' with no recorded passes, then flows through the import unchanged.
+#' @keywords internal
+#' @noRd
+.empty_sheet <- function(cols) {
+  cols <- as.character(cols)
+  tibble::as_tibble(stats::setNames(
+    lapply(cols, function(k) if (grepl("_date$", k)) as.Date(character()) else character()),
+    cols
+  ))
 }
 
 #' Parse SHMI date values (internal)

@@ -19,7 +19,6 @@
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/compute_cover_monthly.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/compute_disturbance.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/compute_diversity.html</loc></url>
-<url><loc>https://danielmanter-usda.github.io/SHMI/reference/compute_orginput.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/compute_orginput_components.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/download_shmi_example.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/download_shmi_template.html</loc></url>
@@ -31,6 +30,7 @@
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/plot_shmi_lollipop.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/prepare_shmi_inputs.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/SHMI-package.html</loc></url>
+<url><loc>https://danielmanter-usda.github.io/SHMI/reference/shmi_climate_dir.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/shmi_components.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/shmi_parameters.html</loc></url>
 <url><loc>https://danielmanter-usda.github.io/SHMI/reference/shmi_weights.html</loc></url>

@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SHMI</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,10 +40,10 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/Background.html">SHMI Background</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/Cover.html">Cover Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity Index</a></li>
-    <li><a class="dropdown-item" href="../articles/Disturbance.html">Disturbance Index</a></li>
-    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Organic Inputs (amendment bonus)</a></li>
+    <li><a class="dropdown-item" href="../articles/Cover.html">Cover/Roots</a></li>
+    <li><a class="dropdown-item" href="../articles/Diversity.html">Diversity</a></li>
+    <li><a class="dropdown-item" href="../articles/Disturbance.html">Inverse Disturbance</a></li>
+    <li><a class="dropdown-item" href="../articles/OrgInputs.html">Amendment bonus and grazing</a></li>
     <li><a class="dropdown-item" href="../articles/SHMI.html">SHMI and SHMI_base</a></li>
   </ul>
 </li>
@@ -98,16 +98,16 @@ sub-indices, each also scored 0-100, with weights calibrated against
 measured soil health:</p>
 <ul>
 <li>
-<strong>Cover</strong> (weight 0.687): the share of days with living
-plants in the growing and non-growing seasons, set by the site’s
-climate.</li>
+<strong>Cover/Roots</strong> (column <code>Cover</code>; weight
+0.687): the share of days with plants present in the growing and
+non-growing seasons, set by the site’s climate.</li>
 <li>
 <strong>Diversity</strong> (0.150): the number of plant species in
 each 4-year span of the record. Grazing animals raise it: grazing every
 year closes a quarter of the gap to 100.</li>
 <li>
-<strong>Inverse disturbance (InvDist)</strong> (0.163): how little
-the soil was tilled; 100 means no tillage.</li>
+<strong>Inverse Disturbance</strong> (column <code>InvDist</code>;
+0.163): how little the soil was tilled; 100 means no tillage.</li>
 </ul>
 <p><strong>SHMI</strong>, the calibrated score, adds organic amendments
 (manure, compost), carbon brought in from outside the field, to
@@ -119,11 +119,11 @@ exceed 100.</p>
 <p>This vignette walks through the standard workflow: fill in the Excel
 workbook, prepare the inputs, add climate, compute SHMI, and review the
 results.</p>
-<p>SHMI 1.0 was calibrated on 354 US plots at 74 sites of the North
+<p>The weights were calibrated on 354 US plots at 74 sites of the North
 American Project to Evaluate Soil Health Measurements (NAPESHM), mostly
-annual cropping systems plus perennial and native reference systems. It
-is most reliable for comparing practices at the same site, and should be
-recalibrated before use in other regions.</p>
+annual cropping systems plus perennial systems and unmanaged reference
+soils. It is most reliable for comparing practices at the same site, and
+should be recalibrated before use in other regions.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://danielmanter-usda.github.io/SHMI/">SHMI</a></span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -358,15 +358,15 @@ date, taken from the <code>MGT_sample_date</code> column of
 <code>Mgt_Unit</code>), and <code>calc_yield</code> /
 <code>calc_n_rate</code> (also return yields in kg/ha and annual
 nitrogen rates). Overrides are best placed on calendar-year boundaries,
-because Organic Inputs and Inverse Disturbance are scored by calendar
-year.</p>
+because the amendment and grazing shares and Inverse Disturbance are
+scored by calendar year.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="add-climate">3. Add climate<a class="anchor" aria-label="anchor" href="#add-climate"></a>
 </h2>
-<p>Cover splits the year into a growing and a non-growing season for
-each management unit. A month is in the growing season when its
+<p>Cover/Roots splits the year into a growing and a non-growing season
+for each management unit. A month is in the growing season when its
 long-term mean temperature is at least 5 °C and, unless the unit is
 irrigated, it is not dry (precipitation in mm at least twice the mean
 temperature in °C). Each unit’s coordinates (<code>MGT_lat</code>,
@@ -485,13 +485,68 @@ mistaken for a fallow.</li>
 <li>
 <strong>No amendment or animal records</strong> means no amendment
 bonus (SHMI = SHMI_base) and no grazing credit in Diversity.</li>
+<li>
+<strong>A reference soil without management records</strong>
+(remnant prairie, sod, an exclosure or a benchmark stand) is entered as
+one perennial stand spanning the period, named with the number of
+species present (for example <code>"8-species"</code>), with no tillage,
+amendment or animal rows. With eight or more species it scores 100; a
+single-species stand (for example alfalfa or sod of one grass) scores
+Diversity 0 and SHMI 85.</li>
 </ul>
 <p>Record every tillage pass, planting, harvest, and amendment for the
 period being evaluated, so that gaps in the records are not mistaken for
 practices.</p>
 </div>
 <div class="section level2">
-<h2 id="the-sub-indices-one-at-a-time">7. The sub-indices one at a time<a class="anchor" aria-label="anchor" href="#the-sub-indices-one-at-a-time"></a>
+<h2 id="what-a-record-needs">7. What a record needs<a class="anchor" aria-label="anchor" href="#what-a-record-needs"></a>
+</h2>
+<p>SHMI was tested with records stripped of detail, to see how much a
+usable record must contain (Moore &amp; Manter, in review):</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Detail</th>
+<th>Minimum that kept SHMI’s skill</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Crops</td>
+<td>the main crop is enough; every species is better for Diversity</td>
+</tr>
+<tr class="even">
+<td>Cover crops</td>
+<td>present or absent (one generic cover per gap between cash
+crops)</td>
+</tr>
+<tr class="odd">
+<td>Tillage</td>
+<td>the class is enough: no-till, reduced or conventional</td>
+</tr>
+<tr class="even">
+<td>Dates</td>
+<td>within about two weeks; for yield comparisons, record dates field by
+field rather than one typical date per site</td>
+</tr>
+<tr class="odd">
+<td>Manure, compost and livestock</td>
+<td>
+<strong>must be reported</strong>: removing them cost the most
+skill</td>
+</tr>
+</tbody>
+</table>
+<p>A typical farm record (main crops, cover-crop presence, tillage
+class, approximate dates, amendments) kept nearly the full score. A
+record built from remote sensing, which cannot see manure or animals,
+kept SHMI’s skill only when manure, compost and livestock were reported
+by the farmer.</p>
+</div>
+<div class="section level2">
+<h2 id="the-sub-indices-one-at-a-time">8. The sub-indices one at a time<a class="anchor" aria-label="anchor" href="#the-sub-indices-one-at-a-time"></a>
 </h2>
 <p>Each sub-index can be computed directly from the prepared inputs:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
@@ -563,8 +618,8 @@ then soybean.</p>
 <span><span class="op">)</span></span>
 <span><span class="va">climate_1</span> <span class="op">&lt;-</span> <span class="va">climate</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span></span>
 <span><span class="va">climate_1</span><span class="op">$</span><span class="va">MGT_combo</span> <span class="op">&lt;-</span> <span class="st">"field_1"</span></span></code></pre></div>
-<p><strong>Cover</strong> is the share of days with a living crop in
-each season. The rye keeps the soil covered through most of the
+<p><strong>Cover/Roots</strong> is the share of days with a crop present
+in each season. The rye keeps the soil covered through most of the
 non-growing season:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/compute_cover.html">compute_cover</a></span><span class="op">(</span><span class="va">crop</span>, <span class="va">rot_bounds</span>, <span class="va">climate_1</span><span class="op">)</span></span>
@@ -582,7 +637,7 @@ species score 29:</p>
 <span><span class="co">#&gt;   MGT_combo Diversity Richness</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> field_1        28.6        3</span></span></code></pre></div>
-<p><strong>Inverse disturbance</strong> is computed as in USDA’s T-DISC
+<p><strong>Inverse Disturbance</strong> is computed as in USDA’s T-DISC
 tool. Each cash crop defines a crop interval, ending at its harvest;
 passes are grouped into tillage windows around planting; and the
 interval is rated by its most intense window. Here a heavy disk before
@@ -640,7 +695,7 @@ bonus and <code>p_animal</code> (0) the grazing credit:</p>
 raise Diversity from 29 to 29 + 0.25 × (100 − 29) = 46.</p>
 </div>
 <div class="section level2">
-<h2 id="plotting-results">8. Plotting results<a class="anchor" aria-label="anchor" href="#plotting-results"></a>
+<h2 id="plotting-results">9. Plotting results<a class="anchor" aria-label="anchor" href="#plotting-results"></a>
 </h2>
 <p>One unit, with a gauge for each sub-index, SHMI_base and SHMI:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
@@ -655,10 +710,10 @@ raise Diversity from 29 to 29 + 0.25 × (100 − 29) = 46.</p>
 <code>row</code>.</p>
 </div>
 <div class="section level2">
-<h2 id="interpreting-shmi">9. Interpreting SHMI<a class="anchor" aria-label="anchor" href="#interpreting-shmi"></a>
+<h2 id="interpreting-shmi">10. Interpreting SHMI<a class="anchor" aria-label="anchor" href="#interpreting-shmi"></a>
 </h2>
 <p>Higher scores indicate management that is more supportive of soil
-health: more of the year under living cover, more plant species (and
+health: more of the year with plants present, more plant species (and
 grazing), less tillage and, for SHMI, more frequent organic
 amendments.</p>
 <p>Report both scores. SHMI_base describes the field’s own plant and
@@ -669,8 +724,20 @@ amendments. The amendment bonus is largest for a low SHMI_base:
 amendments every year add 36 points at SHMI_base 40 but 12 at SHMI_base
 80. Looking at the sub-indices alongside the scores shows which
 practices drive them. SHMI is most informative for comparing practices
-at the same site; a single score predicted for a new site is typically
-within about 13 soil-health points.</p>
+at the same site: each 10 SHMI points went with about 4 points of
+measured soil health (0-100), and a single score predicted for a new
+site is typically within about 13 soil-health points.</p>
+<p><strong>Corn yield.</strong> In ten long-term US experiments that
+SHMI was never fitted to, each 10 SHMI points raised corn yield by about
+220 kg/ha on average at 150 kg N/ha (about 3%, as much as roughly 18
+kg/ha more fertilizer N), more at low N rates and in older systems. The
+return depended on which practices raised the score: largest through
+rotation, legumes or manure, little or none through tillage alone. Treat
+yield values as averages across experiments, not predictions for a
+single field (Moore &amp; Manter, in review).</p>
+<p><strong>What SHMI does not see.</strong> Weather, fertilizer rate,
+irrigation, and pest and weed management. Report them alongside the
+score.</p>
 </div>
 <div class="section level2">
 <h2 id="further-reading">Further reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>

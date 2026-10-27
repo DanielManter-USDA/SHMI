@@ -20,7 +20,7 @@ Draws the plot and invisibly returns the arranged grob from
 \code{\link[gridExtra:grid.arrange]{gridExtra::grid.arrange()}}.
 }
 \description{
-Draws vertical gauges for Cover, Diversity, Inverse Disturbance, SHMI_base
+Draws vertical gauges for Cover/Roots, Diversity, Inverse Disturbance, SHMI_base
 (when the data have \code{SHMI_base}) and SHMI, which adds the organic amendment
 bonus to SHMI_base. Each gauge shows the 0-100 scale in five bands ("very low" to
 "very high") with a pointer at the unit's score.

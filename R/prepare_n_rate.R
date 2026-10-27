@@ -113,7 +113,7 @@
     dplyr::mutate(
       .gap     = as.numeric(difftime(as.Date(harvest_date), as.Date(SA_date), units = "days")),
       .skip    = plowdown & .gap <= plowdown_days,       # stand plowed down soon after: not its N
-      any_skip = any(.skip & harvest_date == min(harvest_date))
+      any_skip = any(.skip & dplyr::min_rank(harvest_date) == 1)   # min_rank(): no warning on an empty group
     ) %>%
     dplyr::filter(!.skip) %>%
     dplyr::slice_min(harvest_date, n = 1, with_ties = FALSE) %>%

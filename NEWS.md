@@ -4,9 +4,61 @@ editor_options:
     wrap: 72
 ---
 
-# SHMI 1.0.0
+# SHMI 2.0.0
 
-First public release.
+First public release: the calibrated Soil Health Management Index
+described in Moore and Manter (in review).
+
+**Version numbers follow the published index.** SHMI v1 is the index of
+Deel et al. (2024): its parts were scored in classes and summed with equal
+weights. Version 2.0.0 is the calibrated SHMI below. Development builds
+before this release were numbered 1.x; they are not separate published
+versions of the index.
+
+## Changes from the development builds
+
+### Bug fixes
+
+-   `prepare_shmi_inputs()` and `validate_excel_input()` no longer reject a
+    workbook whose required date column (e.g. `CD_term_date`) is present but
+    blank in every row, as when every crop ends at harvest.
+-   `prepare_shmi_inputs()` accepts workbooks with an empty sheet, such as
+    `Soil_Disturbance` for a no-till system with no recorded passes. Empty
+    sheets are read as zero rows with typed columns (`MGT_combo` character,
+    dates as `Date`), and a unit without tillage records scores Inverse
+    Disturbance 100.
+-   N-rate assignment (`calc_n_rate = TRUE`) no longer emits repeated
+    "no non-missing arguments to min" warnings when no harvest follows an
+    application.
+
+### Removed
+
+-   `compute_orginput()`, the Organic Inputs score of the development
+    builds. Organic inputs now enter as the grazing credit in Diversity and
+    the amendment bonus in SHMI; `compute_orginput_components()` gives the
+    shares of years with amendments and with animals.
+-   The `expert_mode` and `settings_used` elements of the `build_shmi()`
+    result; use `official`, `weights`, `parameters` and `dist_meth`.
+-   The unused residue tables in `inst/extdata`
+    (`residue_classes.csv`, `residue_crop_map.csv`): residue gets no
+    weight once plant presence is known.
+
+### Other changes
+
+-   Documentation uses the names of the paper: **Cover/Roots** (column
+    `Cover`), **Diversity** and **Inverse Disturbance** (column
+    `InvDist`). Output column names are unchanged; the gauge plot labels
+    the first gauge "Cover/Roots".
+-   Ranking statistics are reported as in the paper: practices ranked in
+    the right direction (a positive within-site rank correlation with
+    measured soil health) at 81% of the 58 calibration sites with at least
+    three systems.
+-   `get_shmi_climate()` keeps the WorldClim normals in a persistent cache,
+    `shmi_climate_dir()` (by default `tools::R_user_dir("SHMI", "cache")`;
+    set `options(shmi.climate_dir = ...)` or `SHMI_CLIMATE_DIR` to change it),
+    instead of the session's temporary folder, so they are downloaded once
+    rather than in every R session. Downloads use a longer timeout and one
+    retry, and a failure says where to get the files by hand.
 
 ## The index
 
@@ -18,7 +70,7 @@ SHMI = SHMI_base + 0.60 p_amend (100 − SHMI_base)
 
 Each sub-index also runs from 0 to 100.
 
--   **Cover**: share of days with living plants in each unit's growing
+-   **Cover/Roots** (`Cover`): share of days with plants present in each unit's growing
     and non-growing seasons, set by its climate. A month is in the
     growing season when its mean temperature is at least 5 °C and,
     unless the unit is irrigated, its precipitation (mm) is at least
@@ -51,14 +103,13 @@ Each sub-index also runs from 0 to 100.
 
 Scores are named so the calibrated score carries the plain name:
 `SHMI` includes the amendment bonus, and `SHMI_base` is the score
-without it. (In SHMI 1.0, `SHMI` was the four-sub-index score.)
+without it.
 
 Organic Inputs is no longer a weighted sub-index. As a weighted
 sub-index it scored 0 for any field without manure or animals, which
 read as a penalty; grazing now raises Diversity, and amendments raise
-SHMI_base to SHMI. `compute_orginput()` is kept, superseded, so SHMI 1.0
-code still runs, and custom `weights` naming `OrgInput` now give an
-error that explains the change.
+SHMI_base to SHMI. Custom `weights` naming `OrgInput` give an error
+that explains the change.
 
 ## Calibration
 
@@ -75,8 +126,9 @@ fitted under that constraint. The grazing share (0.25) and amendment
 share (0.60) were chosen where held-out fit was flat (0.25-0.5 and
 0.5-0.8). For sites held out of the fitting, SHMI explained about a
 quarter of the differences in soil health (R² = 0.26) and ranked
-practices in the right order at 82% of sites; SHMI_base alone explained
-0.23 and ranked 76% of sites correctly. SHMI is calibrated for US
+practices in the right direction at 81% of sites (47 of the 58 with at
+least three systems); SHMI_base alone explained 0.23. Each part alone
+ranked practices in the right direction at only 50-64% of sites. SHMI is calibrated for US
 systems; other regions should recalibrate. `shmi_parameters()`
 returns every calibrated constant, and each `build_shmi()` result
 records them.

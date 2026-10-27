@@ -6,9 +6,10 @@ Amendment Bonus
 ## **Overview**
 
 The Soil Health Management Index reports two 0–100 scores. **SHMI_base**
-combines **Cover**, **Diversity** and **Inverse Disturbance**. **SHMI**
-adds a bonus for organic amendments to SHMI_base; it is the calibrated
-score, with weights fitted against measured soil health.
+combines **Cover/Roots** (column `Cover`), **Diversity** and **Inverse
+Disturbance** (`InvDist`). **SHMI** adds a bonus for organic amendments
+to SHMI_base; it is the calibrated score, with weights fitted against
+measured soil health.
 
 ------------------------------------------------------------------------
 
@@ -30,10 +31,10 @@ where $`p_{amend,i}`$ is the share of years with an organic amendment.
 
 | Constant | Value | 95% range across 1,000 calibration fits |
 |----|----|----|
-| Cover weight | 0.687 | 0.65 – 0.73 |
+| Cover/Roots weight | 0.687 | 0.65 – 0.73 |
 | Diversity weight | 0.150 | fixed |
 | Inverse Disturbance weight | 0.163 | 0.12 – 0.20 |
-| Growing-season share in Cover | 0.760 | 0.70 – 0.83 |
+| Growing-season share in Cover/Roots | 0.760 | 0.70 – 0.83 |
 | Grazing share (Diversity) | 0.25 | chosen; fit flat 0.25 – 0.5 |
 | Amendment share (SHMI) | 0.60 | chosen; fit flat 0.5 – 0.8 |
 
@@ -101,16 +102,18 @@ plus the unit’s study, farm, field and treatment. The list also records
 ## **Interpretation**
 
 - **Higher scores** mean management more supportive of soil health: more
-  of the year under living cover, more plant species and grazing, less
+  of the year with plants present, more plant species and grazing, less
   tillage and, for SHMI, more frequent organic amendments.
 - **Two scores.** SHMI_base describes the field’s own management; SHMI
   adds carbon brought in from outside. They are equal for a unit without
   amendments.
 - **Precision.** For US sites not used in calibration, SHMI explained
   about a quarter of the differences in measured soil health (R² = 0.26)
-  and ranked practices in the right order at 82% of sites (SHMI_base:
-  0.23 and 76%); a single prediction is typically within about 13
-  soil-health points. Both are most informative for comparing practices
-  at the same site.
+  and ranked practices in the right direction (a positive rank
+  correlation with measured soil health) at 81% of sites (47 of the 58
+  with at least three systems; SHMI_base: R² 0.23); each part alone
+  ranked 50-64% of sites. A single prediction is typically within about
+  13 soil-health points. Both are most informative for comparing
+  practices at the same site.
 - **Scope.** Calibrated on US systems; recalibrate before use in other
   regions.

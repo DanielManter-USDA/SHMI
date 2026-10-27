@@ -1,6 +1,6 @@
 #' Plot gauges of SHMI and its sub-indices for one management unit
 #'
-#' Draws vertical gauges for Cover, Diversity, Inverse Disturbance, SHMI_base
+#' Draws vertical gauges for Cover/Roots, Diversity, Inverse Disturbance, SHMI_base
 #' (when the data have `SHMI_base`) and SHMI, which adds the organic amendment
 #' bonus to SHMI_base. Each gauge shows the 0-100 scale in five bands ("very low" to
 #' "very high") with a pointer at the unit's score.
@@ -113,7 +113,7 @@ plot_shmi_gauge <- function(shmi,
   }
 
   panels <- list(
-    panel(x$Cover,     "\nCover"),
+    panel(x$Cover,     "Cover/\nRoots"),
     panel(x$Diversity, "\nDiversity"),
     panel(x$InvDist,   "Inverse\nDisturbance")
   )

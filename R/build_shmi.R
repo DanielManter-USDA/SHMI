@@ -3,7 +3,7 @@
 #' The weights of the three sub-indices in SHMI_base, the medians of 1,000
 #' cross-validated calibration fits against measured soil health on 354 US
 #' plots at 74 sites (NAPESHM). Diversity's weight was fixed at 0.150 and the
-#' other two fitted under that constraint. Within Cover, the growing season
+#' other two fitted under that constraint. Within Cover/Roots, the growing season
 #' counts 0.760 and the non-growing season 0.240 (see [compute_cover()]).
 #' Organic amendments are not weighted: they raise SHMI_base to SHMI (see
 #' [shmi_parameters()] and [build_shmi()]).
@@ -24,7 +24,7 @@ shmi_weights <- function() {
 #' Every calibrated constant used by [build_shmi()]:
 #'
 #' * `weights`: the sub-index weights ([shmi_weights()]).
-#' * `growing_share`: weight of the growing season within Cover (0.760).
+#' * `growing_share`: weight of the growing season within Cover/Roots (0.760).
 #' * `graze_gap`: share of the gap to 100 in Diversity closed by grazing
 #'   animals in every year (0.25). Grazing in a share \eqn{p_{animal}} of years
 #'   gives \eqn{Diversity = D_{plants} + 0.25\,p_{animal}(100 - D_{plants})}.
@@ -53,12 +53,13 @@ shmi_parameters <- function() {
 #' \deqn{SHMI_{base} = 0.687\,Cover + 0.150\,Diversity + 0.163\,InvDist}
 #' \deqn{SHMI = SHMI_{base} + 0.60\,p_{amend}\,(100 - SHMI_{base})}
 #'
-#' * **Cover**: share of days with living plants in the growing and
-#'   non-growing seasons, set by each unit's climate ([compute_cover()]).
+#' * **Cover/Roots** (column `Cover`): share of days with plants present in
+#'   the growing and non-growing seasons, set by each unit's climate
+#'   ([compute_cover()]).
 #' * **Diversity**: plant species richness over 4-year spans
 #'   ([compute_diversity()]), raised by grazing animals: grazing in a share
 #'   \eqn{p_{animal}} of years closes \eqn{0.25\,p_{animal}} of the gap to 100.
-#' * **InvDist**: inverse tillage disturbance, computed as in USDA's T-DISC
+#' * **Inverse Disturbance** (column `InvDist`): inverse tillage disturbance, computed as in USDA's T-DISC
 #'   from implement mixing efficiencies and depths, or from STIR
 #'   ([compute_disturbance()]).
 #' * **SHMI** adds the amendment bonus, `Amend_bonus`, to `SHMI_base`:
@@ -98,8 +99,7 @@ shmi_parameters <- function() {
 #'   `p_animal`, `TI_tillage` and `tillage_designation`), `weights`,
 #'   `parameters` (all constants used), `dist_meth` (the tillage scale used),
 #'   `official` (`TRUE` unless a custom weight or constant was used),
-#'   `shmi_version` and `timestamp` (plus `expert_mode` and `settings_used`,
-#'   kept for code written against SHMI < 1.0).
+#'   `shmi_version` and `timestamp`.
 #'
 #' @seealso [prepare_shmi_inputs()], [get_shmi_climate()], [shmi_components()],
 #'   [shmi_parameters()], [plot_shmi_gauge()], [plot_shmi_lollipop()]
@@ -167,9 +167,7 @@ build_shmi <- function(shmi_inputs, climate, weights = NULL, dist_meth = c("EPA"
 
   list(indicator_df = indicator_df, weights = w, parameters = par, dist_meth = dist_meth,
        official = official,
-       shmi_version = as.character(utils::packageVersion("SHMI")), timestamp = Sys.time(),
-       # kept for code written against SHMI < 1.0 (e.g. plotting helpers)
-       expert_mode = !official, settings_used = list(weights = w, dist_meth = dist_meth))
+       shmi_version = as.character(utils::packageVersion("SHMI")), timestamp = Sys.time())
 }
 
 

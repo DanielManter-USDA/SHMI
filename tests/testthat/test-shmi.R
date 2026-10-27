@@ -53,9 +53,6 @@ test_that("amendment and animal years are counted separately", {
   expect_equal(oc$p_amend, 0.5)
   expect_equal(oc$p_animal, 1)                                     # grazing spans both years
   expect_equal(compute_orginput_components(rb1, amend[0, ], none)$p_animal, 0)
-  # superseded SHMI 1.0 score, kept for old code
-  expect_equal(compute_orginput(rb1, amend, none)$OrgInput, 50)
-  expect_equal(compute_orginput(rb1, amend, animal)$OrgInput, 100)
 })
 
 test_that("grazing credit and amendment bonus close a share of the gap to 100", {
@@ -182,6 +179,7 @@ test_that("build_shmi gives SHMI_base from the official weights and SHMI from th
   expect_equal(d$SHMI, d$SHMI_base + d$Amend_bonus)
   expect_true(all(d$SHMI >= d$SHMI_base))
   expect_false("SHMI_plus" %in% names(d))
+  expect_false(any(c("expert_mode", "settings_used") %in% names(res)))
   expect_true(all(d$Diversity >= d$Diversity_plants))
   expect_true(all(d$tillage_designation %in% c("NT", "RT", "CT")))
   for (k in c("SHMI", "SHMI_base", "Cover", "Diversity", "Diversity_plants", "InvDist")) {

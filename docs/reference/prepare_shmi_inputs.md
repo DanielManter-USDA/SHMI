@@ -167,9 +167,9 @@ animal periods are clipped to it, and the window boundaries are exactly
 the override dates (under `"calendar"`). A unit whose records begin
 after the start override is scored as having no cover, tillage, or
 inputs before its first record, following the missing-record rule.
-Because Organic Inputs and Inverse Disturbance are scored by calendar
-year, overrides are best placed on year boundaries; other dates trigger
-a message.
+Because the amendment and grazing shares and Inverse Disturbance are
+scored by calendar year, overrides are best placed on year boundaries;
+other dates trigger a message.
 
 With `end_at_sample_date = TRUE`, each unit's window is shortened to end
 at its `MGT_sample_date` (from the `Mgt_Unit` sheet) if that falls
@@ -208,22 +208,22 @@ little or no N.
 ``` r
 inputs <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE)
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [342ms]
+#> ✔ Validating inputs... [350ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [346ms]
+#> ✔ Reading Excel file... [340ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [30ms]
+#> ✔ Calculating rotation lengths... [36ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [213ms]
+#> ✔ Calculating crop start/end dates... [190ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [14ms]
+#> ✔ Applying overrides... [17ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [75ms]
+#> ✔ Re-calculating rotation lengths... [64ms]
 #> 
 
 # What was assumed, and what should be reviewed?
@@ -239,22 +239,22 @@ inputs_2022_23 <- prepare_shmi_inputs(get_shmi_example(), verbose = FALSE,
                                       start_date_override = "2022-01-01",
                                       end_date_override   = "2023-12-31")
 #> ℹ Validating inputs...
-#> ✔ Validating inputs... [335ms]
+#> ✔ Validating inputs... [315ms]
 #> 
 #> ℹ Reading Excel file...
-#> ✔ Reading Excel file... [352ms]
+#> ✔ Reading Excel file... [314ms]
 #> 
 #> ℹ Calculating rotation lengths...
-#> ✔ Calculating rotation lengths... [37ms]
+#> ✔ Calculating rotation lengths... [31ms]
 #> 
 #> ℹ Calculating crop start/end dates...
-#> ✔ Calculating crop start/end dates... [230ms]
+#> ✔ Calculating crop start/end dates... [188ms]
 #> 
 #> ℹ Applying overrides...
-#> ✔ Applying overrides... [35ms]
+#> ✔ Applying overrides... [26ms]
 #> 
 #> ℹ Re-calculating rotation lengths...
-#> ✔ Re-calculating rotation lengths... [89ms]
+#> ✔ Re-calculating rotation lengths... [66ms]
 #> 
 inputs_2022_23$rot_bounds
 #> # A tibble: 8 × 5

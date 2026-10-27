@@ -1,7 +1,9 @@
-# Compute the Cover sub-index
+# Compute the Cover/Roots sub-index
 
-Share of days with living plants in the growing and non-growing seasons,
-weighted and scaled 0-100.
+Share of days with plants present (covering the soil and keeping roots
+in it) in the growing and non-growing seasons, weighted and scaled
+0-100. The sub-index is called Cover/Roots in the documentation and
+`Cover` in the output.
 
 ## Usage
 
@@ -48,7 +50,7 @@ A tibble with `MGT_combo`, `Cover`, `Cover_growing` and
 
 ## Details
 
-**Plant days.** Every crop episode is a window of living cover, except
+**Plant days.** Every crop episode is a window of plant presence, except
 rows named `"fallow"`, `"none"` or `"bare"`. Overlapping windows
 (mixtures, relays, cover crops) are merged, so each day counts once.
 
@@ -60,7 +62,7 @@ months form the non-growing season. If a unit has no months in one
 season, that season takes the other's value.
 
 **Score.** With \\G\\ and \\N\\ the percentage of growing- and
-non-growing-season days with living plants, \$\$Cover = s G + (1 - s)
+non-growing-season days with plants present, \$\$Cover = s G + (1 - s)
 N\$\$ where \\s\\ is `growing_share` (0.760, from the SHMI calibration;
 see
 [`shmi_parameters()`](https://danielmanter-usda.github.io/SHMI/reference/shmi_parameters.md)).

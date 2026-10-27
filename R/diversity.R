@@ -10,7 +10,7 @@
 #' corn-soybean rotation counts 2 species, corn-soybean-wheat 3, and a rye cover
 #' grown in the rotation adds 1; a long stand of a single perennial counts 1
 #' except in the spans where it meets the next crop. `window = 1` counts species
-#' per calendar year (the SHMI 1.0 definition).
+#' per calendar year.
 #'
 #' **Species.** Each distinct `CD_name` is a species (whitespace tidied).
 #' Count-first placeholder mixtures such as `"8-species"`, `"8 spp"` or
@@ -27,8 +27,7 @@
 #' @param rot_bounds Rotation bounds with `MGT_combo`, `rot_start` and
 #'   `rot_end`. Episodes are clipped to this window.
 #' @param max_richness Species per window that scores 100.
-#' @param window Window length in years (default 4; 1 = calendar years, as in
-#'   SHMI 1.0). Can be set for a session with `options(SHMI.diversity_window = )`,
+#' @param window Window length in years (default 4; 1 = calendar years). Can be set for a session with `options(SHMI.diversity_window = )`,
 #'   which also changes [build_shmi()] and [shmi_components()].
 #'
 #' @return A tibble with `MGT_combo`, `Diversity` (0-100) and `Richness`
@@ -47,7 +46,7 @@
 #'                          rot_start = as.Date("2020-01-01"),
 #'                          rot_end   = as.Date("2021-12-31"))
 #' compute_diversity(crop, rot_bounds)              # 3 species in the rotation: 29
-#' compute_diversity(crop, rot_bounds, window = 1)  # 2 a year (SHMI 1.0): 14
+#' compute_diversity(crop, rot_bounds, window = 1)  # 2 a year: 14
 #'
 #' @export
 compute_diversity <- function(crop, rot_bounds, max_richness = 8,

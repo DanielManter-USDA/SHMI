@@ -2,7 +2,7 @@
 % Please edit documentation in R/cover.R
 \name{compute_cover}
 \alias{compute_cover}
-\title{Compute the Cover sub-index}
+\title{Compute the Cover/Roots sub-index}
 \usage{
 compute_cover(
   crop,
@@ -33,11 +33,13 @@ A tibble with \code{MGT_combo}, \code{Cover}, \code{Cover_growing} and
 \code{Cover_nongrowing} (all 0-100), one row per unit in \code{rot_bounds}.
 }
 \description{
-Share of days with living plants in the growing and non-growing seasons,
-weighted and scaled 0-100.
+Share of days with plants present (covering the soil and keeping roots in
+it) in the growing and non-growing seasons, weighted and scaled 0-100. The
+sub-index is called Cover/Roots in the documentation and \code{Cover} in the
+output.
 }
 \details{
-\strong{Plant days.} Every crop episode is a window of living cover, except
+\strong{Plant days.} Every crop episode is a window of plant presence, except
 rows named \code{"fallow"}, \code{"none"} or \code{"bare"}. Overlapping windows (mixtures,
 relays, cover crops) are merged, so each day counts once.
 
@@ -49,7 +51,7 @@ form the non-growing season. If a unit has no months in one season, that
 season takes the other's value.
 
 \strong{Score.} With \eqn{G} and \eqn{N} the percentage of growing- and
-non-growing-season days with living plants,
+non-growing-season days with plants present,
 \deqn{Cover = s G + (1 - s) N}
 where \eqn{s} is \code{growing_share} (0.760, from the SHMI calibration; see \code{\link[=shmi_parameters]{shmi_parameters()}}).
 }

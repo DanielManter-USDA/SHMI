@@ -2,6 +2,7 @@
 
 <!-- badges: start -->
 ![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23682169.svg)](https://doi.org/10.5281/zenodo.23682169)
 <!-- badges: end -->
 
 SHMI converts multi-year crop, disturbance, and amendment records into standardized soil-health management scores.
@@ -291,6 +292,6 @@ If you use SHMI in a publication, please cite:
 
 Moore JM, Manter DK. Soil health tracks management systems, not the sum of individual practices. (in review)
 
-Manter DK, Moore JM. (2026). *SHMI: Soil Health Management Index R package*, version 2.0.0. [Zenodo DOI]
+Manter DK, Moore JM. (2026). *SHMI: Soil Health Management Index R package*, version 2.0.0. Zenodo. https://doi.org/10.5281/zenodo.23682170
 
 ---

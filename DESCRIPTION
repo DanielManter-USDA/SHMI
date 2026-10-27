@@ -21,7 +21,7 @@ Description: Implements the Soil Health Management Index (SHMI), a 0-100
     bonus for organic amendments; the score without the bonus is reported
     as SHMI_base. Every assumption made
     while reading the records is reported.
-License: MIT + file LICENSE
+License: cc0-1.0
 Encoding: UTF-8
 URL: https://danielmanter-usda.github.io/SHMI/, https://github.com/DanielManter-USDA/SHMI
 BugReports: https://github.com/DanielManter-USDA/SHMI/issues

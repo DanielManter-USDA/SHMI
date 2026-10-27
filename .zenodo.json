@@ -1,0 +1,15 @@
+{
+  "title": "SHMI: Soil Health Management Index R package (version 2.0.0)",
+  "upload_type": "software",
+  "version": "2.0.0",
+  "description": "R package implementing the calibrated Soil Health Management Index (SHMI), a 0-100 score of how closely a field's management record follows soil health principles (Cover/Roots, Diversity, Inverse Disturbance, plus an organic amendment bonus), calibrated against measured soil health on 354 US systems at 74 NAPESHM sites. Version numbers follow the published index: SHMI v1 is Deel et al. (2024); 2.0.0 is the calibrated score described in Moore and Manter (in review).",
+  "creators": [
+    {"name": "Manter, Daniel K.", "affiliation": "USDA-ARS, Soil Management and Sugar Beet Research, Fort Collins, CO, USA", "orcid": "0000-0001-7729-7197"},
+    {"name": "Moore, Jennifer M.", "affiliation": "USDA-ARS, Forage Seed and Cereal Research, Corvallis, OR, USA", "orcid": "0000-0001-5403-8184"}
+  ],
+  "license": "MIT",
+  "keywords": ["soil health", "management index", "cover crops", "tillage", "crop diversity", "R package"],
+  "related_identifiers": [
+    {"identifier": "https://github.com/DanielManter-USDA/SHMI", "relation": "isSupplementTo", "scheme": "url"}
+  ]
+}

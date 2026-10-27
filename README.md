@@ -1,7 +1,7 @@
 # **SHMI: Soil Health Management Index** <img src="man/figures/logo.png" align="right" width="120" />
 
 <!-- badges: start -->
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?logo=open-source-initiative&logoColor=white)
+![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)
 <!-- badges: end -->
 
 SHMI converts multi-year crop, disturbance, and amendment records into standardized soil-health management scores.
@@ -282,10 +282,7 @@ Issues, suggestions, and pull requests are welcome:
 
 ### License
 
-This software is a work of the United States Government and is not subject to copyright protection in the United States.
-Foreign copyrights may apply.
-
-Distributed under the MIT license.
+This software is a work of the United States Government and is not subject to copyright protection in the United States. To the extent possible, rights are waived worldwide under the CC0 1.0 Universal public domain dedication.
 
 ---
 
